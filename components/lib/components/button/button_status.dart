@@ -1,0 +1,4 @@
+enum ButtonStatus {
+  enabled,
+  disabled,
+}

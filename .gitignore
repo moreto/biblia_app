@@ -1,0 +1,11 @@
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# IDEs
+.idea/
+*.iml
+
+# Flutter / Dart (todos os módulos)
+.dart_tool/
+build/

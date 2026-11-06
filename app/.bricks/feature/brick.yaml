@@ -1,0 +1,10 @@
+name: feature
+description: Scaffold a health feature using the app's repository, use case, and UI layers.
+version: 0.1.0
+environment:
+  mason: ">=0.1.0 <1.0.0"
+vars:
+  name:
+    type: string
+    description: Feature name in snake_case (for example, user_profile).
+    default: example

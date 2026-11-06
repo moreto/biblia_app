@@ -1,0 +1,4 @@
+enum DialogBottomSheetType {
+  compact,
+  detailed,
+}

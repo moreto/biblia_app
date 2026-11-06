@@ -1,0 +1,4 @@
+enum DialogBottomSheetStatus {
+  statusDefault,
+  statusCritical,
+}
