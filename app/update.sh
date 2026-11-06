@@ -56,11 +56,9 @@ echo " "
 echo " "
 #   5. Instala e configura o mason
 echo "=> mason"
-dart pub global activate mason
+cd ../app
 dart pub global activate mason_cli
-mason init
-mason add feature --path='.mason/feature'
-mason add repository --path='.mason/repository'
+mason get
 mason list
 
 echo "... "

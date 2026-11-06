@@ -1,5 +1,5 @@
 name: feature
-description: Scaffold a health feature using the app's repository, use case, and UI layers.
+description: Cria uma feature do app (repository, use case, viewmodel, view e teste).
 version: 0.1.0
 environment:
   mason: ">=0.1.0 <1.0.0"
