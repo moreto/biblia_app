@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../config/app_config.dart';
-import '../../../../l10n/app_localizations.dart';
+import '../../../../../config/app_config.dart';
+import '../../../../../l10n/app_localizations.dart';
+import '../../../../../routing/routes.dart';
 import 'home_viewmodel.dart';
 
 class HomeView extends StatefulWidget {
@@ -25,7 +27,7 @@ class _HomeViewState extends State<HomeView> {
       body: Center(
         child: ElevatedButton(
           onPressed: () async {
-            // context.push(Routes.login);
+            context.push(Routes.login);
           },
           child: Text(strings.translate('login')),
         ),

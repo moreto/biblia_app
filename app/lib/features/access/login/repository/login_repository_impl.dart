@@ -1,10 +1,10 @@
 import 'package:commons/commons.dart';
 import 'package:service/service.dart';
 
-import '../../../data/model/healt_model.dart';
-import 'home_repository.dart';
+import '../../../../data/model/healt_model.dart';
+import 'login_repository.dart';
 
-class HomeRepositoryImpl implements HomeRepository {
+class LoginRepositoryImpl implements LoginRepository {
   @override
   Future<Result<HealtModel>> healt() async {
     try {
