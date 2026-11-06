@@ -18,20 +18,8 @@ const String kDesHost = 'http://192.168.1.45:3000/api';
 const String kPrdHost = 'http://192.168.1.45:3000/api';
 
 enum ApiCore {
-  traducao('/v1/traducao', kDesHost, kPrdHost, HeaderType.minimal),
-  healt('', kDesHost, kPrdHost, HeaderType.minimal),
-  register('/v1/acesso/registro', kDesHost, kPrdHost, HeaderType.minimal),
-  login('/v1/acesso/login', kDesHost, kPrdHost, HeaderType.basicInfo),
-  menu('/v1/menu', kDesHost, kPrdHost, HeaderType.loggedArea),
-  log('/v1/log', kDesHost, kPrdHost, HeaderType.loggedArea),
-  notificacao('/v1/notificacao', kDesHost, kPrdHost, HeaderType.loggedArea),
-  requestOtp('/v1/otp/send', kDesHost, kPrdHost, HeaderType.basicInfo),
-  verifyOtp('/v1/otp/verify', kDesHost, kPrdHost, HeaderType.basicInfo),
-  empresa('/v1/empresa', kDesHost, kPrdHost, HeaderType.loggedArea),
-  empresaUsuarioVincular('/v1/empresa/usuario/vincular', kDesHost, kPrdHost, HeaderType.loggedUser),
-  empresaUsuarioDetalhe('/v1/empresa/usuario/detalhe', kDesHost, kPrdHost, HeaderType.loggedArea),
-  usuarioDetalheById('/v1/usuario/usuario-detalhe-by-id', kDesHost, kPrdHost, HeaderType.loggedArea),
-  usuarioDispositivo('/v1/usuario-dispositivo', kDesHost, kPrdHost, HeaderType.loggedArea);
+  traducao('/v1/traducao', kDesHost, kPrdHost, HeaderType.basicInfo),
+  healt('', kDesHost, kPrdHost, HeaderType.minimal);
 
   const ApiCore(this.endpoint, this.des, this.prd, this.headerType);
   final String endpoint;
