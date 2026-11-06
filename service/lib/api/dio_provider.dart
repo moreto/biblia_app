@@ -92,7 +92,7 @@ class DioProvider {
       Log.print(
         '${_apiCore.endpoint}, s: ${stopWatch.elapsed.inSeconds}, '
         'ms: ${stopWatch.elapsed.inMilliseconds}',
-        title: 'Provider ${verb.name.toUpperCase()} $status',
+        title: '${verb.name.toUpperCase()} $status',
         name: kApi,
       );
     }

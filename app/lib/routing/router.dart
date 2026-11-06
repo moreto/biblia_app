@@ -1,3 +1,5 @@
+import 'package:commons/commons.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 
 import 'router/access_router.dart';
@@ -6,7 +8,10 @@ import 'routes.dart';
 GoRouter router() => GoRouter(
   initialLocation: Routes.home,
   // debugLogDiagnostics: true,
-  // redirect: _redirect,
+  redirect: (BuildContext context, GoRouterState state) {
+    Log.print(state.uri.toString(), title: 'Route', name: kApp);
+    return null;
+  },
   // refreshListenable: authRepository,
   routes: [...AccessRouter.routes],
 );

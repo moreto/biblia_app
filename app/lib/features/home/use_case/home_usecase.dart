@@ -4,9 +4,7 @@ import '../../../data/model/healt_model.dart';
 import '../repository/home_repository.dart';
 
 class HomeUseCase {
-  HomeUseCase({required this.homeRepository}) {
-    Log.print(super.runtimeType);
-  }
+  HomeUseCase({required this.homeRepository});
 
   final HomeRepository homeRepository;
 

@@ -7,7 +7,6 @@ import '../use_case/home_usecase.dart';
 
 class HomeViewmodel extends ChangeNotifier {
   HomeViewmodel({required this.homeUseCase}) {
-    Log.print(super.runtimeType);
     healtCommand.execute();
   }
 

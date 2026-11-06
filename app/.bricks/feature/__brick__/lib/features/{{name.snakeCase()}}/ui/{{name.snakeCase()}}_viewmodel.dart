@@ -7,7 +7,6 @@ import '../use_case/{{name.snakeCase()}}_usecase.dart';
 
 class {{name.pascalCase()}}Viewmodel extends ChangeNotifier {
   {{name.pascalCase()}}Viewmodel({required this.{{name.camelCase()}}UseCase}) {
-    Log.print(super.runtimeType);
     healtCommand.execute();
   }
 

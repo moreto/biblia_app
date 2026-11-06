@@ -4,9 +4,7 @@ import '../../../data/model/healt_model.dart';
 import '../repository/{{name.snakeCase()}}_repository.dart';
 
 class {{name.pascalCase()}}UseCase {
-  {{name.pascalCase()}}UseCase({required this.{{name.camelCase()}}Repository}) {
-    Log.print(super.runtimeType);
-  }
+  {{name.pascalCase()}}UseCase({required this.{{name.camelCase()}}Repository});
 
   final {{name.pascalCase()}}Repository {{name.camelCase()}}Repository;
 

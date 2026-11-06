@@ -3,8 +3,8 @@ const String kVazio = '';
 const String kDefaultAppError = 'defaultAppError';
 
 // log values
-const String kApp = 'Txh App';
-const String kApi = 'Txh Api';
+const String kApp = 'Bbl App';
+const String kApi = 'Bbl Api';
 
 // config
 const String kCryptKey = 'MmT3xh0';
