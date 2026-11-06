@@ -4,7 +4,7 @@
 
 import 'dart:async';
 
-import 'package:commons/result.dart';
+import 'package:commons/commons.dart';
 import 'package:flutter/foundation.dart';
 
 typedef CommandAction0<T> = Future<Result<T>> Function();

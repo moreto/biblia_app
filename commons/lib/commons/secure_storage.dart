@@ -1,6 +1,5 @@
+import 'package:commons/commons.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-
-import 'commons.dart';
 
 class BBSecureStorage {
   final _secureStorage = const FlutterSecureStorage();

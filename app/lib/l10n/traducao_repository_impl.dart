@@ -1,6 +1,5 @@
 import 'package:app/data/model/traducao_model.dart';
-import 'package:commons/api_core.dart';
-import 'package:commons/result.dart';
+import 'package:commons/commons.dart';
 import 'package:service/api/dio_provider.dart';
 import 'package:service/api/enum.dart';
 

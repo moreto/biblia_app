@@ -1,5 +1,5 @@
 import 'package:app/l10n/traducao_repository_impl.dart';
-import 'package:commons/result.dart';
+import 'package:commons/commons.dart';
 import 'package:flutter/material.dart';
 
 import '../data/model/traducao_model.dart';

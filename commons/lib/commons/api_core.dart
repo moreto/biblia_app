@@ -2,15 +2,11 @@ import 'package:commons/commons.dart';
 
 enum HeaderType { minimal, basicInfo, loggedUser, loggedArea }
 
-// const String kDesHost = 'http://192.168.1.70:3000/api';
-// const String kPrdHost = 'http://192.168.1.70:3000/api';
-
+// internet roteada do celular
 // const String kDesHost = 'http://10.0.2.2:3000/api';
 // const String kPrdHost = 'http://172.20.10.14:3000/api';
 
-// const String kDesHost = 'https://texho.vercel.app/api';
-// const String kPrdHost = 'https://texho.vercel.app/api';
-
+// acesso externo
 // const String kDesHost = 'http://179.252.135.186:3000/api';
 // const String kPrdHost = 'http://179.252.135.186:3000/api';
 
