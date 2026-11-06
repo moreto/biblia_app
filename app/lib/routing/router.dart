@@ -1,3 +1,4 @@
+import 'package:app/routing/router/common_router.dart';
 import 'package:commons/commons.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
@@ -13,5 +14,5 @@ GoRouter router() => GoRouter(
     return null;
   },
   // refreshListenable: authRepository,
-  routes: [...AccessRouter.routes],
+  routes: [...AccessRouter.routes, ...CommonRouter.routes],
 );
