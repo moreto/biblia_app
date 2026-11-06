@@ -3,21 +3,21 @@
   "configurations": [
     
     {
-      "name": "Debug",
+      "name": "Biblia - Debug",
       "request": "launch",
       "type": "dart",
       "flutterMode": "debug",
       "program": "app/lib/main.dart"
     },
     {
-      "name": "Profile",
+      "name": "Biblia - Profile",
       "request": "launch",
       "type": "dart",
       "flutterMode": "profile",
       "program": "app/lib/main.dart"
     },
     {
-      "name": "Release",
+      "name": "Biblia - Release",
       "request": "launch",
       "type": "dart",
       "flutterMode": "release",
