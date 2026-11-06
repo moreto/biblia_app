@@ -15,6 +15,9 @@ const String kPrdHost = 'http://192.168.1.45:3000/api';
 
 enum ApiCore {
   traducao('/v1/traducao', kDesHost, kPrdHost, HeaderType.basicInfo),
+  login('/v1/acesso/login', kDesHost, kPrdHost, HeaderType.basicInfo),
+  otpSend('/v1/otp/send', kDesHost, kPrdHost, HeaderType.basicInfo),
+  otpVerify('/v1/otp/verify', kDesHost, kPrdHost, HeaderType.basicInfo),
   healt('', kDesHost, kPrdHost, HeaderType.minimal);
 
   const ApiCore(this.endpoint, this.des, this.prd, this.headerType);

@@ -1,0 +1,7 @@
+construir a view de login, internacionalizar os textos, verificar se existem no arquivo l10n.csv
+utilizar as apis de login estão na pasta biblia_api
+
+gerar um script de insert no banco de dados das traduções faltantes, segue o modelo de dados abaixo:
+SELECT
+
+manter as regras de negocio nas use_case, chamar e notificar nas view_models

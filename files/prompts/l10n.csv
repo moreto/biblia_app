@@ -1,0 +1,117 @@
+"trad_id","trad_chave","trad_pt_br","trad_es_es","trad_en_us","created_at","updated_at","usua_id","trad_status"
+1,home,Home,Inicio,Home,2026-09-29 00:00:00.000,2026-10-19 15:10:00.415,1,true
+2,efetueLogin,Efetue o login,Inicia sesión,Sign in to continue,2026-09-29 00:00:00.000,2026-10-19 15:10:00.415,1,true
+3,informeEmail,Informe o eMail,Introduce el correo electrónico,Enter your email,2026-09-29 11:53:55.685,2026-10-19 15:10:00.415,1,true
+4,senha,Senha,Contraseña,Password,2026-09-29 11:54:35.541,2026-10-19 15:10:00.415,1,true
+5,informeSenha,Informe a senha,Introduce la contraseña,Enter your password,2026-09-29 11:54:35.541,2026-10-19 15:10:00.415,1,true
+6,esqueceu,Esqueceu,¿Olvidaste?,Forgot?,2026-09-29 11:55:15.944,2026-10-19 15:10:00.415,1,true
+7,login,Login,Iniciar sesión,Sign in,2026-09-29 11:55:15.944,2026-10-19 15:10:00.415,1,true
+8,email,eMail,Correo electrónico,Email,2026-09-29 14:12:22.892,2026-10-19 15:10:00.415,1,true
+9,cep,CEP,Código postal,Postal code,2026-09-29 18:59:42.464,2026-10-19 15:10:00.415,1,true
+10,digiteCep,Digite o CEP,Introduce el código postal,Enter postal code,2026-09-29 18:59:42.464,2026-10-19 15:10:00.415,1,true
+11,buscaCep,Busca CEP,Buscar código postal,Search postal code,2026-09-29 18:59:42.464,2026-10-19 15:10:00.415,1,true
+12,fonte,Fonte,Fuente,Font,2026-09-29 18:59:42.464,2026-10-19 15:10:00.415,1,true
+13,sistema,Sistema,Sistema,System,2026-09-29 18:59:42.464,2026-10-19 15:10:00.415,1,true
+14,claro,Claro,Claro,Light,2026-09-29 18:59:42.464,2026-10-19 15:10:00.415,1,true
+15,escuro,Escuro,Oscuro,Dark,2026-09-29 18:59:42.464,2026-10-19 15:10:00.415,1,true
+16,idioma,Idioma,Idioma,Language,2026-09-29 18:59:42.464,2026-10-19 15:10:00.415,1,true
+17,registro,Cadastro,Registro,Registration,2026-09-30 13:38:36.326,2026-10-19 15:10:00.415,1,true
+18,efetueRegistro,Informe os dados para registro,Proporciona los datos de registro,Provide your registration details,2026-09-30 13:38:36.326,2026-10-19 15:10:00.415,1,true
+19,confirmeSenha,Confirme a senha,Confirma la contraseña,Confirm password,2026-09-30 13:59:03.262,2026-10-19 15:10:00.415,1,true
+20,informeConfirmacaoSenha,Confirme a senha,Confirma la contraseña,Confirm your password,2026-09-30 13:59:03.262,2026-10-19 15:10:00.415,1,true
+21,emailSenhaObrigatorios,Email e senha são obrigatórios,Se requiere correo electrónico y contraseña.,Email and password are required.,2026-09-30 17:35:54.256,,1,true
+22,emailJaCadastrado,Esse email ja foi cadastrado,Este correo electrónico ya está registrado.,This email has already been registered.,2026-09-30 17:35:54.256,,1,true
+23,erroApi,Falha na solicitação,Error en la solicitud,Request failed,2026-09-30 17:49:52.800,2026-10-19 15:10:00.415,1,true
+24,erroGeral,Erro geral no servidor de aplicação,"","",2026-10-01 10:03:47.669,,1,true
+25,unauthorized,Credências não foram autorizadas,Las credenciales no estaban autorizadas.,Credentials were not authorized.,2026-10-06 19:53:30.387,,1,true
+26,loginPorSenha,Login por senha,Iniciar sesión con contraseña,Login by password,2026-10-06 19:56:24.016,,1,true
+27,loginPorOTP,Login por eMail (OTP),Iniciar sesión mediante correo electrónico (OTP),Login via email (OTP),2026-10-06 19:56:24.016,,1,true
+28,connectionTimeout,Tempo de conexão esgotado,Tiempo de conexión agotado,Connection timed out,2026-10-07 07:51:13.920,2026-10-19 15:10:00.415,1,true
+29,sendTimeout,Tempo de envio esgotado,Tiempo de envío agotado,Send timed out,2026-10-07 07:51:13.920,2026-10-19 15:10:00.415,1,true
+30,receiveTimeout,Tempo de resposta esgotado,Tiempo de respuesta agotado,Response timed out,2026-10-07 07:51:13.920,2026-10-19 15:10:00.415,1,true
+31,transformTimeout,Tempo de processamento esgotado,Tiempo de proceso agotado,Processing timed out,2026-10-07 07:51:13.920,2026-10-19 15:10:00.415,1,true
+32,badCertificate,Certificado inválido,Certificado inválido,Invalid certificate,2026-10-07 07:51:13.920,2026-10-19 15:10:00.415,1,true
+33,badResponse,Resposta inválida,Respuesta inválida,Invalid response,2026-10-07 07:51:13.920,2026-10-19 15:10:00.415,1,true
+34,connectionError,Erro de conexão,Error de conexión,Connection error,2026-10-07 07:51:13.920,2026-10-19 15:10:00.415,1,true
+35,unknown,Erro desconhecido,Error desconocido,Unknown error,2026-10-07 07:51:13.920,2026-10-19 15:10:00.415,1,true
+36,cancel,Solicitação cancelada,Solicitud cancelada,Request cancelled,2026-10-07 07:51:13.920,2026-10-19 15:10:00.415,1,true
+37,error,Erro,Error,Error,2026-10-07 08:30:06.141,2026-10-19 15:10:00.415,1,true
+38,ok,OK,Aceptar,OK,2026-10-07 08:30:31.349,2026-10-19 15:10:00.415,1,true
+39,digiteCodigoEnviado,Digite o código enviado,Ingresa el código enviado,Enter the code sent,2026-10-08 09:25:40.026,2026-10-19 15:10:00.415,1,true
+40,enviaremosCodigoAcesso,Enviaremos um código,Te enviaremos un código,We will send you a code,2026-10-08 09:25:40.026,2026-10-19 15:10:00.415,1,true
+41,esqueceuSenhaCodigo,Esqueceu a senha? Use código,¿Olvidaste tu contraseña? Usa código,Forgot password? Use a code,2026-10-08 09:25:40.026,2026-10-19 15:10:00.415,1,true
+42,codigoAcesso,Código de acesso,Código de acceso,Access code,2026-10-08 09:25:40.026,2026-10-19 15:10:00.415,1,true
+43,informeCodigo6Digitos,Informe os 6 dígitos,Ingresa los 6 dígitos,Enter the 6 digits,2026-10-08 10:56:07.789,2026-10-19 15:10:00.415,1,true
+44,voltarEntraSenha,Voltar para entrar com senha,Volver para introducir la contraseña,Back to enter password,2026-10-08 10:59:24.321,2026-10-08 11:07:14.858,1,true
+45,criarConta,Criar conta,Crear cuenta,Create account,2026-10-08 11:00:46.940,2026-10-19 15:10:00.415,1,true
+46,tokenInvalido,Token Inválido,Token no válido,Invalid Token,2026-10-09 10:57:28.183,,1,true
+47,headerInvalido,Header Inválido,Header no válido,Invalid Header,2026-10-09 10:57:28.183,,1,true
+49,voltar,Voltar,Volver,Back,2026-10-19 15:10:00.415,,,true
+50,ocultarAcoes,Ocultar ações inferiores,Ocultar acciones inferiores,Hide bottom actions,2026-10-19 15:10:00.415,,,true
+51,exibirAcoes,Exibir ações inferiores,Mostrar acciones inferiores,Show bottom actions,2026-10-19 15:10:00.415,,,true
+52,tema,Tema,Tema,Theme,2026-10-19 15:10:00.415,,,true
+53,reenviarCodigo,Reenviar código,Reenviar código,Resend code,2026-10-19 15:10:00.415,,,true
+54,enviarCodigo,Enviar código,Enviar código,Send code,2026-10-19 15:10:00.415,,,true
+55,voltarSenha,Voltar para senha,Volver a contraseña,Back to password,2026-10-19 15:10:00.415,,,true
+56,codigoEnviadoSeguro,"Se cadastrado, enviaremos o código","Si existe, enviaremos el código","If registered, we will send a code",2026-10-19 15:10:00.415,,,true
+57,tentarNovamente,Tentar novamente,Intentar de nuevo,Try again,2026-10-19 15:10:00.415,,,true
+58,rotaNaoDefinida,Rota não definida,Ruta no definida,Route not defined,2026-10-19 15:10:00.415,,,true
+59,nenhumMenuDisponivel,Nenhum menu disponível,No hay menú disponible,No menu available,2026-10-19 15:10:00.415,,,true
+60,falhaCarregarMenu,Não foi possível carregar o menu,No se pudo cargar el menú,Could not load the menu,2026-10-19 15:10:00.415,,,true
+61,notificacao,Notificação,Notificación,Notification,2026-10-19 15:10:00.415,,,true
+62,notificacoes,Notificações,Notificaciones,Notifications,2026-10-19 15:10:00.415,,,true
+63,atualizarNotificacoes,Atualizar notificações,Actualizar notificaciones,Refresh notifications,2026-10-19 15:10:00.415,,,true
+64,falhaCarregarAvisos,Não foi possível carregar avisos,No se pudieron cargar avisos,Could not load notifications,2026-10-19 15:10:00.415,,,true
+65,semNotificacoes,Nenhuma notificação encontrada,No se encontraron notificaciones,No notifications found,2026-10-19 15:10:00.415,,,true
+66,logAssociado,Log associado,Registro asociado,Related log,2026-10-19 15:10:00.415,,,true
+67,tipo,Tipo,Tipo,Type,2026-10-19 15:10:00.415,,,true
+68,descricao,Descrição,Descripción,Description,2026-10-19 15:10:00.415,,,true
+69,semLogAssociado,Sem log associado,Sin registro asociado,No related log,2026-10-19 15:10:00.415,,,true
+70,log,Log,Registro,Log,2026-10-19 15:10:00.415,,,true
+71,atualizarLogs,Atualizar logs,Actualizar registros,Refresh logs,2026-10-19 15:10:00.415,,,true
+72,falhaCarregarLogs,Não foi possível carregar logs,No se pudieron cargar registros,Could not load logs,2026-10-19 15:10:00.415,,,true
+73,nenhumLogEncontrado,Nenhum log encontrado,No se encontraron registros,No logs found,2026-10-19 15:10:00.415,,,true
+74,empresa,Empresa,Empresa,Company,2026-10-19 15:10:00.415,,,true
+75,usuarios,Usuários,Usuarios,Users,2026-10-19 15:10:00.415,,,true
+76,atualizarEmpresa,Atualizar empresa,Actualizar empresa,Refresh company,2026-10-19 15:10:00.415,,,true
+77,cadastrarEmpresa,Cadastrar empresa,Registrar empresa,Register company,2026-10-19 15:10:00.415,,,true
+78,dadosEmpresa,Dados da empresa,Datos de la empresa,Company details,2026-10-19 15:10:00.415,,,true
+79,codigo,Código,Código,Code,2026-10-19 15:10:00.415,,,true
+80,nomeEmpresa,Nome da empresa,Nombre de la empresa,Company name,2026-10-19 15:10:00.415,,,true
+81,informeNomeEmpresa,Informe o nome da empresa,Ingresa el nombre de la empresa,Enter the company name,2026-10-19 15:10:00.415,,,true
+82,salvando,Salvando...,Guardando...,Saving...,2026-10-19 15:10:00.415,,,true
+83,salvarAlteracoes,Salvar alterações,Guardar cambios,Save changes,2026-10-19 15:10:00.415,,,true
+84,falhaConsultarEmpresa,Não foi possível consultar a empresa.,No se pudo consultar la empresa.,Could not load company.,2026-10-19 15:10:00.415,,,true
+85,atualizeAntesCadastrar,Atualize os dados antes de cadastrar.,Actualiza los datos antes de registrar.,Refresh the data before registering.,2026-10-19 15:10:00.415,,,true
+86,nenhumaEmpresaCadastrada,Nenhuma empresa cadastrada,No hay empresa registrada,No company registered,2026-10-19 15:10:00.415,,,true
+87,preenchaNomeParaCriar,Preencha o nome para criar uma empresa,Ingresa el nombre para crear una empresa,Enter a name to create one,2026-10-19 15:10:00.415,,,true
+88,falhaCarregarUsuarios,Não foi possível carregar usuários,No se pudieron cargar usuarios,Could not load users,2026-10-19 15:10:00.415,,,true
+89,nenhumUsuarioVinculado,Nenhum usuário vinculado,Ningún usuario vinculado,No linked users,2026-10-19 15:10:00.415,,,true
+90,atualizarUsuarios,Atualizar usuários,Actualizar usuarios,Refresh users,2026-10-19 15:10:00.415,,,true
+91,empresaCadastrada,Empresa cadastrada com sucesso,Empresa registrada correctamente,Company registered successfully,2026-10-19 15:10:00.415,,,true
+92,empresaAtualizada,Empresa atualizada com sucesso,Empresa actualizada correctamente,Company updated successfully,2026-10-19 15:10:00.415,,,true
+93,vincularEmpresa,Vincular empresa,Vincular empresa,Link company,2026-10-19 15:10:00.415,,,true
+94,vinculeContaEmpresa,Vincule sua conta à empresa,Vincula tu cuenta a la empresa,Link your account to a company,2026-10-19 15:10:00.415,,,true
+95,informeCodigoVinculo,Informe o código para vincular,Ingresa el código para vincular,Enter the code to link,2026-10-19 15:10:00.415,,,true
+96,codigoEmpresa,Código da empresa,Código de la empresa,Company code,2026-10-19 15:10:00.415,,,true
+97,informeCodigoEmpresa,Informe o código da empresa,Ingresa el código de la empresa,Enter the company code,2026-10-19 15:10:00.415,,,true
+98,vinculando,Vinculando...,Vinculando...,Linking...,2026-10-19 15:10:00.415,,,true
+99,vincular,Vincular,Vincular,Link,2026-10-19 15:10:00.415,,,true
+100,vinculoRealizado,Vínculo realizado com sucesso,Vínculo realizado correctamente,Link completed successfully,2026-10-19 15:10:00.415,,,true
+101,defaultAppError,Ocorreu um erro,Ocurrió un error,An error occurred,2026-10-19 15:10:00.415,,,true
+102,respostaApiInvalida,Resposta da API inválida,Respuesta de API inválida,Invalid API response,2026-10-19 15:10:00.415,,,true
+103,formatoLogInvalido,Formato de log inválido,Formato de registro inválido,Invalid log format,2026-10-19 15:10:00.415,,,true
+104,formatoNotificacaoInvalido,Formato de notificação inválido,Formato de notificación inválido,Invalid notification format,2026-10-19 15:10:00.415,,,true
+105,formatoUsuarioInvalido,Formato de usuário inválido,Formato de usuario inválido,Invalid user format,2026-10-19 15:10:00.415,,,true
+106,requeridaNaoLocalizada,Variávels não localizada ou faltante: #1,Falta la variable de entorno requerida: #1,Missing required environment variable: #1,2026-10-27 10:35:57.737,2026-11-01 08:14:40.236,1,true
+107,emailObrigatorio,Informe o eMail,Introduce el correo electrónico,Email is required,2026-11-06 00:00:00.000,,,true
+108,emailInvalido,eMail inválido,Correo electrónico no válido,Invalid email,2026-11-06 00:00:00.000,,,true
+109,exibirSenha,Exibir senha,Mostrar contraseña,Show password,2026-11-06 00:00:00.000,,,true
+110,ocultarSenha,Ocultar senha,Ocultar contraseña,Hide password,2026-11-06 00:00:00.000,,,true
+111,codigoOtpInvalido,Código inválido,Código no válido,Invalid code,2026-11-06 00:00:00.000,,,true
+112,codigoOtpInvalidoOuExpirado,Código inválido ou expirado,Código no válido o caducado,Invalid or expired code,2026-11-06 00:00:00.000,,,true
+113,usuarioNaoEncontrado,Usuário não encontrado,Usuario no encontrado,User not found,2026-11-06 00:00:00.000,,,true
+114,interfaceNaoInformada,Interface de acesso não informada,Interfaz de acceso no informada,Access interface not provided,2026-11-06 00:00:00.000,,,true
+115,interfaceInvalida,Interface de acesso inválida,Interfaz de acceso no válida,Invalid access interface,2026-11-06 00:00:00.000,,,true
+116,erroGeralApi,Erro geral no servidor de aplicação,Error general en el servidor de aplicaciones,General application server error,2026-11-06 00:00:00.000,,,true
+117,erroGenerico,Ocorreu um erro inesperado,Ocurrió un error inesperado,An unexpected error occurred,2026-11-06 00:00:00.000,,,true
