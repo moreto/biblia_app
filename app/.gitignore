@@ -78,3 +78,5 @@ mason-lock.json
 /ios/Podfile.lock
 /ios/Pods/
 /ios/build/
+# Widget Preview related
+.widget_preview/
