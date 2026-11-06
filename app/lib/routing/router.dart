@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 
+import 'router/access_router.dart';
 import 'routes.dart';
 
 GoRouter router() => GoRouter(
@@ -7,8 +8,5 @@ GoRouter router() => GoRouter(
   // debugLogDiagnostics: true,
   // redirect: _redirect,
   // refreshListenable: authRepository,
-
-  routes: [
-    //...AccessRouter.routes,
-  ],
+  routes: [...AccessRouter.routes],
 );

@@ -1,4 +1,3 @@
-import 'package:components/components.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
@@ -21,8 +20,8 @@ class MyApp extends StatelessWidget {
         builder: (context, themeController, child) {
           return MaterialApp.router(
             // scrollBehavior: AppCustomScrollBehavior(),
-            theme: AppTheme.lightTheme(font: themeController.font),
-            darkTheme: AppTheme.darkTheme(font: themeController.font),
+            // theme: AppTheme.lightTheme(font: themeController.font),
+            // darkTheme: AppTheme.darkTheme(font: themeController.font),
             themeMode: themeController.mode,
             locale: themeController.locale,
             supportedLocales: AppLocalizations.supportedLocales,
