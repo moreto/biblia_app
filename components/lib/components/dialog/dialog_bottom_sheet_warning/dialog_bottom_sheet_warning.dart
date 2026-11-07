@@ -1,7 +1,6 @@
 import 'package:commons/commons.dart';
 import 'package:flutter/material.dart';
 
-import '../../../theme/theme.dart' as app_theme;
 import '../../button/button.dart';
 import '../../button/button_size.dart';
 import '../../button/button_type.dart';
@@ -102,9 +101,8 @@ class _DialogBottomSheetWarningBodyState extends State<DialogBottomSheetWarningB
   Padding getBodyDialog() {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final appTheme = theme.extension<app_theme.ThemeExtension>();
     final isCritical = widget.dialog.statusDialog == DialogBottomSheetStatus.statusCritical;
-    final statusColor = isCritical ? appTheme?.danger ?? colorScheme.error : colorScheme.primary;
+    final statusColor = isCritical ? colorScheme.error : colorScheme.primary;
     final statusBackgroundColor = isCritical
         ? Color.alphaBlend(statusColor.withValues(alpha: 0.12), colorScheme.surfaceContainerLow)
         : colorScheme.primaryContainer;
