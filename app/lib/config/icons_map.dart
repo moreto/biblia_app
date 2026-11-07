@@ -22,6 +22,17 @@ class IconsMap {
     'check-circle': MdiIcons.checkCircle,
     'check-circle-outline': MdiIcons.checkCircleOutline,
     'comment-text-outline': MdiIcons.commentTextOutline,
+    // Leitura da Bíblia (BibliaLeituraView.icone*); 'book-open-variant' também serve de menu_icone da leitura.
+    'book-open-variant': MdiIcons.bookOpenVariant,
+    'history': MdiIcons.history,
+    'book-multiple': MdiIcons.bookMultiple,
+    'chevron-left': MdiIcons.chevronLeft,
+    'chevron-right': MdiIcons.chevronRight,
+    'progress-check': MdiIcons.progressCheck,
+    // Indicação de versículo (VersiculoIndicacaoSheet).
+    'thumb-up': MdiIcons.thumbUp,
+    'thumb-up-outline': MdiIcons.thumbUpOutline,
+    'delete-outline': MdiIcons.deleteOutline,
     // ...
   };
 }

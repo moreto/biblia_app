@@ -12,6 +12,10 @@ import '../features/admin/menu/repository/menu_repository.dart';
 import '../features/admin/menu/repository/menu_repository_impl.dart';
 import '../features/admin/notificacao/repository/notificacao_repository.dart';
 import '../features/admin/notificacao/repository/notificacao_repository_impl.dart';
+import '../features/biblia/biblia_leitura/repository/biblia_leitura_repository.dart';
+import '../features/biblia/biblia_leitura/repository/biblia_leitura_repository_impl.dart';
+import '../features/biblia/versiculo_indicacao/repository/versiculo_indicacao_repository.dart';
+import '../features/biblia/versiculo_indicacao/repository/versiculo_indicacao_repository_impl.dart';
 import '../features/dashboard/repository/dashboard_repository.dart';
 import '../features/dashboard/repository/dashboard_repository_impl.dart';
 import '../features/dashboard/widgets/oracao/repository/oracao_repository.dart';
@@ -34,4 +38,6 @@ void configDependencies() {
   locator.registerLazySingleton<OracaoRepository>(() => OracaoRepositoryImpl());
   locator.registerLazySingleton<VersiculoRepository>(() => VersiculoRepositoryImpl());
   locator.registerLazySingleton<VersiculoReacaoRepository>(() => VersiculoReacaoRepositoryImpl());
+  locator.registerLazySingleton<BibliaLeituraRepository>(() => BibliaLeituraRepositoryImpl());
+  locator.registerLazySingleton<VersiculoIndicacaoRepository>(() => VersiculoIndicacaoRepositoryImpl());
 }

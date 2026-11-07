@@ -17,4 +17,7 @@ abstract final class Routes {
   static const log = '/log';
   static const configuracao = '/configuracao';
   static const menu = '/menu';
+
+  // biblia
+  static const bibliaLeitura = '/biblia-leitura';
 }

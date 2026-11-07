@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 
 import 'router/access_router.dart';
+import 'router/biblia_router.dart';
 import 'router/configuracao_router.dart';
 import 'router/log_router.dart';
 import 'router/menu_router.dart';
@@ -25,5 +26,6 @@ GoRouter router() => GoRouter(
     ...NotificacaoRouter.routes,
     ...ConfiguracaoRouter.routes,
     ...MenuRouter.routes,
+    ...BibliaRouter.routes,
   ],
 );

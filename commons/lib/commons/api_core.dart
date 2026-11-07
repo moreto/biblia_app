@@ -26,6 +26,14 @@ enum ApiCore {
   oracaoAleatoria('/v1/oracao/aleatoria', kDesHost, kPrdHost, HeaderType.loggedArea),
   versiculoAleatorio('/v1/versiculo/aleatorio', kDesHost, kPrdHost, HeaderType.loggedArea),
   versiculoReacao('/v1/versiculo-reacao', kDesHost, kPrdHost, HeaderType.loggedArea),
+  versiculoReacaoLidos('/v1/versiculo-reacao/lidos', kDesHost, kPrdHost, HeaderType.loggedArea),
+  versiculoReacaoCapitulo('/v1/versiculo-reacao/capitulo', kDesHost, kPrdHost, HeaderType.loggedArea),
+  versiculoIndicacao('/v1/versiculo-indicacao', kDesHost, kPrdHost, HeaderType.loggedArea),
+  versao('/v1/versao', kDesHost, kPrdHost, HeaderType.loggedArea),
+  testamento('/v1/testamento', kDesHost, kPrdHost, HeaderType.loggedArea),
+  livro('/v1/livro', kDesHost, kPrdHost, HeaderType.loggedArea),
+  bibliaIndice('/v1/biblia/indice', kDesHost, kPrdHost, HeaderType.loggedArea),
+  bibliaCapitulo('/v1/biblia/capitulo', kDesHost, kPrdHost, HeaderType.loggedArea),
   healt('', kDesHost, kPrdHost, HeaderType.minimal);
 
   const ApiCore(this.endpoint, this.des, this.prd, this.headerType);
