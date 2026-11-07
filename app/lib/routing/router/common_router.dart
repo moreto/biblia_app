@@ -7,6 +7,9 @@ import '../../features/dashboard/ui/dashboard_view.dart';
 import '../../features/dashboard/ui/dashboard_viewmodel.dart';
 import '../../features/dashboard/use_case/dashboard_usecase.dart';
 import '../../features/loggof/ui/loggof_viewmodel.dart';
+import '../../features/oracao/repository/oracao_repository.dart';
+import '../../features/oracao/ui/oracao_viewmodel.dart';
+import '../../features/oracao/use_case/oracao_usecase.dart';
 import '../routes.dart';
 
 abstract final class CommonRouter {
@@ -17,7 +20,11 @@ abstract final class CommonRouter {
         final viewModel = DashboardViewmodel(
           dashboardUseCase: DashboardUseCase(dashboardRepository: locator<DashboardRepository>()),
         );
-        return DashboardView(viewModel: viewModel);
+        // Widgets da dashboard: cada card tem o próprio viewmodel.
+        final oracaoViewModel = OracaoViewmodel(
+          oracaoUseCase: OracaoUseCase(oracaoRepository: locator<OracaoRepository>()),
+        );
+        return DashboardView(viewModel: viewModel, oracaoViewModel: oracaoViewModel);
       },
     ),
     GoRoute(

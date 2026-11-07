@@ -7,14 +7,17 @@ import '../use_case/{{name.snakeCase()}}_usecase.dart';
 
 class {{name.pascalCase()}}Viewmodel extends ChangeNotifier {
   {{name.pascalCase()}}Viewmodel({required this.{{name.camelCase()}}UseCase}) {
+    Log.print(super.runtimeType);
     healtCommand.execute();
   }
 
   final {{name.pascalCase()}}UseCase {{name.camelCase()}}UseCase;
 
   late final Command0<HealtModel> healtCommand = Command0(_healt);
-  late HealtModel _healtModel;
-  HealtModel get healtModel => _healtModel;
+
+  /// Nulo até o primeiro carregamento concluir (ou quando ele falha).
+  HealtModel? _healtModel;
+  HealtModel? get healtModel => _healtModel;
 
   Future<Result<HealtModel>> _healt() async {
     notifyListeners();
@@ -29,5 +32,11 @@ class {{name.pascalCase()}}Viewmodel extends ChangeNotifier {
 
     notifyListeners();
     return result;
+  }
+
+  @override
+  void dispose() {
+    healtCommand.dispose();
+    super.dispose();
   }
 }

@@ -14,6 +14,8 @@ import '../features/admin/notificacao/repository/notificacao_repository.dart';
 import '../features/admin/notificacao/repository/notificacao_repository_impl.dart';
 import '../features/dashboard/repository/dashboard_repository.dart';
 import '../features/dashboard/repository/dashboard_repository_impl.dart';
+import '../features/oracao/repository/oracao_repository.dart';
+import '../features/oracao/repository/oracao_repository_impl.dart';
 
 final GetIt locator = GetIt.instance;
 
@@ -25,4 +27,5 @@ void configDependencies() {
   locator.registerLazySingleton<LogRepository>(() => LogRepositoryImpl());
   locator.registerLazySingleton<ConfiguracaoRepository>(() => ConfiguracaoRepositoryImpl());
   locator.registerLazySingleton<MenuRepository>(() => MenuRepositoryImpl());
+  locator.registerLazySingleton<OracaoRepository>(() => OracaoRepositoryImpl());
 }

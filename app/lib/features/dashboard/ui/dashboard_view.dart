@@ -8,12 +8,17 @@ import 'package:go_router/go_router.dart';
 import 'package:service/service.dart';
 
 import '../../../data/model/menu/menu_model.dart';
+import '../../oracao/ui/oracao_view.dart';
+import '../../oracao/ui/oracao_viewmodel.dart';
 import 'dashboard_viewmodel.dart';
 
 class DashboardView extends StatefulWidget {
-  const DashboardView({super.key, required this.viewModel});
+  const DashboardView({super.key, required this.viewModel, required this.oracaoViewModel});
 
   final DashboardViewmodel viewModel;
+
+  /// Viewmodel do card de oração exibido no topo da dashboard.
+  final OracaoViewmodel oracaoViewModel;
 
   @override
   State<DashboardView> createState() => _DashboardViewState();
@@ -163,11 +168,13 @@ class _DashboardViewState extends State<DashboardView> {
           ),
         ],
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [_iconFor(selectedMenu), const SizedBox(height: 20), Text(selectedMenu.menuNome)],
-        ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          OracaoView(viewModel: widget.oracaoViewModel),
+          const SizedBox(height: 32),
+          Column(children: [_iconFor(selectedMenu), const SizedBox(height: 20), Text(selectedMenu.menuNome)]),
+        ],
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: selectedIndex,

@@ -23,6 +23,7 @@ enum ApiCore {
   notificacao('/v1/notificacao', kDesHost, kPrdHost, HeaderType.loggedArea),
   configuracao('/v1/configuracao', kDesHost, kPrdHost, HeaderType.loggedArea),
   configuracaoItem('/v1/configuracao-item', kDesHost, kPrdHost, HeaderType.loggedArea),
+  oracaoAleatoria('/v1/oracao/aleatoria', kDesHost, kPrdHost, HeaderType.loggedArea),
   healt('', kDesHost, kPrdHost, HeaderType.minimal);
 
   const ApiCore(this.endpoint, this.des, this.prd, this.headerType);

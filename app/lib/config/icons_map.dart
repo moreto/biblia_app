@@ -8,8 +8,12 @@ class IconsMap {
     'factory': MdiIcons.factory,
     'message-fast-outline': MdiIcons.messageFastOutline,
     'account': MdiIcons.account,
-    'accountAlert': MdiIcons.accountAlert,
+    'account-alert': MdiIcons.accountAlert,
     'badge-account': MdiIcons.badgeAccount,
+    'cog': MdiIcons.cog,
+    'text-long': MdiIcons.textLong,
+    'crane': MdiIcons.crane,
+    'menu': MdiIcons.menu,
     // ...
   };
 }
