@@ -15,7 +15,8 @@ typedef CapituloRef = ({int livrId, int capiNumero});
 /// - o índice da versão define quais capítulos existem (só os que têm versículos na versão);
 /// - o progresso vem de `versiculo-reacao/lidos`: um capítulo está lido quando todos os versículos estão marcados;
 /// - marcar o capítulo grava todos os versículos de uma vez; se ele já estava completo, desmarca;
-/// - o histórico de leitura lista os capítulos do mais recente para o mais antigo.
+/// - o histórico de leitura lista os capítulos do mais recente para o mais antigo;
+/// - o filtro de testamentos mostra o Novo Testamento antes do Antigo.
 class BibliaLeituraUseCase {
   BibliaLeituraUseCase({required this.bibliaLeituraRepository}) {
     Log.print(super.runtimeType);
@@ -25,7 +26,17 @@ class BibliaLeituraUseCase {
 
   Future<Result<List<VersaoModel>>> versoes() => bibliaLeituraRepository.versoes();
 
-  Future<Result<List<TestamentoModel>>> testamentos() => bibliaLeituraRepository.testamentos();
+  /// Testamentos na ordem do filtro do índice: Novo antes do Antigo (a API devolve por `test_id` crescente,
+  /// então a lista é ordenada por `testId` decrescente).
+  Future<Result<List<TestamentoModel>>> testamentos() async {
+    final result = await bibliaLeituraRepository.testamentos();
+    switch (result) {
+      case Ok<List<TestamentoModel>>(value: final testamentos):
+        return Result.ok([...testamentos]..sort((a, b) => b.testId.compareTo(a.testId)));
+      case Error<List<TestamentoModel>>(error: final error):
+        return Result.error(error);
+    }
+  }
 
   Future<Result<List<LivroModel>>> livros() => bibliaLeituraRepository.livros();
 

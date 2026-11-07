@@ -185,6 +185,11 @@ void main() {
   }
 
   group('BibliaLeituraUseCase', () {
+    test('lista o Novo Testamento antes do Antigo', () async {
+      final testamentos = (await leituraUseCase().testamentos() as Ok<List<TestamentoModel>>).value;
+      expect(testamentos.map((t) => t.testNome), ['Novo Testamento', 'Antigo Testamento']);
+    });
+
     test('agrupa o índice por livro e descarta capítulos sem versículos na versão', () async {
       final indice = (await leituraUseCase().indice(_arc.versaId) as Ok<Map<int, List<IndiceCapituloModel>>>).value;
       expect(indice.keys, [_genesis.livrId, _joao.livrId]);
@@ -273,6 +278,7 @@ void main() {
 
     test('filtra os livros pelo testamento', () async {
       final viewModel = await criarViewModel();
+      expect(viewModel.testamentos.map((t) => t.testId), [2, 1]);
       viewModel.selecionarTestamento(2);
       expect(viewModel.livros.map((l) => l.livrNome), ['João']);
       viewModel.selecionarTestamento(null);
