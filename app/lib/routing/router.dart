@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'router/access_router.dart';
 import 'router/configuracao_router.dart';
 import 'router/log_router.dart';
+import 'router/menu_router.dart';
 import 'router/notificacao_router.dart';
 import 'routes.dart';
 
@@ -23,5 +24,6 @@ GoRouter router() => GoRouter(
     ...LogRouter.routes,
     ...NotificacaoRouter.routes,
     ...ConfiguracaoRouter.routes,
+    ...MenuRouter.routes,
   ],
 );
