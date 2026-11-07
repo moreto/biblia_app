@@ -1,9 +1,12 @@
 import 'package:app/config/icons_map.dart';
 import 'package:app/data/model/versiculo/versiculo_model.dart';
+import 'package:app/data/model/versiculo/versiculo_reacao_model.dart';
 import 'package:app/features/dashboard/widgets/versiculo/repository/versiculo_repository.dart';
 import 'package:app/features/dashboard/widgets/versiculo/ui/versiculo_view.dart';
 import 'package:app/features/dashboard/widgets/versiculo/ui/versiculo_viewmodel.dart';
 import 'package:app/features/dashboard/widgets/versiculo/use_case/versiculo_usecase.dart';
+import 'package:app/features/dashboard/widgets/versiculo_reacao/repository/versiculo_reacao_repository.dart';
+import 'package:app/features/dashboard/widgets/versiculo_reacao/use_case/versiculo_reacao_usecase.dart';
 import 'package:app/l10n/app_localizations.dart';
 import 'package:commons/commons.dart';
 import 'package:flutter/foundation.dart';
@@ -21,6 +24,43 @@ class _FakeVersiculoRepository implements VersiculoRepository {
   @override
   Future<Result<VersiculoModel>> aleatorio() async => respostas[chamadas++ % respostas.length];
 }
+
+/// Reações em memória do usuário de teste ([_usuario]); [erroGravacao] faz o POST/PUT falhar.
+class _FakeVersiculoReacaoRepository implements VersiculoReacaoRepository {
+  _FakeVersiculoReacaoRepository([List<VersiculoReacaoModel>? iniciais]) : registros = [...?iniciais];
+
+  final List<VersiculoReacaoModel> registros;
+  Exception? erroGravacao;
+
+  @override
+  Future<Result<List<VersiculoReacaoModel>>> reacoes(int versId) async =>
+      Result.ok(registros.where((r) => r.versId == versId).toList());
+
+  @override
+  Future<Result<VersiculoReacaoModel>> incluir(VersiculoReacaoModel reacao) async {
+    if (erroGravacao case final erro?) return Result.error(erro);
+    final gravada = VersiculoReacaoModel(
+      vreaId: registros.length + 1,
+      versId: reacao.versId,
+      usuaId: _usuario,
+      vreaComentario: reacao.vreaComentario,
+      vreaLido: reacao.vreaLido,
+    );
+    registros.add(gravada);
+    return Result.ok(gravada);
+  }
+
+  @override
+  Future<Result<VersiculoReacaoModel>> alterar(VersiculoReacaoModel reacao) async {
+    if (erroGravacao case final erro?) return Result.error(erro);
+    registros
+      ..removeWhere((r) => r.vreaId == reacao.vreaId)
+      ..add(reacao);
+    return Result.ok(reacao);
+  }
+}
+
+const _usuario = 7;
 
 class _TestLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _TestLocalizationsDelegate();
@@ -67,8 +107,14 @@ const _genesis = VersiculoModel(
 );
 
 void main() {
-  VersiculoViewmodel criar(List<Result<VersiculoModel>> respostas) =>
-      VersiculoViewmodel(versiculoUseCase: VersiculoUseCase(versiculoRepository: _FakeVersiculoRepository(respostas)));
+  VersiculoViewmodel criar(List<Result<VersiculoModel>> respostas, {_FakeVersiculoReacaoRepository? reacoes}) =>
+      VersiculoViewmodel(
+        versiculoUseCase: VersiculoUseCase(versiculoRepository: _FakeVersiculoRepository(respostas)),
+        versiculoReacaoUseCase: VersiculoReacaoUseCase(
+          versiculoReacaoRepository: reacoes ?? _FakeVersiculoReacaoRepository(),
+          usuarioLogado: () => _usuario,
+        ),
+      );
 
   Future<void> montar(WidgetTester tester, VersiculoViewmodel viewModel) async {
     await tester.pumpWidget(
@@ -161,11 +207,49 @@ void main() {
       expect(viewModel.aleatorioCommand.error, isTrue);
       expect(viewModel.versiculo?.versId, 26137);
     });
+
+    test('carrega a reação do usuário junto com o versículo', () async {
+      final viewModel = criar(
+        [Result.ok(_joao), Result.ok(_genesis)],
+        reacoes: _FakeVersiculoReacaoRepository(const [
+          VersiculoReacaoModel(vreaId: 1, versId: 26137, usuaId: _usuario, vreaLido: true),
+        ]),
+      );
+      await pumpEventQueue();
+      expect(viewModel.lido, isTrue);
+
+      await viewModel.aleatorioCommand.execute();
+      expect(viewModel.versiculo?.versId, 1);
+      expect(viewModel.lido, isFalse);
+    });
+
+    test('lidoCommand marca e desmarca como lido', () async {
+      final reacoes = _FakeVersiculoReacaoRepository();
+      final viewModel = criar([Result.ok(_joao)], reacoes: reacoes);
+      await pumpEventQueue();
+
+      await viewModel.lidoCommand.execute('Amém');
+      expect(viewModel.lido, isTrue);
+      expect(viewModel.reacao?.vreaComentario, 'Amém');
+      expect(reacoes.registros, hasLength(1));
+
+      await viewModel.lidoCommand.execute(null);
+      expect(viewModel.lido, isFalse);
+      expect(viewModel.reacao?.vreaComentario, 'Amém');
+      expect(reacoes.registros, hasLength(1));
+    });
   });
 
   group('IconsMap', () {
     test('mapeia os ícones usados pelo card', () {
-      for (final chave in [VersiculoView.iconeCard, VersiculoView.iconeOutro, VersiculoView.iconeTentarNovamente]) {
+      for (final chave in [
+        VersiculoView.iconeCard,
+        VersiculoView.iconeOutro,
+        VersiculoView.iconeTentarNovamente,
+        VersiculoView.iconeLido,
+        VersiculoView.iconeNaoLido,
+        VersiculoView.iconeComentario,
+      ]) {
         expect(IconsMap.mdiIcons[chave], isNotNull, reason: chave);
       }
     });
@@ -206,6 +290,82 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('João 3:16 (ARC)'), findsOneWidget);
       expect(find.widgetWithText(SnackBar, 'erroApi'), findsOneWidget);
+    });
+
+    testWidgets('mostra a reação já gravada e desmarca ao tocar no ícone', (tester) async {
+      await montar(
+        tester,
+        criar(
+          [Result.ok(_joao)],
+          reacoes: _FakeVersiculoReacaoRepository(const [
+            VersiculoReacaoModel(vreaId: 1, versId: 26137, usuaId: _usuario, vreaLido: true),
+          ]),
+        ),
+      );
+
+      expect(find.byTooltip('desmarcarComoLido'), findsOneWidget);
+      expect(find.byIcon(IconsMap.mdiIcons[VersiculoView.iconeLido]!), findsOneWidget);
+
+      await tester.tap(find.byTooltip('desmarcarComoLido'));
+      await tester.pumpAndSettle();
+      expect(find.byTooltip('marcarComoLido'), findsOneWidget);
+      expect(find.byIcon(IconsMap.mdiIcons[VersiculoView.iconeNaoLido]!), findsOneWidget);
+    });
+
+    testWidgets('erro ao gravar a reação mantém o ícone e avisa no SnackBar', (tester) async {
+      final reacoes = _FakeVersiculoReacaoRepository()..erroGravacao = HandledException(message: 'erroApi');
+      await montar(tester, criar([Result.ok(_joao)], reacoes: reacoes));
+
+      await tester.tap(find.byTooltip('marcarComoLido'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('salvar'));
+      await tester.pumpAndSettle();
+      expect(find.byTooltip('marcarComoLido'), findsOneWidget);
+      expect(find.widgetWithText(SnackBar, 'erroApi'), findsOneWidget);
+    });
+
+    testWidgets('marcar como lido pede o comentário e o mostra no card', (tester) async {
+      final reacoes = _FakeVersiculoReacaoRepository();
+      await montar(tester, criar([Result.ok(_joao)], reacoes: reacoes));
+
+      await tester.tap(find.byTooltip('marcarComoLido'));
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsOneWidget);
+
+      await tester.enterText(find.byType(TextField), 'Versículo que me marcou');
+      await tester.tap(find.text('salvar'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(find.byTooltip('desmarcarComoLido'), findsOneWidget);
+      expect(find.text('Versículo que me marcou'), findsOneWidget);
+      expect(reacoes.registros.single.vreaComentario, 'Versículo que me marcou');
+    });
+
+    testWidgets('cancelar o comentário não marca como lido', (tester) async {
+      final reacoes = _FakeVersiculoReacaoRepository();
+      await montar(tester, criar([Result.ok(_joao)], reacoes: reacoes));
+
+      await tester.tap(find.byTooltip('marcarComoLido'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('cancelar'));
+      await tester.pumpAndSettle();
+
+      expect(find.byTooltip('marcarComoLido'), findsOneWidget);
+      expect(reacoes.registros, isEmpty);
+    });
+
+    testWidgets('mostra o comentário de uma reação já gravada', (tester) async {
+      await montar(
+        tester,
+        criar(
+          [Result.ok(_joao)],
+          reacoes: _FakeVersiculoReacaoRepository(const [
+            VersiculoReacaoModel(vreaId: 1, versId: 26137, usuaId: _usuario, vreaComentario: 'Amém', vreaLido: true),
+          ]),
+        ),
+      );
+      expect(find.text('Amém'), findsOneWidget);
     });
   });
 }

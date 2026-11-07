@@ -18,6 +18,10 @@ class IconsMap {
     'book-open-page-variant': MdiIcons.bookOpenPageVariant,
     'autorenew': MdiIcons.autorenew,
     'refresh': MdiIcons.refresh,
+    // Reação de leitura do card de versículo (VersiculoView.iconeLido / iconeNaoLido).
+    'check-circle': MdiIcons.checkCircle,
+    'check-circle-outline': MdiIcons.checkCircleOutline,
+    'comment-text-outline': MdiIcons.commentTextOutline,
     // ...
   };
 }

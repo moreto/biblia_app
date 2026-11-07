@@ -6,16 +6,22 @@ import 'package:service/service.dart';
 
 import '../../../../../data/model/versiculo/versiculo_model.dart';
 import 'versiculo_viewmodel.dart';
+import 'widgets/versiculo_comentario_dialog.dart';
 
 /// Widget da dashboard: card com um versículo sorteado (`GET /v1/versiculo/aleatorio`).
 ///
 /// - Carregando sem versículo: indicador de progresso dentro do card.
 /// - Com versículo: referência completa ("João 3:16 (ARC)") como título, texto, testamento e nome da versão, e o botão
 ///   "Outro versículo", que faz um novo sorteio mantendo o versículo atual visível até a resposta.
+/// - Reação de leitura: ícone [iconeLido] (versículo lido) ou [iconeNaoLido] ao lado de "Outro versículo";
+///   tocar em "marcar" abre [VersiculoComentarioDialog] para um comentário opcional antes de gravar; tocar em
+///   "desmarcar" grava direto (`/v1/versiculo-reacao`). O comentário gravado aparece no card, com [iconeComentario].
+///   Erro ao gravar mostra um SnackBar.
 /// - Erro sem versículo carregado: mensagem traduzida e "Tentar novamente". Erro em um novo sorteio
 ///   mantém o versículo atual e mostra um SnackBar.
 ///
-/// Ícones (em [IconsMap.mdiIcons]): [iconeCard], [iconeOutro] e [iconeTentarNovamente].
+/// Ícones (em [IconsMap.mdiIcons]): [iconeCard], [iconeOutro], [iconeTentarNovamente], [iconeLido],
+/// [iconeNaoLido] e [iconeComentario].
 class VersiculoView extends StatefulWidget {
   const VersiculoView({super.key, required this.viewModel});
 
@@ -30,6 +36,15 @@ class VersiculoView extends StatefulWidget {
   /// Chave do ícone do botão "Tentar novamente".
   static const iconeTentarNovamente = 'refresh';
 
+  /// Chave do ícone da reação de leitura com o versículo marcado como lido.
+  static const iconeLido = 'check-circle';
+
+  /// Chave do ícone da reação de leitura com o versículo ainda não lido.
+  static const iconeNaoLido = 'check-circle-outline';
+
+  /// Chave do ícone do comentário da reação exibido no card.
+  static const iconeComentario = 'comment-text-outline';
+
   @override
   State<VersiculoView> createState() => _VersiculoViewState();
 }
@@ -39,18 +54,22 @@ class _VersiculoViewState extends State<VersiculoView> {
   void initState() {
     super.initState();
     widget.viewModel.aleatorioCommand.addListener(_onResult);
+    widget.viewModel.lidoCommand.addListener(_onLidoResult);
   }
 
   @override
   void didUpdateWidget(covariant VersiculoView oldWidget) {
     super.didUpdateWidget(oldWidget);
     oldWidget.viewModel.aleatorioCommand.removeListener(_onResult);
+    oldWidget.viewModel.lidoCommand.removeListener(_onLidoResult);
     widget.viewModel.aleatorioCommand.addListener(_onResult);
+    widget.viewModel.lidoCommand.addListener(_onLidoResult);
   }
 
   @override
   void dispose() {
     widget.viewModel.aleatorioCommand.removeListener(_onResult);
+    widget.viewModel.lidoCommand.removeListener(_onLidoResult);
     super.dispose();
   }
 
@@ -59,13 +78,27 @@ class _VersiculoViewState extends State<VersiculoView> {
   void _onResult() {
     final command = widget.viewModel.aleatorioCommand;
     if (command.error && widget.viewModel.versiculo != null) {
-      ScaffoldMessenger.maybeOf(
-        context,
-      )?.showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).translate(_mensagemErro(command.result)))));
+      _mostrarErro(command.result);
       command.clearResult();
     } else if (command.completed) {
       command.clearResult();
     }
+  }
+
+  /// Erro ao marcar/desmarcar como lido: o ícone mantém o estado anterior e um SnackBar avisa.
+  void _onLidoResult() {
+    final command = widget.viewModel.lidoCommand;
+    if (command.error) {
+      _mostrarErro(command.result);
+      command.clearResult();
+    } else if (command.completed) {
+      command.clearResult();
+    }
+  }
+
+  void _mostrarErro(Result? result) {
+    ScaffoldMessenger.maybeOf(context)
+        ?.showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).translate(_mensagemErro(result)))));
   }
 
   String _mensagemErro(Result? result) {
@@ -120,18 +153,75 @@ class _VersiculoViewState extends State<VersiculoView> {
           '${versiculo.testNome} · ${versiculo.versaNome}',
           style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
         ),
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton.icon(
-            onPressed: sorteando ? null : command.execute,
-            icon: sorteando
-                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                : _icone(VersiculoView.iconeOutro, Icons.autorenew),
-            label: Text(strings.translate('outroVersiculo')),
+        if (widget.viewModel.reacao?.vreaComentario case final comentario? when comentario.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _icone(
+                VersiculoView.iconeComentario,
+                Icons.comment_outlined,
+                size: 16,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  comentario,
+                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                ),
+              ),
+            ],
           ),
+        ],
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _botaoLido(strings, bloqueado: sorteando),
+            TextButton.icon(
+              onPressed: sorteando ? null : command.execute,
+              icon: sorteando
+                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                  : _icone(VersiculoView.iconeOutro, Icons.autorenew),
+              label: Text(strings.translate('outroVersiculo')),
+            ),
+          ],
         ),
       ],
     );
+  }
+
+  /// Reação de leitura: preenchido (cor primária) quando lido. Fica bloqueado durante um novo sorteio
+  /// ([bloqueado]) e enquanto a reação é gravada.
+  Widget _botaoLido(AppLocalizations strings, {required bool bloqueado}) {
+    final viewModel = widget.viewModel;
+    final gravando = viewModel.lidoCommand.running;
+    final lido = viewModel.lido;
+
+    return IconButton(
+      tooltip: strings.translate(lido ? 'desmarcarComoLido' : 'marcarComoLido'),
+      isSelected: lido,
+      onPressed: bloqueado || gravando ? null : _alternarLido,
+      icon: gravando
+          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+          : _icone(VersiculoView.iconeNaoLido, Icons.check_circle_outline),
+      selectedIcon: gravando
+          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+          : _icone(VersiculoView.iconeLido, Icons.check_circle, color: Theme.of(context).colorScheme.primary),
+    );
+  }
+
+  /// Ao marcar como lido pede o comentário (cancelar não grava); ao desmarcar grava direto.
+  Future<void> _alternarLido() async {
+    final viewModel = widget.viewModel;
+    if (viewModel.lido) {
+      await viewModel.lidoCommand.execute(null);
+      return;
+    }
+
+    final comentario = await VersiculoComentarioDialog.show(context, comentario: viewModel.reacao?.vreaComentario);
+    if (comentario == null || !mounted) return;
+    await viewModel.lidoCommand.execute(comentario);
   }
 
   Widget _card() {

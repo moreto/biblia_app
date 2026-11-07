@@ -12,6 +12,8 @@ import '../../features/dashboard/widgets/oracao/use_case/oracao_usecase.dart';
 import '../../features/dashboard/widgets/versiculo/repository/versiculo_repository.dart';
 import '../../features/dashboard/widgets/versiculo/ui/versiculo_viewmodel.dart';
 import '../../features/dashboard/widgets/versiculo/use_case/versiculo_usecase.dart';
+import '../../features/dashboard/widgets/versiculo_reacao/repository/versiculo_reacao_repository.dart';
+import '../../features/dashboard/widgets/versiculo_reacao/use_case/versiculo_reacao_usecase.dart';
 import '../../features/loggof/ui/loggof_viewmodel.dart';
 import '../routes.dart';
 
@@ -29,6 +31,9 @@ abstract final class CommonRouter {
         );
         final versiculoViewModel = VersiculoViewmodel(
           versiculoUseCase: VersiculoUseCase(versiculoRepository: locator<VersiculoRepository>()),
+          versiculoReacaoUseCase: VersiculoReacaoUseCase(
+            versiculoReacaoRepository: locator<VersiculoReacaoRepository>(),
+          ),
         );
         return DashboardView(
           viewModel: viewModel,

@@ -18,6 +18,8 @@ import '../features/dashboard/widgets/oracao/repository/oracao_repository.dart';
 import '../features/dashboard/widgets/oracao/repository/oracao_repository_impl.dart';
 import '../features/dashboard/widgets/versiculo/repository/versiculo_repository.dart';
 import '../features/dashboard/widgets/versiculo/repository/versiculo_repository_impl.dart';
+import '../features/dashboard/widgets/versiculo_reacao/repository/versiculo_reacao_repository.dart';
+import '../features/dashboard/widgets/versiculo_reacao/repository/versiculo_reacao_repository_impl.dart';
 
 final GetIt locator = GetIt.instance;
 
@@ -31,4 +33,5 @@ void configDependencies() {
   locator.registerLazySingleton<MenuRepository>(() => MenuRepositoryImpl());
   locator.registerLazySingleton<OracaoRepository>(() => OracaoRepositoryImpl());
   locator.registerLazySingleton<VersiculoRepository>(() => VersiculoRepositoryImpl());
+  locator.registerLazySingleton<VersiculoReacaoRepository>(() => VersiculoReacaoRepositoryImpl());
 }
