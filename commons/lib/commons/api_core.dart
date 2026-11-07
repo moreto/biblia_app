@@ -18,6 +18,9 @@ enum ApiCore {
   login('/v1/acesso/login', kDesHost, kPrdHost, HeaderType.basicInfo),
   otpSend('/v1/otp/send', kDesHost, kPrdHost, HeaderType.basicInfo),
   otpVerify('/v1/otp/verify', kDesHost, kPrdHost, HeaderType.basicInfo),
+  menu('/v1/menu', kDesHost, kPrdHost, HeaderType.loggedArea),
+  log('/v1/log', kDesHost, kPrdHost, HeaderType.loggedArea),
+  notificacao('/v1/notificacao', kDesHost, kPrdHost, HeaderType.loggedArea),
   healt('', kDesHost, kPrdHost, HeaderType.minimal);
 
   const ApiCore(this.endpoint, this.des, this.prd, this.headerType);

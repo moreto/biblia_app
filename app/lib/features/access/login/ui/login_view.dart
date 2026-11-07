@@ -18,8 +18,8 @@ class LoginView extends StatefulWidget {
 
 class _LoginViewState extends State<LoginView> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _senhaController = TextEditingController();
+  final _emailController = TextEditingController(text: 'mmoreto@gmail.com');
+  final _senhaController = TextEditingController(text: '123');
   final _codigoController = TextEditingController();
   bool _senhaVisivel = false;
 
@@ -239,10 +239,7 @@ class _LoginViewState extends State<LoginView> {
         ),
       ),
       const SizedBox(height: 16),
-      FilledButton(
-        onPressed: _vm.running ? null : _submitSenha,
-        child: Text(strings.translate('login')),
-      ),
+      FilledButton(onPressed: _vm.running ? null : _submitSenha, child: Text(strings.translate('login'))),
     ];
   }
 
@@ -251,10 +248,7 @@ class _LoginViewState extends State<LoginView> {
       return [
         Text(strings.translate('enviaremosCodigoAcesso'), textAlign: TextAlign.center),
         const SizedBox(height: 24),
-        FilledButton(
-          onPressed: _vm.running ? null : _enviarCodigo,
-          child: Text(strings.translate('enviarCodigo')),
-        ),
+        FilledButton(onPressed: _vm.running ? null : _enviarCodigo, child: Text(strings.translate('enviarCodigo'))),
         const SizedBox(height: 8),
         _voltarSenhaButton(strings),
       ];
@@ -280,15 +274,9 @@ class _LoginViewState extends State<LoginView> {
         validator: _validateCodigo,
       ),
       const SizedBox(height: 24),
-      FilledButton(
-        onPressed: _vm.running ? null : _submitCodigo,
-        child: Text(strings.translate('login')),
-      ),
+      FilledButton(onPressed: _vm.running ? null : _submitCodigo, child: Text(strings.translate('login'))),
       const SizedBox(height: 8),
-      TextButton(
-        onPressed: _vm.running ? null : _enviarCodigo,
-        child: Text(strings.translate('reenviarCodigo')),
-      ),
+      TextButton(onPressed: _vm.running ? null : _enviarCodigo, child: Text(strings.translate('reenviarCodigo'))),
       _voltarSenhaButton(strings),
     ];
   }

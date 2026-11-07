@@ -4,6 +4,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 
 import 'router/access_router.dart';
+import 'router/log_router.dart';
+import 'router/notificacao_router.dart';
 import 'routes.dart';
 
 GoRouter router() => GoRouter(
@@ -14,5 +16,5 @@ GoRouter router() => GoRouter(
     return null;
   },
   // refreshListenable: authRepository,
-  routes: [...AccessRouter.routes, ...CommonRouter.routes],
+  routes: [...AccessRouter.routes, ...CommonRouter.routes, ...LogRouter.routes, ...NotificacaoRouter.routes],
 );

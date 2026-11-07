@@ -1,17 +1,17 @@
 import 'package:commons/commons.dart';
 import 'package:service/service.dart';
 
-import '../../../data/model/healt_model.dart';
+import '../../../data/model/menu/menu_model.dart';
 import 'dashboard_repository.dart';
 
 class DashboardRepositoryImpl implements DashboardRepository {
   @override
-  Future<Result<HealtModel>> healt() async {
+  Future<Result<MenuModel>> menu() async {
     try {
-      final response = await DioProvider.of(ApiCore.healt).request(verb: Verb.get);
+      final response = await DioProvider.of(ApiCore.menu).request(verb: Verb.get);
       switch (response) {
         case Ok(value: final value) when value is Map:
-          return Result.ok(HealtModel.fromJson(Map<String, dynamic>.from(value)));
+          return Result.ok(MenuModel.fromJson(Map<String, dynamic>.from(value)));
         case Error(error: final error):
           return Result.error(error);
         default:

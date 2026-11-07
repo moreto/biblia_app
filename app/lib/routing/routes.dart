@@ -10,4 +10,9 @@ abstract final class Routes {
 
   // common
   static const dashboard = '/dashboard';
+  static const loggof = '/loggof';
+
+  // admin
+  static const notificacao = '/notificacao';
+  static const log = '/log';
 }

@@ -1,29 +1,30 @@
-import 'package:app/config/command.dart';
 import 'package:commons/commons.dart';
 import 'package:flutter/material.dart';
 
-import '../../../data/model/healt_model.dart';
+import '../../../config/command.dart';
+import '../../../data/model/menu/menu_model.dart';
 import '../use_case/dashboard_usecase.dart';
 
 class DashboardViewmodel extends ChangeNotifier {
-  DashboardViewmodel({required this.dashboardUseCase}) {
-    healtCommand.execute();
+  DashboardViewmodel({required this._dashboardUseCase}) {
+    Log.print(super.runtimeType);
+    menuCommand.execute();
   }
 
-  final DashboardUseCase dashboardUseCase;
+  final DashboardUseCase _dashboardUseCase;
 
-  late final Command0<HealtModel> healtCommand = Command0(_healt);
-  late HealtModel _healtModel;
-  HealtModel get healtModel => _healtModel;
+  late final Command0<MenuModel> menuCommand = Command0(_menu);
+  MenuModel? _menuModel;
+  MenuModel? get menuModel => _menuModel;
 
-  Future<Result<HealtModel>> _healt() async {
+  Future<Result<MenuModel>> _menu() async {
     notifyListeners();
 
-    final result = await dashboardUseCase.healt();
+    final result = await _dashboardUseCase.menu();
     switch (result) {
-      case Ok<HealtModel>():
-        _healtModel = result.value;
-      case Error<HealtModel>(error: final error):
+      case Ok<MenuModel>():
+        _menuModel = result.value;
+      case Error<MenuModel>(error: final error):
         Log.print(error.toString(), name: kApp, title: 'Erro');
     }
 
