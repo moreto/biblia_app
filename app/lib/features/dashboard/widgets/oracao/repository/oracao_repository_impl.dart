@@ -1,7 +1,7 @@
 import 'package:commons/commons.dart';
 import 'package:service/service.dart';
 
-import '../../../data/model/oracao/oracao_model.dart';
+import '../../../../../data/model/oracao/oracao_model.dart';
 import 'oracao_repository.dart';
 
 class OracaoRepositoryImpl implements OracaoRepository {

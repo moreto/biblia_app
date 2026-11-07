@@ -6,10 +6,13 @@ import '../../features/dashboard/repository/dashboard_repository.dart';
 import '../../features/dashboard/ui/dashboard_view.dart';
 import '../../features/dashboard/ui/dashboard_viewmodel.dart';
 import '../../features/dashboard/use_case/dashboard_usecase.dart';
+import '../../features/dashboard/widgets/oracao/repository/oracao_repository.dart';
+import '../../features/dashboard/widgets/oracao/ui/oracao_viewmodel.dart';
+import '../../features/dashboard/widgets/oracao/use_case/oracao_usecase.dart';
+import '../../features/dashboard/widgets/versiculo/repository/versiculo_repository.dart';
+import '../../features/dashboard/widgets/versiculo/ui/versiculo_viewmodel.dart';
+import '../../features/dashboard/widgets/versiculo/use_case/versiculo_usecase.dart';
 import '../../features/loggof/ui/loggof_viewmodel.dart';
-import '../../features/oracao/repository/oracao_repository.dart';
-import '../../features/oracao/ui/oracao_viewmodel.dart';
-import '../../features/oracao/use_case/oracao_usecase.dart';
 import '../routes.dart';
 
 abstract final class CommonRouter {
@@ -24,7 +27,14 @@ abstract final class CommonRouter {
         final oracaoViewModel = OracaoViewmodel(
           oracaoUseCase: OracaoUseCase(oracaoRepository: locator<OracaoRepository>()),
         );
-        return DashboardView(viewModel: viewModel, oracaoViewModel: oracaoViewModel);
+        final versiculoViewModel = VersiculoViewmodel(
+          versiculoUseCase: VersiculoUseCase(versiculoRepository: locator<VersiculoRepository>()),
+        );
+        return DashboardView(
+          viewModel: viewModel,
+          oracaoViewModel: oracaoViewModel,
+          versiculoViewModel: versiculoViewModel,
+        );
       },
     ),
     GoRoute(

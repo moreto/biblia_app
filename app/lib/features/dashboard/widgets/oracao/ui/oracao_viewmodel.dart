@@ -2,7 +2,7 @@ import 'package:app/config/command.dart';
 import 'package:commons/commons.dart';
 import 'package:flutter/material.dart';
 
-import '../../../data/model/oracao/oracao_model.dart';
+import '../../../../../data/model/oracao/oracao_model.dart';
 import '../use_case/oracao_usecase.dart';
 
 /// Estado do card de oração da dashboard: carrega uma oração ao ser criado e sorteia outra a cada

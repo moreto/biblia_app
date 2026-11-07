@@ -1,8 +1,8 @@
 import 'package:app/data/model/oracao/oracao_model.dart';
-import 'package:app/features/oracao/repository/oracao_repository.dart';
-import 'package:app/features/oracao/ui/oracao_view.dart';
-import 'package:app/features/oracao/ui/oracao_viewmodel.dart';
-import 'package:app/features/oracao/use_case/oracao_usecase.dart';
+import 'package:app/features/dashboard/widgets/oracao/repository/oracao_repository.dart';
+import 'package:app/features/dashboard/widgets/oracao/ui/oracao_view.dart';
+import 'package:app/features/dashboard/widgets/oracao/ui/oracao_viewmodel.dart';
+import 'package:app/features/dashboard/widgets/oracao/use_case/oracao_usecase.dart';
 import 'package:app/l10n/app_localizations.dart';
 import 'package:commons/commons.dart';
 import 'package:flutter/foundation.dart';

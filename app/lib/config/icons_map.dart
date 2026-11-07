@@ -14,6 +14,10 @@ class IconsMap {
     'text-long': MdiIcons.textLong,
     'crane': MdiIcons.crane,
     'menu': MdiIcons.menu,
+    // Card de versículo aleatório da dashboard (VersiculoView).
+    'book-open-page-variant': MdiIcons.bookOpenPageVariant,
+    'autorenew': MdiIcons.autorenew,
+    'refresh': MdiIcons.refresh,
     // ...
   };
 }

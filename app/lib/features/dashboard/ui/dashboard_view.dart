@@ -8,17 +8,27 @@ import 'package:go_router/go_router.dart';
 import 'package:service/service.dart';
 
 import '../../../data/model/menu/menu_model.dart';
-import '../../oracao/ui/oracao_view.dart';
-import '../../oracao/ui/oracao_viewmodel.dart';
+import '../widgets/oracao/ui/oracao_view.dart';
+import '../widgets/oracao/ui/oracao_viewmodel.dart';
+import '../widgets/versiculo/ui/versiculo_view.dart';
+import '../widgets/versiculo/ui/versiculo_viewmodel.dart';
 import 'dashboard_viewmodel.dart';
 
 class DashboardView extends StatefulWidget {
-  const DashboardView({super.key, required this.viewModel, required this.oracaoViewModel});
+  const DashboardView({
+    super.key,
+    required this.viewModel,
+    required this.oracaoViewModel,
+    required this.versiculoViewModel,
+  });
 
   final DashboardViewmodel viewModel;
 
   /// Viewmodel do card de oração exibido no topo da dashboard.
   final OracaoViewmodel oracaoViewModel;
+
+  /// Viewmodel do card de versículo aleatório exibido na dashboard, abaixo do card de oração.
+  final VersiculoViewmodel versiculoViewModel;
 
   @override
   State<DashboardView> createState() => _DashboardViewState();
@@ -172,8 +182,8 @@ class _DashboardViewState extends State<DashboardView> {
         padding: const EdgeInsets.all(16),
         children: [
           OracaoView(viewModel: widget.oracaoViewModel),
-          const SizedBox(height: 32),
-          Column(children: [_iconFor(selectedMenu), const SizedBox(height: 20), Text(selectedMenu.menuNome)]),
+          const SizedBox(height: 16),
+          VersiculoView(viewModel: widget.versiculoViewModel),
         ],
       ),
       bottomNavigationBar: NavigationBar(

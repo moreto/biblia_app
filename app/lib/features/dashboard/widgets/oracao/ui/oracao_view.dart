@@ -3,7 +3,7 @@ import 'package:commons/commons.dart';
 import 'package:flutter/material.dart';
 import 'package:service/service.dart';
 
-import '../../../data/model/oracao/oracao_model.dart';
+import '../../../../../data/model/oracao/oracao_model.dart';
 import 'oracao_viewmodel.dart';
 
 /// Widget da dashboard: card com uma oração sorteada (`GET /v1/oracao/aleatoria`).
