@@ -15,4 +15,5 @@ abstract final class Routes {
   // admin
   static const notificacao = '/notificacao';
   static const log = '/log';
+  static const configuracao = '/configuracao';
 }

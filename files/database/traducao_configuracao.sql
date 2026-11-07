@@ -1,0 +1,42 @@
+-- Traduções da tela de Configurações (/configuracao). Idempotente: só insere chaves inexistentes.
+INSERT INTO public.traducao (trad_chave, trad_pt_br, trad_es_es, trad_en_us, usua_id, trad_status, created_at)
+SELECT v.trad_chave, v.trad_pt_br, v.trad_es_es, v.trad_en_us, 1, true, now()
+FROM (VALUES
+  ('configuracao', 'Configuração', 'Configuración', 'Setting'),
+  ('configuracoes', 'Configurações', 'Configuraciones', 'Settings'),
+  ('itensConfiguracao', 'Itens de configuração', 'Ítems de configuración', 'Setting items'),
+  ('novaConfiguracao', 'Nova configuração', 'Nueva configuración', 'New setting'),
+  ('editarConfiguracao', 'Editar configuração', 'Editar configuración', 'Edit setting'),
+  ('novoItemConfiguracao', 'Novo item de configuração', 'Nuevo ítem de configuración', 'New setting item'),
+  ('editarItemConfiguracao', 'Editar item de configuração', 'Editar ítem de configuración', 'Edit setting item'),
+  ('nome', 'Nome', 'Nombre', 'Name'),
+  ('campo', 'Campo', 'Campo', 'Field'),
+  ('chave', 'Chave', 'Clave', 'Key'),
+  ('valor', 'Valor', 'Valor', 'Value'),
+  ('sequencia', 'Sequência', 'Secuencia', 'Sequence'),
+  ('ativo', 'Ativo', 'Activo', 'Active'),
+  ('inativo', 'Inativo', 'Inactivo', 'Inactive'),
+  ('salvar', 'Salvar', 'Guardar', 'Save'),
+  ('cancelar', 'Cancelar', 'Cancelar', 'Cancel'),
+  ('excluir', 'Excluir', 'Eliminar', 'Delete'),
+  ('atualizar', 'Atualizar', 'Actualizar', 'Refresh'),
+  ('confirmarExclusao', 'Confirmar exclusão', 'Confirmar eliminación', 'Confirm deletion'),
+  ('confirmarExclusaoConfiguracao', 'Os itens desta configuração também serão excluídos. Deseja continuar?', 'Los ítems de esta configuración también se eliminarán. ¿Desea continuar?', 'The items of this setting will also be deleted. Do you want to continue?'),
+  ('confirmarExclusaoItem', 'Deseja excluir este item de configuração?', '¿Desea eliminar este ítem de configuración?', 'Do you want to delete this setting item?'),
+  ('registroSalvo', 'Registro salvo', 'Registro guardado', 'Record saved'),
+  ('registroExcluido', 'Registro excluído', 'Registro eliminado', 'Record deleted'),
+  ('registroNaoEncontrado', 'Registro não encontrado', 'Registro no encontrado', 'Record not found'),
+  ('dadosInvalidos', 'Dados inválidos', 'Datos inválidos', 'Invalid data'),
+  ('selecioneConfiguracao', 'Selecione uma configuração', 'Seleccione una configuración', 'Select a setting'),
+  ('falhaCarregarConfiguracoes', 'Falha ao carregar as configurações', 'Error al cargar las configuraciones', 'Failed to load settings'),
+  ('falhaCarregarItens', 'Falha ao carregar os itens', 'Error al cargar los ítems', 'Failed to load items'),
+  ('nenhumaConfiguracaoEncontrada', 'Nenhuma configuração encontrada', 'No se encontró ninguna configuración', 'No settings found'),
+  ('nenhumItemEncontrado', 'Nenhum item encontrado', 'No se encontró ningún ítem', 'No items found'),
+  ('formatoConfiguracaoInvalido', 'Formato de configuração inválido', 'Formato de configuración inválido', 'Invalid setting format'),
+  ('nomeObrigatorio', 'Informe o nome', 'Introduce el nombre', 'Enter the name'),
+  ('nomeMaximo60', 'O nome deve ter no máximo 60 caracteres', 'El nombre debe tener como máximo 60 caracteres', 'Name must be at most 60 characters'),
+  ('campoObrigatorio', 'Informe o campo', 'Introduce el campo', 'Enter the field'),
+  ('campoMaximo60', 'O campo deve ter no máximo 60 caracteres', 'El campo debe tener como máximo 60 caracteres', 'Field must be at most 60 characters'),
+  ('valorMaximo128', 'O valor deve ter no máximo 128 caracteres', 'El valor debe tener como máximo 128 caracteres', 'Value must be at most 128 characters')
+) AS v (trad_chave, trad_pt_br, trad_es_es, trad_en_us)
+WHERE NOT EXISTS (SELECT 1 FROM public.traducao t WHERE t.trad_chave = v.trad_chave);

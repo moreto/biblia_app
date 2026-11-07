@@ -21,6 +21,8 @@ enum ApiCore {
   menu('/v1/menu', kDesHost, kPrdHost, HeaderType.loggedArea),
   log('/v1/log', kDesHost, kPrdHost, HeaderType.loggedArea),
   notificacao('/v1/notificacao', kDesHost, kPrdHost, HeaderType.loggedArea),
+  configuracao('/v1/configuracao', kDesHost, kPrdHost, HeaderType.loggedArea),
+  configuracaoItem('/v1/configuracao-item', kDesHost, kPrdHost, HeaderType.loggedArea),
   healt('', kDesHost, kPrdHost, HeaderType.minimal);
 
   const ApiCore(this.endpoint, this.des, this.prd, this.headerType);
