@@ -1,10 +1,10 @@
 import 'package:go_router/go_router.dart';
 
 import '../../config/dependencies.dart';
-import '../../features/log/repository/log_repository.dart';
-import '../../features/log/ui/log_view.dart';
-import '../../features/log/ui/log_viewmodel.dart';
-import '../../features/log/use_case/log_usecase.dart';
+import '../../features/admin/log/repository/log_repository.dart';
+import '../../features/admin/log/ui/log_view.dart';
+import '../../features/admin/log/ui/log_viewmodel.dart';
+import '../../features/admin/log/use_case/log_usecase.dart';
 import '../routes.dart';
 
 class LogRouter {

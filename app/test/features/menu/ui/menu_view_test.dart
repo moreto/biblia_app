@@ -1,8 +1,8 @@
 import 'package:app/data/model/menu/menu_item_model.dart';
-import 'package:app/features/menu/repository/menu_repository.dart';
-import 'package:app/features/menu/ui/menu_view.dart';
-import 'package:app/features/menu/ui/menu_viewmodel.dart';
-import 'package:app/features/menu/use_case/menu_usecase.dart';
+import 'package:app/features/admin/menu/repository/menu_repository.dart';
+import 'package:app/features/admin/menu/ui/menu_view.dart';
+import 'package:app/features/admin/menu/ui/menu_viewmodel.dart';
+import 'package:app/features/admin/menu/use_case/menu_usecase.dart';
 import 'package:app/l10n/app_localizations.dart';
 import 'package:commons/commons.dart';
 import 'package:flutter/foundation.dart';

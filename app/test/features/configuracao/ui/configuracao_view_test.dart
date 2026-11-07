@@ -1,9 +1,9 @@
 import 'package:app/data/model/configuracao/configuracao_item_model.dart';
 import 'package:app/data/model/configuracao/configuracao_model.dart';
-import 'package:app/features/configuracao/repository/configuracao_repository.dart';
-import 'package:app/features/configuracao/ui/configuracao_view.dart';
-import 'package:app/features/configuracao/ui/configuracao_viewmodel.dart';
-import 'package:app/features/configuracao/use_case/configuracao_usecase.dart';
+import 'package:app/features/admin/configuracao/repository/configuracao_repository.dart';
+import 'package:app/features/admin/configuracao/ui/configuracao_view.dart';
+import 'package:app/features/admin/configuracao/ui/configuracao_viewmodel.dart';
+import 'package:app/features/admin/configuracao/use_case/configuracao_usecase.dart';
 import 'package:app/l10n/app_localizations.dart';
 import 'package:commons/commons.dart';
 import 'package:flutter/foundation.dart';

@@ -1,10 +1,10 @@
 import 'package:go_router/go_router.dart';
 
 import '../../config/dependencies.dart';
-import '../../features/notificacao/repository/notificacao_repository.dart';
-import '../../features/notificacao/ui/notificacao_view.dart';
-import '../../features/notificacao/ui/notificacao_viewmodel.dart';
-import '../../features/notificacao/use_case/notificacao_usecase.dart';
+import '../../features/admin/notificacao/repository/notificacao_repository.dart';
+import '../../features/admin/notificacao/ui/notificacao_view.dart';
+import '../../features/admin/notificacao/ui/notificacao_viewmodel.dart';
+import '../../features/admin/notificacao/use_case/notificacao_usecase.dart';
 import '../routes.dart';
 
 class NotificacaoRouter {

@@ -1,10 +1,10 @@
 import 'package:go_router/go_router.dart';
 
 import '../../config/dependencies.dart';
-import '../../features/configuracao/repository/configuracao_repository.dart';
-import '../../features/configuracao/ui/configuracao_view.dart';
-import '../../features/configuracao/ui/configuracao_viewmodel.dart';
-import '../../features/configuracao/use_case/configuracao_usecase.dart';
+import '../../features/admin/configuracao/repository/configuracao_repository.dart';
+import '../../features/admin/configuracao/ui/configuracao_view.dart';
+import '../../features/admin/configuracao/ui/configuracao_viewmodel.dart';
+import '../../features/admin/configuracao/use_case/configuracao_usecase.dart';
 import '../routes.dart';
 
 class ConfiguracaoRouter {
