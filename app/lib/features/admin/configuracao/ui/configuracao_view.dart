@@ -12,6 +12,9 @@ import 'configuracao_viewmodel.dart';
 import 'widgets/configuracao_form_dialog.dart';
 import 'widgets/configuracao_item_form_dialog.dart';
 
+import 'package:app/config/orientation_button.dart';
+import 'package:app/config/theme_mode_button.dart';
+
 class ConfiguracaoView extends StatefulWidget {
   const ConfiguracaoView({super.key, required this.viewModel});
 
@@ -366,8 +369,9 @@ class _ConfiguracaoViewState extends State<ConfiguracaoView> with SingleTickerPr
       appBar: AppBar(
         title: Text(strings.translate('configuracoes')),
         elevation: 0,
-        centerTitle: true,
         actions: [
+          const ThemeModeButton(),
+          const OrientationButton(),
           IconButton(
             tooltip: strings.translate('atualizar'),
             onPressed: widget.viewModel.getConfiguracoesCommand.running || widget.viewModel.getItensCommand.running

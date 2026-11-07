@@ -5,6 +5,9 @@ import 'package:go_router/go_router.dart';
 
 import 'loggof_viewmodel.dart';
 
+import 'package:app/config/orientation_button.dart';
+import 'package:app/config/theme_mode_button.dart';
+
 class LoggofView extends StatelessWidget {
   const LoggofView({super.key, required this.viewModel});
 
@@ -15,7 +18,7 @@ class LoggofView extends StatelessWidget {
     final strings = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text(strings.translate('Encerrar sessão'))),
+      appBar: AppBar(title: Text(strings.translate('Encerrar sessão')), actions: const [OrientationButton(), ThemeModeButton()]),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),

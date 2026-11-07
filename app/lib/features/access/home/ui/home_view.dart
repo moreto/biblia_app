@@ -7,6 +7,9 @@ import '../../../../../l10n/app_localizations.dart';
 import '../../../../../routing/routes.dart';
 import 'home_viewmodel.dart';
 
+import 'package:app/config/orientation_button.dart';
+import 'package:app/config/theme_mode_button.dart';
+
 class HomeView extends StatefulWidget {
   const HomeView({super.key, required this.viewModel});
 
@@ -23,7 +26,11 @@ class _HomeViewState extends State<HomeView> {
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(strings.translate('home')), elevation: 0, centerTitle: true),
+      appBar: AppBar(
+        title: Text(strings.translate('home')),
+        elevation: 0,
+        actions: const [OrientationButton(), ThemeModeButton()],
+      ),
       body: Center(
         child: ElevatedButton(
           onPressed: () async {

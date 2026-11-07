@@ -7,6 +7,9 @@ import '../../../../config/command.dart';
 import '../../../../routing/routes.dart';
 import 'login_viewmodel.dart';
 
+import 'package:app/config/orientation_button.dart';
+import 'package:app/config/theme_mode_button.dart';
+
 class LoginView extends StatefulWidget {
   const LoginView({super.key, required this.viewModel});
 
@@ -152,7 +155,11 @@ class _LoginViewState extends State<LoginView> {
     return Stack(
       children: [
         Scaffold(
-          appBar: AppBar(title: Text(strings.translate('login')), elevation: 0, centerTitle: true),
+          appBar: AppBar(
+            title: Text(strings.translate('login')),
+            elevation: 0,
+            actions: const [OrientationButton(), ThemeModeButton()],
+          ),
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: SafeArea(
             child: Center(

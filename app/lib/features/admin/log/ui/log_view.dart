@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:service/service.dart';
 
+import '../../../../config/orientation_button.dart';
+import '../../../../config/theme_mode_button.dart';
 import '../../../../data/model/log_model.dart';
 import 'log_viewmodel.dart';
 
@@ -133,8 +135,9 @@ class _LogViewState extends State<LogView> {
       appBar: AppBar(
         title: Text(strings.translate('log')),
         elevation: 0,
-        centerTitle: true,
         actions: [
+          const ThemeModeButton(),
+          const OrientationButton(),
           IconButton(
             tooltip: strings.translate('atualizarLogs'),
             onPressed: command.running ? null : command.execute,

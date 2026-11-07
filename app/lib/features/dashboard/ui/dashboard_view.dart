@@ -14,6 +14,9 @@ import '../widgets/versiculo/ui/versiculo_view.dart';
 import '../widgets/versiculo/ui/versiculo_viewmodel.dart';
 import 'dashboard_viewmodel.dart';
 
+import 'package:app/config/orientation_button.dart';
+import 'package:app/config/theme_mode_button.dart';
+
 class DashboardView extends StatefulWidget {
   const DashboardView({
     super.key,
@@ -171,6 +174,8 @@ class _DashboardViewState extends State<DashboardView> {
       appBar: AppBar(
         title: Text(selectedMenu.menuNome),
         actions: [
+          const ThemeModeButton(),
+          const OrientationButton(),
           IconButton(
             tooltip: AppLocalizations.of(context).translate('Sair'),
             onPressed: () => context.push(Routes.loggof),

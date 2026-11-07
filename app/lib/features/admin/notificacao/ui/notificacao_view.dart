@@ -8,6 +8,9 @@ import 'package:service/service.dart';
 import '../../../../data/model/notificacao_model.dart';
 import 'notificacao_viewmodel.dart';
 
+import 'package:app/config/orientation_button.dart';
+import 'package:app/config/theme_mode_button.dart';
+
 class NotificacaoView extends StatefulWidget {
   const NotificacaoView({super.key, required this.viewModel});
 
@@ -155,8 +158,9 @@ class _NotificacaoViewState extends State<NotificacaoView> {
       appBar: AppBar(
         title: Text(strings.translate('notificacoes')),
         elevation: 0,
-        centerTitle: true,
         actions: [
+          const ThemeModeButton(),
+          const OrientationButton(),
           IconButton(
             tooltip: strings.translate('atualizarNotificacoes'),
             onPressed: command.running ? null : command.execute,

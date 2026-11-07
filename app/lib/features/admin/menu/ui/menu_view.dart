@@ -11,6 +11,9 @@ import '../../../../data/model/menu/menu_item_model.dart';
 import 'menu_viewmodel.dart';
 import 'widgets/menu_form_dialog.dart';
 
+import 'package:app/config/orientation_button.dart';
+import 'package:app/config/theme_mode_button.dart';
+
 class MenuView extends StatefulWidget {
   const MenuView({super.key, required this.viewModel});
 
@@ -323,8 +326,9 @@ class _MenuViewState extends State<MenuView> {
       appBar: AppBar(
         title: Text(strings.translate('menus')),
         elevation: 0,
-        centerTitle: true,
         actions: [
+          const ThemeModeButton(),
+          const OrientationButton(),
           IconButton(
             tooltip: strings.translate('atualizar'),
             onPressed: widget.viewModel.getMenusCommand.running ? null : widget.viewModel.getMenusCommand.execute,
