@@ -2,14 +2,6 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Biblia - Android",
-      "request": "launch",
-      "type": "dart",
-      "flutterMode": "debug",
-      "program": "app/lib/main.dart",
-      "deviceId": "bafb9a06"
-    },
-    {
       "name": "Biblia - Debug",
       "request": "launch",
       "type": "dart",
@@ -29,6 +21,14 @@
       "type": "dart",
       "flutterMode": "release",
       "program": "app/lib/main.dart"
+    },
+    {
+      "name": "Biblia - Android",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "debug",
+      "program": "app/lib/main.dart",
+      "deviceId": "bafb9a06"
     }
   ]
 }

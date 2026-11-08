@@ -109,18 +109,28 @@ class _DashboardViewState extends State<DashboardView> {
     showModalBottomSheet<void>(
       context: context,
       builder: (sheetContext) {
-        return SizedBox(
-          height: 150,
+        return SafeArea(
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Text(parent.menuNome),
-              const SizedBox(height: 20),
-              Expanded(
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text(
+                  parent.menuNome,
+                  style: Theme.of(context).textTheme.titleMedium,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 120,
                 child: ListView.separated(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   scrollDirection: Axis.horizontal,
                   itemCount: children.length,
-                  separatorBuilder: (_, _) => const SizedBox(width: 14),
+                  separatorBuilder: (_, _) => const SizedBox(width: 12),
                   itemBuilder: (context, index) {
                     final child = children[index];
                     return QuickCard(
@@ -247,18 +257,27 @@ class QuickCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 145,
+      width: 120,
       child: Card(
+        clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.all(12),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 icon,
-                const SizedBox(height: 14),
-                Text(title, textAlign: TextAlign.center),
+                const SizedBox(height: 8),
+                Flexible(
+                  child: Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
               ],
             ),
           ),

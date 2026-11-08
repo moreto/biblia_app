@@ -33,6 +33,8 @@ class IconsMap {
     'thumb-up': MdiIcons.thumbUp,
     'thumb-up-outline': MdiIcons.thumbUpOutline,
     'delete-outline': MdiIcons.deleteOutline,
+    'book-open-variant-outline': MdiIcons.bookOpenVariantOutline,
+    'book-open-page-variant-outline': MdiIcons.bookOpenPageVariantOutline,
     // ...
   };
 }
