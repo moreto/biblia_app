@@ -2,6 +2,10 @@
 const String kVazio = '';
 const String kDefaultAppError = 'defaultAppError';
 
+// App
+const String kColorScheme = 'colorScheme';
+const String kSelectedLanguage = 'selectedLanguage';
+
 // log values
 const String kApp = 'Bbl App';
 const String kApi = 'Bbl Api';

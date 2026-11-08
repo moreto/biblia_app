@@ -1,5 +1,7 @@
 import 'package:get_it/get_it.dart';
 
+import 'app_config.dart';
+
 import '../features/access/home/repository/home_repository.dart';
 import '../features/access/home/repository/home_repository_impl.dart';
 import '../features/access/login/repository/login_repository.dart';
@@ -28,6 +30,7 @@ import '../features/dashboard/widgets/versiculo_reacao/repository/versiculo_reac
 final GetIt locator = GetIt.instance;
 
 void configDependencies() {
+  locator.registerLazySingleton<AppConfig>(() => AppConfig());
   locator.registerLazySingleton<HomeRepository>(() => HomeRepositoryImpl());
   locator.registerLazySingleton<LoginRepository>(() => LoginRepositoryImpl());
   locator.registerLazySingleton<DashboardRepository>(() => DashboardRepositoryImpl());

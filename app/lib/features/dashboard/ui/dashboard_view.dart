@@ -259,6 +259,8 @@ class QuickCard extends StatelessWidget {
     return SizedBox(
       width: 120,
       child: Card(
+        // Um tom acima do fundo do bottom sheet (surfaceContainerLow).
+        color: Theme.of(context).colorScheme.surfaceContainer,
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
@@ -267,7 +269,11 @@ class QuickCard extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                icon,
+                // Mesma cor dos ícones do NavigationBar (padrão M3 para itens não selecionados).
+                IconTheme.merge(
+                  data: IconThemeData(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  child: icon,
+                ),
                 const SizedBox(height: 8),
                 Flexible(
                   child: Text(
