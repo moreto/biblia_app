@@ -10,8 +10,13 @@ enum HeaderType { minimal, basicInfo, loggedUser, loggedArea }
 // const String kDesHost = 'http://179.252.135.186:3000/api';
 // const String kPrdHost = 'http://179.252.135.186:3000/api';
 
+// interno / localhost
+// const String kDesHost = 'http://192.168.1.45:3000/api';
+// const String kPrdHost = 'http://192.168.1.45:3000/api';
+
+// prod
 const String kDesHost = 'http://192.168.1.45:3000/api';
-const String kPrdHost = 'http://192.168.1.45:3000/api';
+const String kPrdHost = 'http://179.252.135.186:3000/api';
 
 enum ApiCore {
   traducao('/v1/traducao', kDesHost, kPrdHost, HeaderType.basicInfo),
