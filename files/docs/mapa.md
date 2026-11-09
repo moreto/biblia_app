@@ -24,7 +24,7 @@ Para cada tela: rota, feature, use case e endpoints. Os caminhos de feature são
 
 | Rota | Feature | Use case | Endpoints | Comportamento |
 |---|---|---|---|---|
-| `/biblia-leitura` | [biblia/biblia_leitura](../../app/lib/features/biblia/biblia_leitura) + [versiculo_indicacao](../../app/lib/features/biblia/versiculo_indicacao) | `BibliaLeituraUseCase`, `VersiculoIndicacaoUseCase` | `/v1/versao`, `/v1/testamento`, `/v1/livro`, `/v1/biblia/indice`, `/v1/biblia/capitulo`, `/v1/versiculo-reacao/lidos`, `/v1/versiculo-reacao/capitulo`, `/v1/versiculo-indicacao` | Índice por versão e testamento, com o progresso de leitura de cada livro e capítulo. Na leitura do capítulo, o usuário marca o capítulo como lido, navega entre capítulos e indica versículos. Tem também o histórico de leitura. |
+| `/biblia-leitura` | [biblia/biblia_leitura](../../app/lib/features/biblia/biblia_leitura) + [versiculo_indicacao](../../app/lib/features/biblia/versiculo_indicacao) | `BibliaLeituraUseCase`, `VersiculoIndicacaoUseCase`, `VersiculoReacaoUseCase` | `/v1/versao`, `/v1/testamento`, `/v1/livro`, `/v1/biblia/indice`, `/v1/biblia/capitulo`, `/v1/versiculo-reacao/lidos`, `/v1/versiculo-reacao/capitulo` (GET e PUT), `/v1/versiculo-reacao`, `/v1/versiculo-indicacao` | Índice por versão e testamento, com o progresso de leitura de cada livro e capítulo. Na leitura do capítulo, o usuário marca o capítulo ou cada versículo como lido (ícone ao lado da linha; o comentário da reação é mantido), navega entre capítulos e, tocando no texto, indica o versículo com comentário. Tem também o histórico de leitura. |
 
 ## Administração
 

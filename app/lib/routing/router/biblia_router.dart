@@ -7,6 +7,8 @@ import '../../features/biblia/biblia_leitura/repository/biblia_leitura_repositor
 import '../../features/biblia/biblia_leitura/ui/biblia_leitura_viewmodel.dart';
 import '../../features/biblia/biblia_leitura/use_case/biblia_leitura_usecase.dart';
 import '../../features/biblia/versiculo_indicacao/repository/versiculo_indicacao_repository.dart';
+import '../../features/dashboard/widgets/versiculo_reacao/repository/versiculo_reacao_repository.dart';
+import '../../features/dashboard/widgets/versiculo_reacao/use_case/versiculo_reacao_usecase.dart';
 import '../routes.dart';
 
 class BibliaRouter {
@@ -18,6 +20,9 @@ class BibliaRouter {
           bibliaLeituraUseCase: BibliaLeituraUseCase(bibliaLeituraRepository: locator<BibliaLeituraRepository>()),
           versiculoIndicacaoUseCase: VersiculoIndicacaoUseCase(
             versiculoIndicacaoRepository: locator<VersiculoIndicacaoRepository>(),
+          ),
+          versiculoReacaoUseCase: VersiculoReacaoUseCase(
+            versiculoReacaoRepository: locator<VersiculoReacaoRepository>(),
           ),
         );
         return BibliaLeituraView(viewModel: viewModel);

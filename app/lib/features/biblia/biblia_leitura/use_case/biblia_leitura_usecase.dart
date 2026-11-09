@@ -6,15 +6,22 @@ import '../../../../data/model/biblia/livro_model.dart';
 import '../../../../data/model/biblia/testamento_model.dart';
 import '../../../../data/model/biblia/versao_model.dart';
 import '../../../../data/model/biblia/versiculo_texto_model.dart';
+import '../../../../data/model/versiculo/versiculo_reacao_model.dart';
 import '../repository/biblia_leitura_repository.dart';
 
 /// Referência de um capítulo (livro e número), usada para navegar entre capítulos.
 typedef CapituloRef = ({int livrId, int capiNumero});
 
+/// Progresso de um livro: capítulos completos, capítulos começados, total de capítulos e a fração (0 a 1) de
+/// versículos lidos no livro.
+typedef ProgressoLivro = ({int completos, int emAndamento, int total, double fracao});
+
 /// Regras da leitura da Bíblia:
 /// - o índice da versão define quais capítulos existem (só os que têm versículos na versão);
 /// - o progresso vem de `versiculo-reacao/lidos`: um capítulo está lido quando todos os versículos estão marcados;
 /// - marcar o capítulo grava todos os versículos de uma vez; se ele já estava completo, desmarca;
+/// - cada versículo do capítulo aberto mostra se está lido, pelas reações do usuário no capítulo; ao marcar um
+///   versículo, o progresso do capítulo é recalculado a partir dessas reações;
 /// - o histórico de leitura lista os capítulos do mais recente para o mais antigo;
 /// - o filtro de testamentos mostra o Novo Testamento antes do Antigo.
 class BibliaLeituraUseCase {
@@ -120,6 +127,66 @@ class BibliaLeituraUseCase {
       case Error<int>(error: final error):
         return Result.error(error);
     }
+  }
+
+  /// Progresso de leitura do livro a partir dos [capitulos] do índice e do progresso de cada um ([lidoDe]):
+  /// capítulos completos, capítulos começados (com parte dos versículos lidos) e a fração de versículos lidos,
+  /// que avança mesmo quando nenhum capítulo está completo.
+  ProgressoLivro progressoLivro(
+    List<IndiceCapituloModel> capitulos,
+    CapituloLidoModel? Function(int capiNumero) lidoDe,
+  ) {
+    var completos = 0;
+    var emAndamento = 0;
+    var versLidos = 0;
+    var versTotal = 0;
+    for (final capitulo in capitulos) {
+      versTotal += capitulo.versTotal;
+      final lido = lidoDe(capitulo.capiNumero);
+      if (lido == null || lido.versLidos <= 0) continue;
+      versLidos += lido.versLidos.clamp(0, capitulo.versTotal);
+      if (lido.completo) {
+        completos++;
+      } else {
+        emAndamento++;
+      }
+    }
+    return (
+      completos: completos,
+      emAndamento: emAndamento,
+      total: capitulos.length,
+      fracao: versTotal == 0 ? 0.0 : versLidos / versTotal,
+    );
+  }
+
+  /// Reações do usuário aos versículos do capítulo, indexadas por `versId`.
+  Future<Result<Map<int, VersiculoReacaoModel>>> reacoesCapitulo(int versaId, CapituloRef ref) async {
+    final result = await bibliaLeituraRepository.reacoesCapitulo(versaId, ref.livrId, ref.capiNumero);
+    switch (result) {
+      case Ok<List<VersiculoReacaoModel>>(value: final reacoes):
+        return Result.ok({for (final reacao in reacoes) reacao.versId: reacao});
+      case Error<List<VersiculoReacaoModel>>(error: final error):
+        return Result.error(error);
+    }
+  }
+
+  /// Progresso do capítulo calculado a partir das [reacoes] dos versículos; nulo se nenhum versículo está lido.
+  CapituloLidoModel? progressoCapitulo(
+    IndiceCapituloModel capitulo,
+    LivroModel? livro,
+    Map<int, VersiculoReacaoModel> reacoes,
+  ) {
+    final lidos = reacoes.values.where((r) => r.vreaLido).length;
+    if (lidos == 0) return null;
+    return CapituloLidoModel(
+      livrId: capitulo.livrId,
+      livrNome: livro?.livrNome ?? capitulo.livrNome,
+      livrAbrev: livro?.livrAbrev ?? '',
+      capiNumero: capitulo.capiNumero,
+      versTotal: capitulo.versTotal,
+      versLidos: lidos,
+      lidoEm: DateTime.now(),
+    );
   }
 
   /// Capítulo vizinho de [atual] na ordem da Bíblia ([passo] -1 anterior, 1 próximo), passando de um livro para

@@ -13,6 +13,9 @@ class VersiculoIndicacaoSheet extends StatefulWidget {
 
   final BibliaLeituraViewmodel viewModel;
 
+  /// Fração da altura da tela ocupada ao abrir; o usuário pode arrastar até quase a tela toda.
+  static const alturaInicial = 0.75;
+
   @override
   State<VersiculoIndicacaoSheet> createState() => _VersiculoIndicacaoSheetState();
 }
@@ -63,51 +66,69 @@ class _VersiculoIndicacaoSheetState extends State<VersiculoIndicacaoSheet> {
         final gravando = _vm.indicarCommand.running || _vm.removerIndicacaoCommand.running;
         final erro = _erro();
 
+        // Folha alta e rolável: versículo longo, comentário extenso ou teclado aberto não cortam o conteúdo.
         return Padding(
-          padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + MediaQuery.viewInsetsOf(context).bottom),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(versiculo.referencia, style: textTheme.titleLarge),
-              const SizedBox(height: 8),
-              Text(versiculo.versTexto, style: textTheme.bodyLarge),
-              const SizedBox(height: 16),
-              if (indicacoes == null && _vm.indicacoesCommand.running)
-                const Center(child: CircularProgressIndicator())
-              else if (indicacoes != null) ...[
-                _total(indicacoes, strings),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _comentario,
-                  enabled: !gravando,
-                  maxLength: VersiculoIndicacaoUseCase.comentarioMaximo,
-                  maxLines: 3,
-                  minLines: 1,
-                  decoration: InputDecoration(labelText: strings.translate('comentarioOpcional')),
-                ),
-                Row(
-                  children: [
-                    if (minha != null)
-                      TextButton.icon(
-                        onPressed: gravando ? null : _vm.removerIndicacaoCommand.execute,
-                        icon: BibliaLeituraView.icone(BibliaLeituraView.iconeRemover, Icons.delete_outline),
-                        label: Text(strings.translate('removerIndicacao')),
-                      ),
-                    const Spacer(),
-                    FilledButton.icon(
-                      onPressed: gravando ? null : () => _vm.indicarCommand.execute(_comentario.text),
-                      icon: BibliaLeituraView.icone(BibliaLeituraView.iconeIndicar, Icons.thumb_up_outlined),
-                      label: Text(strings.translate(minha == null ? 'indicarVersiculo' : 'atualizarIndicacao')),
-                    ),
-                  ],
-                ),
-              ],
-              if (erro != null) ...[
+          padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+          child: DraggableScrollableSheet(
+            expand: false,
+            initialChildSize: VersiculoIndicacaoSheet.alturaInicial,
+            minChildSize: 0.4,
+            maxChildSize: 0.95,
+            builder: (context, scrollController) => ListView(
+              controller: scrollController,
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              children: [
+                Text(versiculo.referencia, style: textTheme.titleLarge),
                 const SizedBox(height: 8),
-                Text(strings.translate(erro), style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                Text(versiculo.versTexto, style: textTheme.bodyLarge?.copyWith(height: 1.5)),
+                const SizedBox(height: 16),
+                if (indicacoes == null && _vm.indicacoesCommand.running)
+                  const Center(child: CircularProgressIndicator())
+                else if (indicacoes != null) ...[
+                  _total(indicacoes, strings),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _comentario,
+                    enabled: !gravando,
+                    maxLength: VersiculoIndicacaoUseCase.comentarioMaximo,
+                    minLines: 4,
+                    maxLines: 10,
+                    keyboardType: TextInputType.multiline,
+                    decoration: InputDecoration(
+                      labelText: strings.translate('comentarioOpcional'),
+                      alignLabelWithHint: true,
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  // OverflowBar empilha os botões quando não cabem lado a lado.
+                  OverflowBar(
+                    alignment: MainAxisAlignment.spaceBetween,
+                    overflowAlignment: OverflowBarAlignment.end,
+                    overflowSpacing: 8,
+                    children: [
+                      if (minha != null)
+                        TextButton.icon(
+                          onPressed: gravando ? null : _vm.removerIndicacaoCommand.execute,
+                          icon: BibliaLeituraView.icone(BibliaLeituraView.iconeRemover, Icons.delete_outline),
+                          label: Text(strings.translate('removerIndicacao')),
+                        )
+                      else
+                        const SizedBox.shrink(),
+                      FilledButton.icon(
+                        onPressed: gravando ? null : () => _vm.indicarCommand.execute(_comentario.text),
+                        icon: BibliaLeituraView.icone(BibliaLeituraView.iconeIndicar, Icons.thumb_up_outlined),
+                        label: Text(strings.translate(minha == null ? 'indicarVersiculo' : 'atualizarIndicacao')),
+                      ),
+                    ],
+                  ),
+                ],
+                if (erro != null) ...[
+                  const SizedBox(height: 8),
+                  Text(strings.translate(erro), style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                ],
               ],
-            ],
+            ),
           ),
         );
       },

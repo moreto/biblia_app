@@ -48,10 +48,10 @@ class BibliaLeituraView extends StatefulWidget {
   static const iconeAnterior = 'chevron-left';
   static const iconeProximo = 'chevron-right';
 
-  /// Capítulo lido por completo.
+  /// Capítulo (ou versículo) lido por completo.
   static const iconeLido = 'check-circle';
 
-  /// Capítulo não lido.
+  /// Capítulo (ou versículo) não lido.
   static const iconeNaoLido = 'check-circle-outline';
 
   /// Capítulo com parte dos versículos lidos.
@@ -87,7 +87,8 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
   BibliaLeituraViewmodel get _vm => widget.viewModel;
 
   /// Comandos cujo erro vira SnackBar. O erro do carregamento inicial aparece na tela, em [_erroCarregamento].
-  List<Listenable> _comandos(BibliaLeituraViewmodel vm) => [vm.versaoCommand, vm.marcarLidoCommand];
+  List<Listenable> _comandos(BibliaLeituraViewmodel vm) =>
+      [vm.versaoCommand, vm.marcarLidoCommand, vm.marcarVersiculoCommand];
 
   @override
   void initState() {
@@ -117,7 +118,7 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
   }
 
   void _onResult() {
-    for (final Command command in [_vm.versaoCommand, _vm.marcarLidoCommand]) {
+    for (final Command command in [_vm.versaoCommand, _vm.marcarLidoCommand, _vm.marcarVersiculoCommand]) {
       if (command.error) {
         final mensagem = BibliaLeituraView.mensagemErro(command.result);
         command.clearResult();
@@ -142,6 +143,7 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
       context: context,
       useSafeArea: true,
       isScrollControlled: true,
+      showDragHandle: true,
       builder: (_) => VersiculoIndicacaoSheet(viewModel: _vm),
     );
   }
@@ -270,9 +272,9 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
 
   Widget _livro(LivroModel livro, AppLocalizations strings) {
     final capitulos = _vm.capitulosDo(livro.livrId);
-    final lidos = _vm.capitulosLidosDo(livro.livrId);
+    final progresso = _vm.progressoDo(livro.livrId);
     final scheme = Theme.of(context).colorScheme;
-    final completo = lidos == capitulos.length && lidos > 0;
+    final completo = progresso.completos == progresso.total && progresso.total > 0;
 
     return ExpansionTile(
       key: PageStorageKey('livro-${livro.livrId}'),
@@ -297,9 +299,13 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('$lidos/${capitulos.length} ${strings.translate('capitulosLidos')}'),
+          Text(
+            '${progresso.completos}/${progresso.total} ${strings.translate('capitulosLidos')}'
+            '${progresso.emAndamento > 0 ? ' · ${progresso.emAndamento} ${strings.translate('emAndamento')}' : ''}',
+          ),
           const SizedBox(height: 4),
-          LinearProgressIndicator(value: capitulos.isEmpty ? 0 : lidos / capitulos.length),
+          // Avança por versículo lido, para a leitura parcial também aparecer na barra.
+          LinearProgressIndicator(value: progresso.fracao),
         ],
       ),
       childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -376,25 +382,54 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
           );
         }
         final versiculo = versiculos[index - 1];
-        return InkWell(
-          borderRadius: BorderRadius.circular(8),
-          onTap: () => _abrirVersiculo(versiculo),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-            child: Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: '${versiculo.versNumero}  ',
-                    style: textTheme.labelMedium?.copyWith(color: scheme.primary, fontWeight: FontWeight.bold),
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: () => _abrirVersiculo(versiculo),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                  child: Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: '${versiculo.versNumero}  ',
+                          style: textTheme.labelMedium?.copyWith(color: scheme.primary, fontWeight: FontWeight.bold),
+                        ),
+                        TextSpan(text: versiculo.versTexto, style: textTheme.bodyLarge?.copyWith(height: 1.5)),
+                      ],
+                    ),
                   ),
-                  TextSpan(text: versiculo.versTexto, style: textTheme.bodyLarge?.copyWith(height: 1.5)),
-                ],
+                ),
               ),
             ),
-          ),
+            _marcaVersiculo(versiculo, strings),
+          ],
         );
       },
+    );
+  }
+
+  /// Ícone que marca ou desmarca o versículo como lido; mostra progresso enquanto grava.
+  Widget _marcaVersiculo(VersiculoTextoModel versiculo, AppLocalizations strings) {
+    final scheme = Theme.of(context).colorScheme;
+    final lido = _vm.versiculoLido(versiculo.versId);
+    final gravando = _vm.versiculoGravando == versiculo.versId;
+
+    return IconButton(
+      tooltip: strings.translate(lido ? 'desmarcarVersiculoLido' : 'marcarVersiculoLido'),
+      visualDensity: VisualDensity.compact,
+      onPressed: _vm.marcarVersiculoCommand.running ? null : () => _vm.marcarVersiculoCommand.execute(versiculo),
+      icon: gravando
+          ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
+          : BibliaLeituraView.icone(
+              lido ? BibliaLeituraView.iconeLido : BibliaLeituraView.iconeNaoLido,
+              lido ? Icons.check_circle : Icons.check_circle_outline,
+              size: 20,
+              color: lido ? scheme.primary : scheme.outline,
+            ),
     );
   }
 

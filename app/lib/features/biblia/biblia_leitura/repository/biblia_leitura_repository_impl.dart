@@ -7,6 +7,7 @@ import '../../../../data/model/biblia/livro_model.dart';
 import '../../../../data/model/biblia/testamento_model.dart';
 import '../../../../data/model/biblia/versao_model.dart';
 import '../../../../data/model/biblia/versiculo_texto_model.dart';
+import '../../../../data/model/versiculo/versiculo_reacao_model.dart';
 import 'biblia_leitura_repository.dart';
 
 class BibliaLeituraRepositoryImpl implements BibliaLeituraRepository {
@@ -30,6 +31,10 @@ class BibliaLeituraRepositoryImpl implements BibliaLeituraRepository {
   @override
   Future<Result<List<CapituloLidoModel>>> lidos(int versaId) =>
       _lista(ApiCore.versiculoReacaoLidos, versaId, CapituloLidoModel.fromJson);
+
+  @override
+  Future<Result<List<VersiculoReacaoModel>>> reacoesCapitulo(int versaId, int livrId, int capiNumero) =>
+      _lista(ApiCore.versiculoReacaoCapitulo, '$versaId/$livrId/$capiNumero', VersiculoReacaoModel.fromJson);
 
   @override
   Future<Result<int>> marcarCapitulo(int versaId, int livrId, int capiNumero, {required bool lido}) async {

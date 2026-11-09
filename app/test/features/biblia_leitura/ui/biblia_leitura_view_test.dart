@@ -5,13 +5,17 @@ import 'package:app/data/model/biblia/testamento_model.dart';
 import 'package:app/data/model/biblia/versao_model.dart';
 import 'package:app/data/model/biblia/versiculo_indicacao_model.dart';
 import 'package:app/data/model/biblia/versiculo_texto_model.dart';
+import 'package:app/data/model/versiculo/versiculo_reacao_model.dart';
 import 'package:app/features/biblia/biblia_leitura/repository/biblia_leitura_repository.dart';
 import 'package:app/features/biblia/biblia_leitura/ui/biblia_leitura_view.dart';
 import 'package:app/features/biblia/biblia_leitura/ui/biblia_leitura_viewmodel.dart';
 import 'package:app/features/biblia/biblia_leitura/ui/widgets/capitulo_chip.dart';
+import 'package:app/features/biblia/biblia_leitura/ui/widgets/versiculo_indicacao_sheet.dart';
 import 'package:app/features/biblia/biblia_leitura/use_case/biblia_leitura_usecase.dart';
 import 'package:app/features/biblia/versiculo_indicacao/repository/versiculo_indicacao_repository.dart';
 import 'package:app/features/biblia/versiculo_indicacao/use_case/versiculo_indicacao_usecase.dart';
+import 'package:app/features/dashboard/widgets/versiculo_reacao/repository/versiculo_reacao_repository.dart';
+import 'package:app/features/dashboard/widgets/versiculo_reacao/use_case/versiculo_reacao_usecase.dart';
 import 'package:app/l10n/app_localizations.dart';
 import 'package:commons/commons.dart';
 import 'package:flutter/foundation.dart';
@@ -35,7 +39,8 @@ IndiceCapituloModel _cap(LivroModel livro, int numero, int total) => IndiceCapit
 );
 
 /// Bíblia em memória: Gênesis 1 (3 versículos), Gênesis 2 (2), Gênesis 3 sem versículos na versão e João 1 (2).
-/// Os capítulos lidos ficam em [lidosPorVersao]; [marcarCapitulo] grava neles como a API.
+/// Os capítulos lidos ficam em [lidosPorVersao]; as reações por versículo, em [reacoes]. [marcarCapitulo] grava nas
+/// reações como a API. O `versId` é `livrId * 1000 + capiNumero * 100 + número`.
 class _FakeBibliaLeituraRepository implements BibliaLeituraRepository {
   _FakeBibliaLeituraRepository({Map<int, List<CapituloLidoModel>>? lidos}) : lidosPorVersao = lidos ?? {};
 
@@ -43,6 +48,7 @@ class _FakeBibliaLeituraRepository implements BibliaLeituraRepository {
   final marcacoes = <({int versaId, int livrId, int capiNumero, bool lido})>[];
   Exception? erroVersoes;
   Exception? erroMarcar;
+  final reacoes = <VersiculoReacaoModel>[];
 
   final _indice = [_cap(_genesis, 1, 3), _cap(_genesis, 2, 2), _cap(_genesis, 3, 0), _cap(_joao, 1, 2)];
 
@@ -87,7 +93,53 @@ class _FakeBibliaLeituraRepository implements BibliaLeituraRepository {
   Future<Result<int>> marcarCapitulo(int versaId, int livrId, int capiNumero, {required bool lido}) async {
     if (erroMarcar case final erro?) return Result.error(erro);
     marcacoes.add((versaId: versaId, livrId: livrId, capiNumero: capiNumero, lido: lido));
-    return Result.ok(_indice.firstWhere((c) => c.livrId == livrId && c.capiNumero == capiNumero).versTotal);
+    final total = _indice.firstWhere((c) => c.livrId == livrId && c.capiNumero == capiNumero).versTotal;
+    for (var n = 1; n <= total; n++) {
+      final versId = livrId * 1000 + capiNumero * 100 + n;
+      final i = reacoes.indexWhere((r) => r.versId == versId);
+      if (i >= 0) {
+        reacoes[i] = reacoes[i].copyWith(vreaLido: lido);
+      } else if (lido) {
+        reacoes.add(VersiculoReacaoModel(vreaId: 900 + reacoes.length, versId: versId, usuaId: _usuario, vreaLido: true));
+      }
+    }
+    return Result.ok(total);
+  }
+
+  @override
+  Future<Result<List<VersiculoReacaoModel>>> reacoesCapitulo(int versaId, int livrId, int capiNumero) async =>
+      Result.ok(reacoes.where((r) => r.versId ~/ 1000 == livrId && (r.versId % 1000) ~/ 100 == capiNumero).toList());
+}
+
+/// Reações gravadas nas mesmas [_FakeBibliaLeituraRepository.reacoes] da leitura.
+class _FakeVersiculoReacaoRepository implements VersiculoReacaoRepository {
+  _FakeVersiculoReacaoRepository(this.leitura);
+
+  final _FakeBibliaLeituraRepository leitura;
+
+  @override
+  Future<Result<List<VersiculoReacaoModel>>> reacoes(int versId) async =>
+      Result.ok(leitura.reacoes.where((r) => r.versId == versId).toList());
+
+  @override
+  Future<Result<VersiculoReacaoModel>> incluir(VersiculoReacaoModel reacao) async {
+    final gravada = VersiculoReacaoModel(
+      vreaId: 500 + leitura.reacoes.length,
+      versId: reacao.versId,
+      usuaId: _usuario,
+      vreaComentario: reacao.vreaComentario,
+      vreaLido: reacao.vreaLido,
+    );
+    leitura.reacoes.add(gravada);
+    return Result.ok(gravada);
+  }
+
+  @override
+  Future<Result<VersiculoReacaoModel>> alterar(VersiculoReacaoModel reacao) async {
+    leitura.reacoes
+      ..removeWhere((r) => r.vreaId == reacao.vreaId)
+      ..add(reacao);
+    return Result.ok(reacao);
   }
 }
 
@@ -167,8 +219,17 @@ void main() {
         ],
       },
     );
+    // Gênesis 2: versículo 1 lido (com comentário), como o progresso 1/2 acima.
+    repository.reacoes.add(
+      const VersiculoReacaoModel(vreaId: 1, versId: 1201, usuaId: _usuario, vreaComentario: 'Amém', vreaLido: true),
+    );
     indicacoes = _FakeVersiculoIndicacaoRepository();
   });
+
+  VersiculoReacaoUseCase reacaoUseCase() => VersiculoReacaoUseCase(
+    versiculoReacaoRepository: _FakeVersiculoReacaoRepository(repository),
+    usuarioLogado: () => _usuario,
+  );
 
   BibliaLeituraUseCase leituraUseCase() => BibliaLeituraUseCase(bibliaLeituraRepository: repository);
 
@@ -179,6 +240,7 @@ void main() {
     final viewModel = BibliaLeituraViewmodel(
       bibliaLeituraUseCase: leituraUseCase(),
       versiculoIndicacaoUseCase: indicacaoUseCase(),
+      versiculoReacaoUseCase: reacaoUseCase(),
     );
     await pumpEventQueue();
     return viewModel;
@@ -334,6 +396,67 @@ void main() {
       expect(viewModel.indicacoes?.minha, isNull);
     });
 
+    test('abre o capítulo com o estado lido de cada versículo', () async {
+      final viewModel = await criarViewModel();
+      await viewModel.abrirCapituloCommand.execute((livrId: 1, capiNumero: 2));
+      expect(viewModel.versiculoLido(1201), isTrue);
+      expect(viewModel.versiculoLido(1202), isFalse);
+    });
+
+    test('marcar o versículo atualiza o progresso do capítulo e mantém o comentário', () async {
+      final viewModel = await criarViewModel();
+      await viewModel.abrirCapituloCommand.execute((livrId: 1, capiNumero: 2));
+
+      await viewModel.marcarVersiculoCommand.execute(viewModel.versiculos![1]);
+      expect(viewModel.versiculoLido(1202), isTrue);
+      expect(viewModel.lidoAtual?.completo, isTrue);
+      expect(viewModel.capitulosLidosDo(_genesis.livrId), 2);
+
+      await viewModel.marcarVersiculoCommand.execute(viewModel.versiculos![0]);
+      expect(viewModel.versiculoLido(1201), isFalse);
+      expect(viewModel.lidoAtual?.versLidos, 1);
+      expect(repository.reacoes.firstWhere((r) => r.versId == 1201).vreaComentario, 'Amém');
+
+      await viewModel.marcarVersiculoCommand.execute(viewModel.versiculos![0]);
+      expect(repository.reacoes.firstWhere((r) => r.versId == 1201).vreaComentario, 'Amém');
+      expect(repository.reacoes.where((r) => r.versId == 1201), hasLength(1));
+    });
+
+    test('desmarcar todos os versículos remove o capítulo do progresso', () async {
+      final viewModel = await criarViewModel();
+      await viewModel.abrirCapituloCommand.execute((livrId: 1, capiNumero: 2));
+      await viewModel.marcarVersiculoCommand.execute(viewModel.versiculos![0]);
+      expect(viewModel.lidoAtual, isNull);
+    });
+
+    test('progresso do livro conta capítulos começados e avança por versículo lido', () async {
+      final viewModel = await criarViewModel();
+      // Gênesis: cap. 1 completo (3/3) e cap. 2 começado (1/2) = 4 de 5 versículos.
+      final genesis = viewModel.progressoDo(_genesis.livrId);
+      expect(genesis.completos, 1);
+      expect(genesis.emAndamento, 1);
+      expect(genesis.total, 2);
+      expect(genesis.fracao, closeTo(4 / 5, 1e-9));
+
+      // Sem capítulo completo, a leitura parcial ainda aparece.
+      await viewModel.abrirCapituloCommand.execute((livrId: 43, capiNumero: 1));
+      await viewModel.marcarVersiculoCommand.execute(viewModel.versiculos!.first);
+      final joao = viewModel.progressoDo(_joao.livrId);
+      expect(joao.completos, 0);
+      expect(joao.emAndamento, 1);
+      expect(joao.fracao, closeTo(1 / 2, 1e-9));
+    });
+
+    test('marcar o capítulo inteiro marca cada versículo', () async {
+      final viewModel = await criarViewModel();
+      await viewModel.abrirCapituloCommand.execute((livrId: 43, capiNumero: 1));
+      expect(viewModel.versiculoLido(43101), isFalse);
+
+      await viewModel.marcarLidoCommand.execute();
+      expect(viewModel.versiculoLido(43101), isTrue);
+      expect(viewModel.versiculoLido(43102), isTrue);
+    });
+
     test('falha no carregamento deixa o índice nulo', () async {
       repository.erroVersoes = HandledException(message: 'erroApi');
       final viewModel = await criarViewModel();
@@ -347,6 +470,7 @@ void main() {
       final viewModel = BibliaLeituraViewmodel(
         bibliaLeituraUseCase: leituraUseCase(),
         versiculoIndicacaoUseCase: indicacaoUseCase(),
+        versiculoReacaoUseCase: reacaoUseCase(),
       );
       await tester.pumpWidget(
         MaterialApp(
@@ -362,7 +486,7 @@ void main() {
       await montar(tester);
       expect(find.text('leituraBiblica'), findsOneWidget);
       expect(find.text('Gênesis'), findsOneWidget);
-      expect(find.text('1/2 capitulosLidos'), findsOneWidget);
+      expect(find.text('1/2 capitulosLidos · 1 emAndamento'), findsOneWidget);
 
       await tester.tap(find.text('Gênesis'));
       await tester.pumpAndSettle();
@@ -425,6 +549,22 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('1 indicacoes · voceIndicou'), findsOneWidget);
       expect(find.text('removerIndicacao'), findsOneWidget);
+    });
+
+    testWidgets('o ícone de cada versículo marca como lido sem abrir a indicação', (tester) async {
+      final viewModel = await montar(tester);
+      await tester.tap(find.text('João'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(CapituloChip, '1'));
+      await tester.pumpAndSettle();
+
+      expect(find.byTooltip('marcarVersiculoLido'), findsNWidgets(2));
+      await tester.tap(find.byTooltip('marcarVersiculoLido').first);
+      await tester.pumpAndSettle();
+      expect(viewModel.versiculoLido(43101), isTrue);
+      expect(find.byTooltip('desmarcarVersiculoLido'), findsOneWidget);
+      expect(find.text('1/2 versiculosLidos'), findsOneWidget);
+      expect(find.byType(VersiculoIndicacaoSheet), findsNothing);
     });
   });
 }

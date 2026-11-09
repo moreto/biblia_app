@@ -50,17 +50,21 @@ class VersiculoReacaoUseCase {
   /// [comentario] só vale ao marcar como lido: é aparado e, se vazio, remove o comentário. Ao desmarcar, o
   /// comentário gravado é mantido. Acima de [comentarioMaximo] caracteres devolve `comentarioMaximo500`.
   ///
+  /// Com [manterComentario] (marcação rápida, sem campo de comentário), o comentário gravado é mantido também
+  /// ao marcar como lido e [comentario] é ignorado.
+  ///
   /// Sem [atual] — o usuário não reagiu ou a consulta inicial falhou —, a reação é consultada de novo antes de
   /// gravar, para não criar um registro duplicado.
   Future<Result<VersiculoReacaoModel>> alternarLido(
     int versId,
     VersiculoReacaoModel? atual, {
     String? comentario,
+    bool manterComentario = false,
   }) async {
     final lido = !(atual?.vreaLido ?? false);
 
     final texto = comentario?.trim() ?? '';
-    if (lido && texto.length > comentarioMaximo) {
+    if (lido && !manterComentario && texto.length > comentarioMaximo) {
       return Result.error(HandledException(message: 'comentarioMaximo500'));
     }
 
@@ -75,7 +79,7 @@ class VersiculoReacaoUseCase {
       }
     }
 
-    final novoComentario = lido ? (texto.isEmpty ? null : texto) : existente?.vreaComentario;
+    final novoComentario = lido && !manterComentario ? (texto.isEmpty ? null : texto) : existente?.vreaComentario;
     if (existente == null) {
       return versiculoReacaoRepository.incluir(
         VersiculoReacaoModel(versId: versId, vreaLido: lido, vreaComentario: novoComentario),

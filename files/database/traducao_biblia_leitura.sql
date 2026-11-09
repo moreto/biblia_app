@@ -4,6 +4,9 @@ INSERT INTO public.traducao (trad_chave, trad_pt_br, trad_es_es, trad_en_us, usu
 SELECT v.trad_chave, v.trad_pt_br, v.trad_es_es, v.trad_en_us, 1, true, now()
 FROM (VALUES
   ('leituraBiblica', 'Leitura bíblica', 'Lectura bíblica', 'Bible reading'),
+  ('marcarVersiculoLido', 'Marcar versículo como lido', 'Marcar versículo como leído', 'Mark verse as read'),
+  ('desmarcarVersiculoLido', 'Desmarcar versículo lido', 'Desmarcar versículo leído', 'Unmark verse as read'),
+  ('emAndamento', 'em andamento', 'en curso', 'in progress'),
   ('versao', 'Versão', 'Versión', 'Version'),
   ('todos', 'Todos', 'Todos', 'All'),
   ('historicoLeitura', 'Histórico de leitura', 'Historial de lectura', 'Reading history'),

@@ -6,6 +6,7 @@ import '../../../../data/model/biblia/livro_model.dart';
 import '../../../../data/model/biblia/testamento_model.dart';
 import '../../../../data/model/biblia/versao_model.dart';
 import '../../../../data/model/biblia/versiculo_texto_model.dart';
+import '../../../../data/model/versiculo/versiculo_reacao_model.dart';
 
 /// Acesso às APIs de leitura da Bíblia e ao progresso de leitura do usuário.
 abstract class BibliaLeituraRepository {
@@ -30,4 +31,8 @@ abstract class BibliaLeituraRepository {
   /// Marca ou desmarca como lidos todos os versículos do capítulo (`PUT /v1/versiculo-reacao/capitulo`).
   /// Devolve o total de versículos do capítulo.
   Future<Result<int>> marcarCapitulo(int versaId, int livrId, int capiNumero, {required bool lido});
+
+  /// Reações do usuário do token aos versículos do capítulo, a mais recente de cada versículo
+  /// (`GET /v1/versiculo-reacao/capitulo/:versaId/:livrId/:capiNumero`).
+  Future<Result<List<VersiculoReacaoModel>>> reacoesCapitulo(int versaId, int livrId, int capiNumero);
 }

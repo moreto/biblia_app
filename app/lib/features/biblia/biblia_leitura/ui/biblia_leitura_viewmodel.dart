@@ -9,6 +9,8 @@ import '../../../../data/model/biblia/testamento_model.dart';
 import '../../../../data/model/biblia/versao_model.dart';
 import '../../../../data/model/biblia/versiculo_indicacao_model.dart';
 import '../../../../data/model/biblia/versiculo_texto_model.dart';
+import '../../../../data/model/versiculo/versiculo_reacao_model.dart';
+import '../../../dashboard/widgets/versiculo_reacao/use_case/versiculo_reacao_usecase.dart';
 import '../../versiculo_indicacao/use_case/versiculo_indicacao_usecase.dart';
 import '../use_case/biblia_leitura_usecase.dart';
 
@@ -18,14 +20,34 @@ import '../use_case/biblia_leitura_usecase.dart';
 /// o índice de capítulos e o progresso de leitura do usuário. A partir daí:
 /// - [versaoCommand] troca a versão e recarrega índice, progresso e o capítulo aberto;
 /// - [selecionarTestamento] filtra os livros do índice (nulo = todos);
-/// - [abrirCapituloCommand] carrega os versículos de um capítulo; [fecharCapitulo] volta ao índice;
+/// - [abrirCapituloCommand] carrega os versículos de um capítulo e as reações do usuário a eles;
+///   [fecharCapitulo] volta ao índice;
 /// - [marcarLidoCommand] marca o capítulo aberto como lido (ou desmarca, se já estava completo);
+/// - [marcarVersiculoCommand] marca um versículo como lido (ou desmarca), mantendo o comentário da reação;
 /// - [indicacoesCommand], [indicarCommand] e [removerIndicacaoCommand] tratam a indicação do versículo selecionado.
 class BibliaLeituraViewmodel extends ChangeNotifier {
-  BibliaLeituraViewmodel({required this.bibliaLeituraUseCase, required this.versiculoIndicacaoUseCase}) {
+  BibliaLeituraViewmodel({
+    required this.bibliaLeituraUseCase,
+    required this.versiculoIndicacaoUseCase,
+    required this.versiculoReacaoUseCase,
+  }) {
     Log.print(super.runtimeType);
     carregarCommand.execute();
   }
+
+  final VersiculoReacaoUseCase versiculoReacaoUseCase;
+
+  late final Command1<VersiculoReacaoModel, VersiculoTextoModel> marcarVersiculoCommand = Command1(_marcarVersiculo);
+
+  /// Reações do usuário aos versículos do capítulo aberto, por `versId`.
+  Map<int, VersiculoReacaoModel> _reacoes = const {};
+
+  /// O versículo está marcado como lido pelo usuário.
+  bool versiculoLido(int versId) => _reacoes[versId]?.vreaLido ?? false;
+
+  /// Versículo cuja marcação está sendo gravada; nulo quando nenhum.
+  int? _versiculoGravando;
+  int? get versiculoGravando => _versiculoGravando;
 
   final BibliaLeituraUseCase bibliaLeituraUseCase;
   final VersiculoIndicacaoUseCase versiculoIndicacaoUseCase;
@@ -102,8 +124,11 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
   CapituloLidoModel? lidoDe(int livrId, int capiNumero) => _lidos[CapituloLidoModel.chaveDe(livrId, capiNumero)];
 
   /// Quantos capítulos do livro estão completos.
-  int capitulosLidosDo(int livrId) =>
-      capitulosDo(livrId).where((c) => lidoDe(livrId, c.capiNumero)?.completo ?? false).length;
+  int capitulosLidosDo(int livrId) => progressoDo(livrId).completos;
+
+  /// Progresso do livro no índice (capítulos completos, começados e fração de versículos lidos).
+  ProgressoLivro progressoDo(int livrId) =>
+      bibliaLeituraUseCase.progressoLivro(capitulosDo(livrId), (capiNumero) => lidoDe(livrId, capiNumero));
 
   /// Histórico de leitura (do mais recente para o mais antigo).
   List<CapituloLidoModel> get historico => bibliaLeituraUseCase.historico(_lidos.values);
@@ -132,6 +157,7 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
   void fecharCapitulo() {
     _capitulo = null;
     _versiculos = null;
+    _reacoes = const {};
     _limparVersiculo();
     notifyListeners();
   }
@@ -228,18 +254,75 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
     }
     _capitulo = ref;
     _versiculos = null;
+    _reacoes = const {};
     _limparVersiculo();
     notifyListeners();
 
-    final result = await bibliaLeituraUseCase.capitulo(versao.versaId, ref);
+    final (result, reacoes) = await (
+      bibliaLeituraUseCase.capitulo(versao.versaId, ref),
+      bibliaLeituraUseCase.reacoesCapitulo(versao.versaId, ref),
+    ).wait;
+    // Ignora a resposta se outro capítulo foi aberto enquanto este carregava.
+    final atual = _capitulo == ref;
     switch (result) {
       case Ok<List<VersiculoTextoModel>>(value: final versiculos):
-        // Ignora a resposta se outro capítulo foi aberto enquanto este carregava.
-        if (_capitulo == ref) _versiculos = versiculos;
+        if (atual) _versiculos = versiculos;
       case Error<List<VersiculoTextoModel>>(error: final error):
         Log.print(error.toString(), name: kApp, title: 'Erro');
     }
+    // Falha nas reações não impede a leitura: os versículos aparecem sem marcação.
+    switch (reacoes) {
+      case Ok<Map<int, VersiculoReacaoModel>>(value: final value):
+        if (atual) _reacoes = value;
+      case Error<Map<int, VersiculoReacaoModel>>(error: final error):
+        Log.print(error.toString(), name: kApp, title: 'Erro');
+    }
 
+    notifyListeners();
+    return result;
+  }
+
+  /// Recarrega as reações do capítulo aberto (depois de marcar ou desmarcar o capítulo inteiro).
+  Future<void> _recarregarReacoes() async {
+    final versao = _versao;
+    final ref = _capitulo;
+    if (versao == null || ref == null) return;
+    final result = await bibliaLeituraUseCase.reacoesCapitulo(versao.versaId, ref);
+    switch (result) {
+      case Ok<Map<int, VersiculoReacaoModel>>(value: final value):
+        if (_capitulo == ref) _reacoes = value;
+      case Error<Map<int, VersiculoReacaoModel>>(error: final error):
+        Log.print(error.toString(), name: kApp, title: 'Erro');
+    }
+  }
+
+  Future<Result<VersiculoReacaoModel>> _marcarVersiculo(VersiculoTextoModel versiculo) async {
+    final ref = _capitulo;
+    _versiculoGravando = versiculo.versId;
+    notifyListeners();
+
+    final result = await versiculoReacaoUseCase.alternarLido(
+      versiculo.versId,
+      _reacoes[versiculo.versId],
+      manterComentario: true,
+    );
+    switch (result) {
+      case Ok<VersiculoReacaoModel>(value: final reacao):
+        if (ref != null && _capitulo == ref) {
+          _reacoes = {..._reacoes, reacao.versId: reacao};
+          final capitulo = capitulosDo(ref.livrId).where((c) => c.capiNumero == ref.capiNumero).firstOrNull;
+          if (capitulo != null) {
+            final chave = CapituloLidoModel.chaveDe(ref.livrId, ref.capiNumero);
+            final progresso = bibliaLeituraUseCase.progressoCapitulo(capitulo, livroDe(ref.livrId), _reacoes);
+            _lidos = {..._lidos}..remove(chave);
+            if (progresso != null) _lidos[chave] = progresso;
+          }
+        }
+      case Error<VersiculoReacaoModel>(error: final error):
+        Log.print(error.toString(), name: kApp, title: 'Erro');
+    }
+
+    _versiculoGravando = null;
     notifyListeners();
     return result;
   }
@@ -266,6 +349,7 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
         final chave = CapituloLidoModel.chaveDe(ref.livrId, ref.capiNumero);
         _lidos = {..._lidos}..remove(chave);
         if (lido != null) _lidos[chave] = lido;
+        await _recarregarReacoes();
       case Error<CapituloLidoModel?>(error: final error):
         Log.print(error.toString(), name: kApp, title: 'Erro');
     }
@@ -340,6 +424,7 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
     versaoCommand.dispose();
     abrirCapituloCommand.dispose();
     marcarLidoCommand.dispose();
+    marcarVersiculoCommand.dispose();
     indicacoesCommand.dispose();
     indicarCommand.dispose();
     removerIndicacaoCommand.dispose();
