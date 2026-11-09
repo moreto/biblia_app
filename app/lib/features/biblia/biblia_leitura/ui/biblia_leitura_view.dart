@@ -272,13 +272,26 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
     final capitulos = _vm.capitulosDo(livro.livrId);
     final lidos = _vm.capitulosLidosDo(livro.livrId);
     final scheme = Theme.of(context).colorScheme;
+    final completo = lidos == capitulos.length && lidos > 0;
 
     return ExpansionTile(
       key: PageStorageKey('livro-${livro.livrId}'),
-      leading: CircleAvatar(
-        backgroundColor: lidos == capitulos.length && lidos > 0 ? scheme.primary : scheme.surfaceContainerHighest,
-        foregroundColor: lidos == capitulos.length && lidos > 0 ? scheme.onPrimary : scheme.onSurfaceVariant,
-        child: Text(livro.livrAbrev, style: const TextStyle(fontSize: 12)),
+      leading: Container(
+        width: 40,
+        height: 40,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: completo ? scheme.secondaryContainer : Colors.transparent,
+          border: completo ? null : Border.all(color: scheme.outlineVariant),
+        ),
+        child: Text(
+          livro.livrAbrev,
+          style: TextStyle(
+            fontSize: 12,
+            color: completo ? scheme.onSecondaryContainer : scheme.onSurfaceVariant,
+          ),
+        ),
       ),
       title: Text(livro.livrNome),
       subtitle: Column(
