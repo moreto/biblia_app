@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../../../data/model/biblia/capitulo_lido_model.dart';
 
 /// Número de um capítulo no índice da leitura, clicável, com o estado de leitura:
-/// preenchido (lido por completo), contornado na cor primária (parcialmente lido) ou neutro (não lido).
+/// todos com a mesma borda; preenchido e em negrito (lido por completo), texto em negrito na cor primária
+/// (parcialmente lido) ou texto normal neutro (não lido).
 class CapituloChip extends StatelessWidget {
   const CapituloChip({super.key, required this.numero, required this.lido, required this.onTap});
 
@@ -20,10 +21,10 @@ class CapituloChip extends StatelessWidget {
     final parcial = lido != null && !completo;
 
     return Material(
-      color: completo ? scheme.primary : scheme.surfaceContainerHighest,
+      color: completo ? scheme.secondaryContainer : Colors.transparent,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
-        side: parcial ? BorderSide(color: scheme.primary, width: 2) : BorderSide.none,
+        side: BorderSide(color: scheme.outlineVariant),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(10),
@@ -34,7 +35,7 @@ class CapituloChip extends StatelessWidget {
             child: Text(
               '$numero',
               style: TextStyle(
-                color: completo ? scheme.onPrimary : (parcial ? scheme.primary : scheme.onSurfaceVariant),
+                color: completo ? scheme.onSecondaryContainer : (parcial ? scheme.primary : scheme.onSurfaceVariant),
                 fontWeight: lido == null ? FontWeight.normal : FontWeight.bold,
               ),
             ),
