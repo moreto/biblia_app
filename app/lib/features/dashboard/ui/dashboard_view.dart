@@ -8,6 +8,8 @@ import 'package:go_router/go_router.dart';
 import 'package:service/service.dart';
 
 import '../../../data/model/menu/menu_model.dart';
+import '../widgets/musica/ui/musica_view.dart';
+import '../widgets/musica/ui/musica_viewmodel.dart';
 import '../widgets/oracao/ui/oracao_view.dart';
 import '../widgets/oracao/ui/oracao_viewmodel.dart';
 import '../widgets/versiculo/ui/versiculo_view.dart';
@@ -23,6 +25,7 @@ class DashboardView extends StatefulWidget {
     required this.viewModel,
     required this.oracaoViewModel,
     required this.versiculoViewModel,
+    required this.musicaViewModel,
   });
 
   final DashboardViewmodel viewModel;
@@ -32,6 +35,9 @@ class DashboardView extends StatefulWidget {
 
   /// Viewmodel do card de versículo aleatório exibido na dashboard, abaixo do card de oração.
   final VersiculoViewmodel versiculoViewModel;
+
+  /// Viewmodel do card de música aleatória exibido na dashboard, logo abaixo do card de versículo.
+  final MusicaViewmodel musicaViewModel;
 
   @override
   State<DashboardView> createState() => _DashboardViewState();
@@ -199,6 +205,8 @@ class _DashboardViewState extends State<DashboardView> {
           OracaoView(viewModel: widget.oracaoViewModel),
           const SizedBox(height: 16),
           VersiculoView(viewModel: widget.versiculoViewModel),
+          const SizedBox(height: 16),
+          MusicaView(viewModel: widget.musicaViewModel),
         ],
       ),
       bottomNavigationBar: NavigationBar(

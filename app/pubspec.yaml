@@ -55,6 +55,7 @@ dependencies:
 
   components:
     path: ../components
+  url_launcher: ^6.3.3
 
 dev_dependencies:
   flutter_test:

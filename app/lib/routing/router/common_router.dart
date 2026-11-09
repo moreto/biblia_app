@@ -6,6 +6,9 @@ import '../../features/dashboard/repository/dashboard_repository.dart';
 import '../../features/dashboard/ui/dashboard_view.dart';
 import '../../features/dashboard/ui/dashboard_viewmodel.dart';
 import '../../features/dashboard/use_case/dashboard_usecase.dart';
+import '../../features/dashboard/widgets/musica/repository/musica_repository.dart';
+import '../../features/dashboard/widgets/musica/ui/musica_viewmodel.dart';
+import '../../features/dashboard/widgets/musica/use_case/musica_usecase.dart';
 import '../../features/dashboard/widgets/oracao/repository/oracao_repository.dart';
 import '../../features/dashboard/widgets/oracao/ui/oracao_viewmodel.dart';
 import '../../features/dashboard/widgets/oracao/use_case/oracao_usecase.dart';
@@ -35,10 +38,14 @@ abstract final class CommonRouter {
             versiculoReacaoRepository: locator<VersiculoReacaoRepository>(),
           ),
         );
+        final musicaViewModel = MusicaViewmodel(
+          musicaUseCase: MusicaUseCase(musicaRepository: locator<MusicaRepository>()),
+        );
         return DashboardView(
           viewModel: viewModel,
           oracaoViewModel: oracaoViewModel,
           versiculoViewModel: versiculoViewModel,
+          musicaViewModel: musicaViewModel,
         );
       },
     ),

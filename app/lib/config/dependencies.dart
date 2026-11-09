@@ -20,6 +20,8 @@ import '../features/biblia/versiculo_indicacao/repository/versiculo_indicacao_re
 import '../features/biblia/versiculo_indicacao/repository/versiculo_indicacao_repository_impl.dart';
 import '../features/dashboard/repository/dashboard_repository.dart';
 import '../features/dashboard/repository/dashboard_repository_impl.dart';
+import '../features/dashboard/widgets/musica/repository/musica_repository.dart';
+import '../features/dashboard/widgets/musica/repository/musica_repository_impl.dart';
 import '../features/dashboard/widgets/oracao/repository/oracao_repository.dart';
 import '../features/dashboard/widgets/oracao/repository/oracao_repository_impl.dart';
 import '../features/dashboard/widgets/versiculo/repository/versiculo_repository.dart';
@@ -39,6 +41,7 @@ void configDependencies() {
   locator.registerLazySingleton<ConfiguracaoRepository>(() => ConfiguracaoRepositoryImpl());
   locator.registerLazySingleton<MenuRepository>(() => MenuRepositoryImpl());
   locator.registerLazySingleton<OracaoRepository>(() => OracaoRepositoryImpl());
+  locator.registerLazySingleton<MusicaRepository>(() => MusicaRepositoryImpl());
   locator.registerLazySingleton<VersiculoRepository>(() => VersiculoRepositoryImpl());
   locator.registerLazySingleton<VersiculoReacaoRepository>(() => VersiculoReacaoRepositoryImpl());
   locator.registerLazySingleton<BibliaLeituraRepository>(() => BibliaLeituraRepositoryImpl());

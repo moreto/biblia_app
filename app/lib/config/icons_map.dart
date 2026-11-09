@@ -35,6 +35,17 @@ class IconsMap {
     'delete-outline': MdiIcons.deleteOutline,
     'book-open-variant-outline': MdiIcons.bookOpenVariantOutline,
     'book-open-page-variant-outline': MdiIcons.bookOpenPageVariantOutline,
+    // Card de música da dashboard (MusicaView.icone* e MusicaPlataforma.icone);
+    // 'autorenew' e 'refresh' já mapeados acima.
+    'music-note': MdiIcons.musicNote,
+    'account-music-outline': MdiIcons.accountMusicOutline,
+    'format-quote-open': MdiIcons.formatQuoteOpen,
+    // Ícones de marca: o MDI os marcou como deprecated, mas seguem no pacote 3.1.0.
+    // ignore: deprecated_member_use
+    'spotify': MdiIcons.spotify,
+    'music-circle': MdiIcons.musicCircle,
+    // ignore: deprecated_member_use
+    'apple': MdiIcons.apple,
     // ...
   };
 }

@@ -5,3 +5,39 @@ gerar um script de insert no banco de dados das traduções faltantes, segue o m
 SELECT
 
 manter as regras de negocio nas use_case, chamar e notificar nas view_models
+
+
+
+crie view CRUD para menu
+
+lista / edita / insere / exclui menu
+a lista tem q representar visualmente e ser clicavel considerando o nivel do menu
+
+crie um widget para versuculo aleatorio, que vai ser apresentado como um card na dashboard
+
+adicionar icone de reação de leitura do widget de versiculo da dashboard
+ao recuperar o versiculo, caso ja tenha uma reação mostrar tbém no card
+
+endpoints:
+/v1/versiculo-reacao/
+
+seguir o padrão mvvm do projeto
+seguir modelo de desenvolvimento do mason
+gerar script para inserir as traduções implementadas
+mapeie os icones necessários
+mantenha o mesmo projeto visual
+
+-----
+
+crie um widget para a api musica
+esse widget vai ser apresentado na dashboard, como o de oracoes e versiculo
+colocar logo abaixo de versiculo na dashboard
+
+endpoints:
+/v1/musica/aleatoria
+
+seguir o padrão mvvm do projeto
+seguir modelo de desenvolvimento do mason
+gerar script para inserir as traduções implementadas
+mapeie os icones necessários
+mantenha o mesmo projeto visual
