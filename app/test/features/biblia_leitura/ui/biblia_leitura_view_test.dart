@@ -1,3 +1,4 @@
+import 'package:app/config/versao_preferencia.dart';
 import 'package:app/data/model/biblia/capitulo_lido_model.dart';
 import 'package:app/data/model/biblia/indice_capitulo_model.dart';
 import 'package:app/data/model/biblia/livro_model.dart';
@@ -182,6 +183,17 @@ class _FakeVersiculoIndicacaoRepository implements VersiculoIndicacaoRepository 
   }
 }
 
+/// Preferência de versão em memória (no app é o `AppConfig`, em secure storage).
+class _FakeVersaoPreferencia implements VersaoPreferencia {
+  _FakeVersaoPreferencia();
+
+  @override
+  int? versaoId;
+
+  @override
+  void setVersaoId(int versaId) => versaoId = versaId;
+}
+
 class _TestLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _TestLocalizationsDelegate();
 
@@ -209,6 +221,7 @@ CapituloLidoModel _lido(LivroModel livro, int capitulo, int lidos, int total, [D
 void main() {
   late _FakeBibliaLeituraRepository repository;
   late _FakeVersiculoIndicacaoRepository indicacoes;
+  late _FakeVersaoPreferencia preferencia;
 
   setUp(() {
     repository = _FakeBibliaLeituraRepository(
@@ -224,6 +237,7 @@ void main() {
       const VersiculoReacaoModel(vreaId: 1, versId: 1201, usuaId: _usuario, vreaComentario: 'Amém', vreaLido: true),
     );
     indicacoes = _FakeVersiculoIndicacaoRepository();
+    preferencia = _FakeVersaoPreferencia();
   });
 
   VersiculoReacaoUseCase reacaoUseCase() => VersiculoReacaoUseCase(
@@ -231,7 +245,8 @@ void main() {
     usuarioLogado: () => _usuario,
   );
 
-  BibliaLeituraUseCase leituraUseCase() => BibliaLeituraUseCase(bibliaLeituraRepository: repository);
+  BibliaLeituraUseCase leituraUseCase() =>
+      BibliaLeituraUseCase(bibliaLeituraRepository: repository, versaoPreferencia: preferencia);
 
   VersiculoIndicacaoUseCase indicacaoUseCase() =>
       VersiculoIndicacaoUseCase(versiculoIndicacaoRepository: indicacoes, usuarioLogado: () => _usuario);
@@ -455,6 +470,22 @@ void main() {
       await viewModel.marcarLidoCommand.execute();
       expect(viewModel.versiculoLido(43101), isTrue);
       expect(viewModel.versiculoLido(43102), isTrue);
+    });
+
+    test('abre na versão salva e salva a versão escolhida', () async {
+      preferencia.versaoId = _nvi.versaId;
+      final viewModel = await criarViewModel();
+      expect(viewModel.versao?.versaCodigo, 'NVI');
+
+      await viewModel.versaoCommand.execute(_arc);
+      expect(preferencia.versaoId, _arc.versaId);
+    });
+
+    test('versão salva que não existe mais abre na primeira', () async {
+      preferencia.versaoId = 99;
+      final viewModel = await criarViewModel();
+      expect(viewModel.versao?.versaCodigo, 'ARC');
+      expect(preferencia.versaoId, 99);
     });
 
     test('falha no carregamento deixa o índice nulo', () async {

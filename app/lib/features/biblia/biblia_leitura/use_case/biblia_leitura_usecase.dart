@@ -1,3 +1,4 @@
+import 'package:app/config/versao_preferencia.dart';
 import 'package:commons/commons.dart';
 
 import '../../../../data/model/biblia/capitulo_lido_model.dart';
@@ -23,15 +24,33 @@ typedef ProgressoLivro = ({int completos, int emAndamento, int total, double fra
 /// - cada versículo do capítulo aberto mostra se está lido, pelas reações do usuário no capítulo; ao marcar um
 ///   versículo, o progresso do capítulo é recalculado a partir dessas reações;
 /// - o histórico de leitura lista os capítulos do mais recente para o mais antigo;
-/// - o filtro de testamentos mostra o Novo Testamento antes do Antigo.
+/// - o filtro de testamentos mostra o Novo Testamento antes do Antigo;
+/// - a leitura abre na versão salva em [versaoPreferencia] (a primeira, se não há versão salva ou se a salva não
+///   existe mais) e cada troca de versão é salva.
 class BibliaLeituraUseCase {
-  BibliaLeituraUseCase({required this.bibliaLeituraRepository}) {
+  BibliaLeituraUseCase({required this.bibliaLeituraRepository, this.versaoPreferencia}) {
     Log.print(super.runtimeType);
   }
 
   final BibliaLeituraRepository bibliaLeituraRepository;
 
+  /// Onde a versão escolhida é guardada; nulo não guarda (sempre abre na primeira).
+  final VersaoPreferencia? versaoPreferencia;
+
   Future<Result<List<VersaoModel>>> versoes() => bibliaLeituraRepository.versoes();
+
+  /// Versão em que a leitura abre: a salva, se ainda estiver entre as [versoes]; senão a primeira. Nula se não
+  /// há versões.
+  VersaoModel? versaoInicial(List<VersaoModel> versoes) {
+    final salva = versaoPreferencia?.versaoId;
+    for (final versao in versoes) {
+      if (versao.versaId == salva) return versao;
+    }
+    return versoes.firstOrNull;
+  }
+
+  /// Guarda a versão escolhida para as próximas aberturas do app.
+  void salvarVersao(VersaoModel versao) => versaoPreferencia?.setVersaoId(versao.versaId);
 
   /// Testamentos na ordem do filtro do índice: Novo antes do Antigo (a API devolve por `test_id` crescente,
   /// então a lista é ordenada por `testId` decrescente).

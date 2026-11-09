@@ -5,6 +5,7 @@ const String kDefaultAppError = 'defaultAppError';
 // App
 const String kColorScheme = 'colorScheme';
 const String kSelectedLanguage = 'selectedLanguage';
+const String kSelectedBibleVersion = 'selectedBibleVersion';
 
 // log values
 const String kApp = 'Bbl App';

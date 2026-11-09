@@ -188,7 +188,7 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
     _testamentos = (testamentos as Ok<List<TestamentoModel>>).value;
     _livros = (livros as Ok<List<LivroModel>>).value;
 
-    final versao = _versao ?? (_versoes.isEmpty ? null : _versoes.first);
+    final versao = _versao ?? bibliaLeituraUseCase.versaoInicial(_versoes);
     if (versao == null) {
       notifyListeners();
       return Result.error(HandledException(message: 'nenhumaVersaoDisponivel'));
@@ -231,6 +231,7 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
 
     final result = await _carregarVersao(versao);
     if (result is Ok) {
+      bibliaLeituraUseCase.salvarVersao(versao);
       final ref = _capitulo;
       // O capítulo aberto é recarregado na nova versão; se ela não tem o capítulo, volta ao índice.
       if (ref != null) {
