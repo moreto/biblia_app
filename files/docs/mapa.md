@@ -7,6 +7,7 @@ Para cada tela: rota, feature, use case e endpoints. Os caminhos de feature são
 | Rota | Feature | Use case | Endpoints | Comportamento |
 |---|---|---|---|---|
 | `/home` (inicial) | [access/home](../../app/lib/features/access/home) | `HomeUseCase.healt` | `ApiCore.healt` (`/api`) | Verifica se a API responde. Tem atalhos de tema e idioma e leva ao login. |
+| — (card) | [access/home/widgets/funcionalidade](../../app/lib/features/access/home/widgets/funcionalidade) | `FuncionalidadeUseCase.listar` | `/v1/funcionalidade` (público) | Lista as funcionalidades do app na ordem da API. As inativas aparecem esmaecidas, com o selo "Em breve". |
 | `/login` | [access/login](../../app/lib/features/access/login) | `LoginUseCase.login`, `otpSend`, `otpVerify` | `/v1/acesso/login`, `/v1/otp/send`, `/v1/otp/verify` | Valida e-mail e código de 6 dígitos, criptografa a senha (AES-GCM, `kCryptKeyB64`) e grava `AuthSession`. Depois vai para `/dashboard`. |
 
 ## Comum (`CommonRouter`)

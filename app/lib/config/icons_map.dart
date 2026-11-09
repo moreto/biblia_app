@@ -46,6 +46,14 @@ class IconsMap {
     'music-circle': MdiIcons.musicCircle,
     // ignore: deprecated_member_use
     'apple': MdiIcons.apple,
+    // Funcionalidades do app (tabela funcionalidade, coluna func_icone);
+    // as demais chaves usadas lá já estão mapeadas acima.
+    'login': MdiIcons.login,
+    'theme-light-dark': MdiIcons.themeLightDark,
+    'view-dashboard': MdiIcons.viewDashboard,
+    'hands-pray': MdiIcons.handsPray,
+    // Card de funcionalidades da home (FuncionalidadeView.iconeCard); 'refresh' já mapeado acima.
+    'apps': MdiIcons.apps,
     // ...
   };
 }

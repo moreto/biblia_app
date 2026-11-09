@@ -41,3 +41,17 @@ seguir modelo de desenvolvimento do mason
 gerar script para inserir as traduções implementadas
 mapeie os icones necessários
 mantenha o mesmo projeto visual
+
+crie um widget funcionalidades
+esse widget vai ser apresentado na home, como o de oracoes e versiculo
+deixe o widget dentro da home
+
+
+endpoints:
+/v1/funcionalidade
+
+seguir o padrão mvvm do projeto
+seguir modelo de desenvolvimento do mason
+gerar script para inserir as traduções implementadas
+mapeie os icones necessários
+mantenha o mesmo projeto visual

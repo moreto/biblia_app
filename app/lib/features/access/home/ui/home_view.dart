@@ -5,15 +5,20 @@ import 'package:provider/provider.dart';
 import '../../../../../config/app_config.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../routing/routes.dart';
+import '../widgets/funcionalidade/ui/funcionalidade_view.dart';
+import '../widgets/funcionalidade/ui/funcionalidade_viewmodel.dart';
 import 'home_viewmodel.dart';
 
 import 'package:app/config/orientation_button.dart';
 import 'package:app/config/theme_mode_button.dart';
 
 class HomeView extends StatefulWidget {
-  const HomeView({super.key, required this.viewModel});
+  const HomeView({super.key, required this.viewModel, required this.funcionalidadeViewModel});
 
   final HomeViewmodel viewModel;
+
+  /// Viewmodel do card de funcionalidades exibido no corpo da home, acima do botão de login.
+  final FuncionalidadeViewmodel funcionalidadeViewModel;
 
   @override
   State<HomeView> createState() => _HomeViewState();
@@ -31,13 +36,26 @@ class _HomeViewState extends State<HomeView> {
         elevation: 0,
         actions: const [OrientationButton(), ThemeModeButton()],
       ),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: () async {
-            context.push(Routes.login);
-          },
-          child: Text(strings.translate('login')),
-        ),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [FuncionalidadeView(viewModel: widget.funcionalidadeViewModel)],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Center(
+              child: ElevatedButton(
+                onPressed: () async {
+                  context.push(Routes.login);
+                },
+                child: Text(strings.translate('login')),
+              ),
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedSetting,

@@ -4,6 +4,8 @@ import 'app_config.dart';
 
 import '../features/access/home/repository/home_repository.dart';
 import '../features/access/home/repository/home_repository_impl.dart';
+import '../features/access/home/widgets/funcionalidade/repository/funcionalidade_repository.dart';
+import '../features/access/home/widgets/funcionalidade/repository/funcionalidade_repository_impl.dart';
 import '../features/access/login/repository/login_repository.dart';
 import '../features/access/login/repository/login_repository_impl.dart';
 import '../features/admin/configuracao/repository/configuracao_repository.dart';
@@ -34,6 +36,7 @@ final GetIt locator = GetIt.instance;
 void configDependencies() {
   locator.registerLazySingleton<AppConfig>(() => AppConfig());
   locator.registerLazySingleton<HomeRepository>(() => HomeRepositoryImpl());
+  locator.registerLazySingleton<FuncionalidadeRepository>(() => FuncionalidadeRepositoryImpl());
   locator.registerLazySingleton<LoginRepository>(() => LoginRepositoryImpl());
   locator.registerLazySingleton<DashboardRepository>(() => DashboardRepositoryImpl());
   locator.registerLazySingleton<NotificacaoRepository>(() => NotificacaoRepositoryImpl());
