@@ -12,6 +12,10 @@ import '../../features/access/login/repository/login_repository.dart';
 import '../../features/access/login/ui/login_view.dart';
 import '../../features/access/login/ui/login_viewmodel.dart';
 import '../../features/access/login/use_case/login_usecase.dart';
+import '../../features/access/registro/repository/registro_repository.dart';
+import '../../features/access/registro/ui/registro_view.dart';
+import '../../features/access/registro/ui/registro_viewmodel.dart';
+import '../../features/access/registro/use_case/registro_usecase.dart';
 import '../routes.dart';
 
 abstract final class AccessRouter {
@@ -33,6 +37,16 @@ abstract final class AccessRouter {
       builder: (context, state) {
         final viewModel = LoginViewmodel(loginUseCase: LoginUseCase(loginRepository: locator<LoginRepository>()));
         return LoginView(viewModel: viewModel);
+      },
+    ),
+
+    GoRoute(
+      path: Routes.registro,
+      builder: (context, state) {
+        final viewModel = RegistroViewmodel(
+          registroUseCase: RegistroUseCase(registroRepository: locator<RegistroRepository>()),
+        );
+        return RegistroView(viewModel: viewModel);
       },
     ),
   ];

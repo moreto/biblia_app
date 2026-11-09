@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../config/command.dart';
 import '../../../../routing/routes.dart';
+import '../../registro/ui/registro_view.dart';
 import 'login_viewmodel.dart';
 
 import 'package:app/config/orientation_button.dart';
@@ -247,7 +248,34 @@ class _LoginViewState extends State<LoginView> {
       ),
       const SizedBox(height: 16),
       FilledButton(onPressed: _vm.running ? null : _submitSenha, child: Text(strings.translate('login'))),
+      const SizedBox(height: 24),
+      ..._criarContaSection(strings),
     ];
+  }
+
+  /// "Não tem conta?" + botão "Criar conta": abre o cadastro; ao voltar com a conta ativada, preenche o e-mail
+  /// cadastrado.
+  List<Widget> _criarContaSection(AppLocalizations strings) {
+    return [
+      Text(
+        strings.translate('naoTemConta'),
+        textAlign: TextAlign.center,
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+      ),
+      const SizedBox(height: 8),
+      OutlinedButton.icon(
+        onPressed: _vm.running ? null : _abrirRegistro,
+        icon: RegistroView.icone(RegistroView.iconeCabecalho, Icons.person_add_alt_outlined),
+        label: Text(strings.translate('criarConta')),
+      ),
+    ];
+  }
+
+  Future<void> _abrirRegistro() async {
+    final email = await context.push<String>(Routes.registro);
+    if (!mounted || email == null || email.isEmpty) return;
+    _emailController.text = email;
+    _senhaController.clear();
   }
 
   List<Widget> _codigoSection(AppLocalizations strings) {

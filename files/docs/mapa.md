@@ -8,7 +8,8 @@ Para cada tela: rota, feature, use case e endpoints. Os caminhos de feature são
 |---|---|---|---|---|
 | `/home` (inicial) | [access/home](../../app/lib/features/access/home) | `HomeUseCase.healt` | `ApiCore.healt` (`/api`) | Verifica se a API responde. Tem atalhos de tema e idioma e leva ao login. |
 | — (card) | [access/home/widgets/funcionalidade](../../app/lib/features/access/home/widgets/funcionalidade) | `FuncionalidadeUseCase.listar` | `/v1/funcionalidade` (público) | Lista as funcionalidades do app na ordem da API. As inativas aparecem esmaecidas, com o selo "Em breve". |
-| `/login` | [access/login](../../app/lib/features/access/login) | `LoginUseCase.login`, `otpSend`, `otpVerify` | `/v1/acesso/login`, `/v1/otp/send`, `/v1/otp/verify` | Valida e-mail e código de 6 dígitos, criptografa a senha (AES-GCM, `kCryptKeyB64`) e grava `AuthSession`. Depois vai para `/dashboard`. |
+| `/login` | [access/login](../../app/lib/features/access/login) | `LoginUseCase.login`, `otpSend`, `otpVerify` | `/v1/acesso/login`, `/v1/otp/send`, `/v1/otp/verify` | Valida e-mail e código de 6 dígitos, criptografa a senha (AES-GCM, `kCryptKeyB64`) e grava `AuthSession`. Depois vai para `/dashboard`. O link "Criar conta" abre `/registro`. |
+| `/registro` | [access/registro](../../app/lib/features/access/registro) | `RegistroUseCase.registrar`, `ativar` | `/v1/acesso/registro`, `/v1/usuario-ativacao/confirmar` (públicos) | Valida e-mail, senha (mínimo 6) e confirmação, criptografa a senha e cria o usuário inativo. Depois pede o código de 6 dígitos enviado ao e-mail e ativa a conta. Volta ao login com o e-mail preenchido. |
 
 ## Comum (`CommonRouter`)
 

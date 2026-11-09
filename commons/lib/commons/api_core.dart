@@ -23,6 +23,8 @@ enum ApiCore {
   login('/v1/acesso/login', kDesHost, kPrdHost, HeaderType.basicInfo),
   otpSend('/v1/otp/send', kDesHost, kPrdHost, HeaderType.basicInfo),
   otpVerify('/v1/otp/verify', kDesHost, kPrdHost, HeaderType.basicInfo),
+  registro('/v1/acesso/registro', kDesHost, kPrdHost, HeaderType.basicInfo),
+  usuarioAtivacaoConfirmar('/v1/usuario-ativacao/confirmar', kDesHost, kPrdHost, HeaderType.basicInfo),
   // Pública (fora da área logada): a API valida só o x-access-token.
   funcionalidade('/v1/funcionalidade', kDesHost, kPrdHost, HeaderType.basicInfo),
   menu('/v1/menu', kDesHost, kPrdHost, HeaderType.loggedArea),

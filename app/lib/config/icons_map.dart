@@ -54,6 +54,14 @@ class IconsMap {
     'hands-pray': MdiIcons.handsPray,
     // Card de funcionalidades da home (FuncionalidadeView.iconeCard); 'refresh' já mapeado acima.
     'apps': MdiIcons.apps,
+    // Cadastro de usuário (RegistroView.icone*) e link "Criar conta" do login.
+    'account-plus-outline': MdiIcons.accountPlusOutline,
+    'email-outline': MdiIcons.emailOutline,
+    'lock-outline': MdiIcons.lockOutline,
+    'lock-check-outline': MdiIcons.lockCheckOutline,
+    'eye-outline': MdiIcons.eyeOutline,
+    'eye-off-outline': MdiIcons.eyeOffOutline,
+    'shield-check-outline': MdiIcons.shieldCheckOutline,
     // ...
   };
 }

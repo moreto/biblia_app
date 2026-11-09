@@ -7,6 +7,7 @@ abstract final class Routes {
   static const splash = '/';
   static const home = '/home';
   static const login = '/login';
+  static const registro = '/registro';
 
   // common
   static const dashboard = '/dashboard';
