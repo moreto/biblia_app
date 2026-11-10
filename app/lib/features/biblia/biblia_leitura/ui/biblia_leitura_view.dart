@@ -6,6 +6,7 @@ import 'package:app/l10n/app_localizations.dart';
 import 'package:commons/commons.dart';
 import 'package:components/components.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:flutter/services.dart';
 import 'package:service/service.dart';
 

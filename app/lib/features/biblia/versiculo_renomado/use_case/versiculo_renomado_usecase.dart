@@ -9,7 +9,8 @@ import '../repository/versiculo_renomado_repository.dart';
 /// Regras dos versículos de um renomado:
 /// - a lista abre na versão escolhida pelo usuário (a mesma da leitura, via [BibliaLeituraUseCase.versaoInicial]) e
 ///   trocar a versão aqui também a salva para a leitura;
-/// - os versículos vêm na versão escolhida, por `vrenSeq` (sem sequência por último), livro, capítulo e número;
+/// - só os versículos gravados na versão escolhida (a API filtra pela versão), por `vrenSeq` (sem sequência por
+///   último), livro, capítulo e número;
 /// - 404 `registroNaoEncontrado` vira lista vazia (`nenhumVersiculoRenomado` na tela);
 /// - tocar num versículo abre a leitura nele, na mesma versão ([destino]).
 class VersiculoRenomadoUseCase {

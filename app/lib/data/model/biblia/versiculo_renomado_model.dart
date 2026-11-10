@@ -2,8 +2,8 @@ import 'json_reader.dart';
 
 /// Versículo de um renomado na versão escolhida (`GET /v1/versiculo-renomado/:renoId/:versaId`).
 ///
-/// A API resolve a referência (livro, capítulo e número) pelo versículo gravado em `biblia.versiculo_renomado` e
-/// devolve o texto e o [versId] do versículo de mesma referência na versão pedida ([versaId]).
+/// O renomado tem um registro em `biblia.versiculo_renomado` por versão; a API devolve só os da versão pedida
+/// ([versaId]), com a referência (livro, capítulo e número) e o texto.
 class VersiculoRenomadoModel {
   const VersiculoRenomadoModel({
     required this.vrenId,
