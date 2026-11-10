@@ -1,5 +1,6 @@
 import 'package:app/data/model/configuracao/configuracao_app_model.dart';
 import 'package:app/data/model/login_model.dart';
+import 'package:app/data/model/usuario/usuario_dispositivo_model.dart';
 import 'package:app/features/access/configuracao_app/repository/configuracao_app_repository.dart';
 import 'package:app/features/access/configuracao_app/use_case/configuracao_app_usecase.dart';
 import 'package:app/features/access/login/repository/login_repository.dart';
@@ -41,11 +42,27 @@ class _FakeLoginRepository implements LoginRepository {
     chamadas++;
     return resposta;
   }
+
+  final dispositivos = <UsuarioDispositivoModel>[];
+  Result<UsuarioDispositivoModel>? respostaDispositivo;
+
+  @override
+  Future<Result<UsuarioDispositivoModel>> registrarDispositivo(UsuarioDispositivoModel dispositivo) async {
+    dispositivos.add(dispositivo);
+    return respostaDispositivo ?? Result.ok(dispositivo);
+  }
 }
 
-LoginUseCase _useCase(_FakeLoginRepository repo) => LoginUseCase(
+const _aparelho = UsuarioDispositivoModel(
+  udisDeviceId: 'abc123',
+  udisNome: ' Pixel 8 ',
+  udisSistemaOperacional: 'Android 15',
+);
+
+LoginUseCase _useCase(_FakeLoginRepository repo, {DispositivoAtual? dispositivo}) => LoginUseCase(
   loginRepository: repo,
   configuracaoAppUseCase: ConfiguracaoAppUseCase(configuracaoAppRepository: _FakeConfiguracaoAppRepository()),
+  dispositivo: dispositivo ?? () async => _aparelho,
 );
 
 String? _mensagem(Result<Object?> result) => switch (result) {
@@ -123,5 +140,107 @@ void main() {
 
     expect(result, isA<Error<LoginModel>>());
     expect(AuthSession.instance.isLogged, isFalse);
+  });
+
+  group('registro do dispositivo', () {
+    test('login por senha com sucesso registra o aparelho (textos aparados)', () async {
+      final repo = _FakeLoginRepository(Result.ok(LoginModel(usuaId: 7, token: 'tk')));
+
+      await _useCase(repo).login(email: 'a@b.com', senha: 'segredo');
+      await pumpEventQueue();
+
+      final enviado = repo.dispositivos.single;
+      expect(
+        (enviado.udisDeviceId, enviado.udisNome, enviado.udisSistemaOperacional),
+        ('abc123', 'Pixel 8', 'Android 15'),
+      );
+    });
+
+    test('login por código com sucesso também registra', () async {
+      final repo = _FakeLoginRepository(Result.ok(LoginModel(usuaId: 7, token: 'tk')));
+
+      await _useCase(repo).otpVerify(email: 'a@b.com', otp: '123456');
+      await pumpEventQueue();
+
+      expect(repo.dispositivos, hasLength(1));
+    });
+
+    test('login com erro ou token inválido não registra', () async {
+      final erro = _FakeLoginRepository(Result.error(HttpServiceException(message: 'usuarioSenhaInvalidos')));
+      await _useCase(erro).login(email: 'a@b.com', senha: 'x');
+      final semToken = _FakeLoginRepository(Result.ok(LoginModel(usuaId: 7, token: '')));
+      await _useCase(semToken).otpVerify(email: 'a@b.com', otp: '123456');
+      await pumpEventQueue();
+
+      expect(erro.dispositivos, isEmpty);
+      expect(semToken.dispositivos, isEmpty);
+    });
+
+    test('aparelho sem informações (web/desktop) não chama a API e não afeta o login', () async {
+      final repo = _FakeLoginRepository(Result.ok(LoginModel(usuaId: 7, token: 'tk')));
+      final useCase = _useCase(repo, dispositivo: () async => throw UnsupportedError('desktop'));
+
+      final result = await useCase.login(email: 'a@b.com', senha: 'segredo');
+      await pumpEventQueue();
+
+      expect(result, isA<Ok<LoginModel>>());
+      expect(repo.dispositivos, isEmpty);
+      expect(_mensagem(await useCase.registrarDispositivo()), 'dispositivoIndisponivel');
+    });
+
+    test('erro da API no registro não afeta o login', () async {
+      final repo = _FakeLoginRepository(Result.ok(LoginModel(usuaId: 7, token: 'tk')))
+        ..respostaDispositivo = Result.error(HttpServiceException(message: 'erroGeralApi', code: 500));
+
+      final result = await _useCase(repo).login(email: 'a@b.com', senha: 'segredo');
+      await pumpEventQueue();
+
+      expect(result, isA<Ok<LoginModel>>());
+      expect(AuthSession.instance.isLogged, isTrue);
+      expect(repo.dispositivos, hasLength(1));
+    });
+
+    test('corta nos tamanhos das colunas e exige os três campos', () async {
+      AuthSession.instance.setLoggedUser(token: 'tk', userId: 7);
+      final repo = _FakeLoginRepository(Result.ok(LoginModel(usuaId: 7, token: 'tk')));
+      final longo = _useCase(
+        repo,
+        dispositivo: () async =>
+            UsuarioDispositivoModel(udisDeviceId: 'i' * 100, udisNome: 'n' * 100, udisSistemaOperacional: 's' * 70),
+      );
+
+      expect(await longo.registrarDispositivo(), isA<Ok<void>>());
+      final enviado = repo.dispositivos.single;
+      expect(
+        (enviado.udisDeviceId.length, enviado.udisNome.length, enviado.udisSistemaOperacional.length),
+        (90, 90, 60),
+      );
+
+      final semNome = _useCase(
+        repo,
+        dispositivo: () async =>
+            const UsuarioDispositivoModel(udisDeviceId: 'x', udisNome: ' ', udisSistemaOperacional: 'iOS'),
+      );
+      expect(_mensagem(await semNome.registrarDispositivo()), 'dispositivoIndisponivel');
+      expect(repo.dispositivos, hasLength(1));
+    });
+
+    test('sem sessão não registra', () async {
+      final repo = _FakeLoginRepository(Result.ok(LoginModel(usuaId: 7, token: 'tk')));
+      expect(_mensagem(await _useCase(repo).registrarDispositivo()), 'tokenInvalido');
+      expect(repo.dispositivos, isEmpty);
+    });
+
+    test('UsuarioDispositivoModel lê a resposta da API e envia só os campos do corpo', () {
+      final model = UsuarioDispositivoModel.fromJson({
+        'udisId': '3',
+        'usua_id': 7,
+        'udisDeviceId': 'abc',
+        'udisNome': 'Pixel',
+        'udisSistemaOperacional': 'Android 15',
+      });
+      expect((model.udisId, model.usuaId, model.udloIp), (3, 7, null));
+      expect(model.toJson().keys, ['udisDeviceId', 'udisNome', 'udisSistemaOperacional', 'udloIp']);
+    });
   });
 }

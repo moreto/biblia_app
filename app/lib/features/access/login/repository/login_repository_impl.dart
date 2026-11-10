@@ -2,6 +2,7 @@ import 'package:commons/commons.dart';
 import 'package:service/service.dart';
 
 import '../../../../data/model/login_model.dart';
+import '../../../../data/model/usuario/usuario_dispositivo_model.dart';
 import 'login_repository.dart';
 
 class LoginRepositoryImpl implements LoginRepository {
@@ -23,6 +24,26 @@ class LoginRepositoryImpl implements LoginRepository {
         case Error(error: final error):
           return Result.error(error);
       }
+    } catch (error) {
+      return Result.error(_toException(error));
+    }
+  }
+
+  @override
+  Future<Result<UsuarioDispositivoModel>> registrarDispositivo(UsuarioDispositivoModel dispositivo) async {
+    try {
+      final response = await DioProvider.of(ApiCore.usuarioDispositivo)
+          .request(verb: Verb.post, body: dispositivo.toJson());
+      switch (response) {
+        case Ok(value: final value) when value is Map:
+          return Result.ok(UsuarioDispositivoModel.fromJson(Map<String, dynamic>.from(value)));
+        case Error(error: final error):
+          return Result.error(error);
+        default:
+          return Result.error(HandledException(message: 'respostaApiInvalida'));
+      }
+    } on FormatException {
+      return Result.error(HandledException(message: 'respostaApiInvalida'));
     } catch (error) {
       return Result.error(_toException(error));
     }

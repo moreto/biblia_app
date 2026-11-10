@@ -1,13 +1,42 @@
+import 'dart:async';
+
 import 'package:commons/commons.dart';
 import 'package:service/service.dart';
 
+import '../../../../config/device_info.dart';
 import '../../../../data/model/login_model.dart';
+import '../../../../data/model/usuario/usuario_dispositivo_model.dart';
 import '../../configuracao_app/use_case/configuracao_app_usecase.dart';
 import '../repository/login_repository.dart';
 
+/// Lê o aparelho atual (id, nome e sistema operacional); lança se a plataforma não tiver essas informações.
+typedef DispositivoAtual = Future<UsuarioDispositivoModel> Function();
+
+Future<UsuarioDispositivoModel> _dispositivoDoAparelho() async {
+  final info = DeviceInfo.instance;
+  await info.initialize();
+  return UsuarioDispositivoModel(
+    udisDeviceId: info.deviceId,
+    udisNome: info.name,
+    udisSistemaOperacional: info.operatingSystem,
+  );
+}
+
 /// Regras de negócio do login. As validações devolvem a chave de tradução do erro, ou null se o valor é válido.
+///
+/// Login com sucesso (senha ou código) grava a sessão e registra o aparelho do usuário
+/// (`POST /v1/usuario-dispositivo`, [registrarDispositivo]) em segundo plano: o login não espera nem falha por
+/// causa do registro.
 class LoginUseCase {
-  LoginUseCase({required this.loginRepository, required this.configuracaoAppUseCase});
+  LoginUseCase({required this.loginRepository, required this.configuracaoAppUseCase, DispositivoAtual? dispositivo})
+    : _dispositivo = dispositivo ?? _dispositivoDoAparelho;
+
+  /// Tamanhos das colunas de `public.usuario_dispositivo` (id, nome e sistema operacional).
+  static const kDeviceIdMax = 90;
+  static const kNomeDispositivoMax = 90;
+  static const kSistemaOperacionalMax = 60;
+
+  final DispositivoAtual _dispositivo;
 
   final LoginRepository loginRepository;
 
@@ -67,7 +96,7 @@ class LoginUseCase {
     }
 
     final result = await loginRepository.login(email: email.trim(), senha: senhaCriptografada);
-    return _saveSession(result);
+    return _logado(_saveSession(result));
   }
 
   Future<Result<void>> otpSend({required String email}) async {
@@ -82,7 +111,51 @@ class LoginUseCase {
     if (invalid != null) return Result.error(HandledException(message: invalid));
 
     final result = await loginRepository.otpVerify(email: email.trim(), otp: otp.trim());
-    return _saveSession(result);
+    return _logado(_saveSession(result));
+  }
+
+  /// Registra o aparelho do usuário logado. Sem informações do aparelho (ex.: web/desktop) ou sem sessão, não
+  /// chama a API. Textos vão aparados e cortados no tamanho das colunas. Erros só vão para o log.
+  Future<Result<void>> registrarDispositivo() async {
+    if (!AuthSession.instance.isLogged) return Result.error(HandledException(message: 'tokenInvalido'));
+
+    final UsuarioDispositivoModel aparelho;
+    try {
+      aparelho = await _dispositivo();
+    } catch (error) {
+      Log.print('Dispositivo não registrado: $error', name: kApp, title: 'Dispositivo');
+      return Result.error(HandledException(message: 'dispositivoIndisponivel'));
+    }
+
+    final dispositivo = UsuarioDispositivoModel(
+      udisDeviceId: _corta(aparelho.udisDeviceId, kDeviceIdMax),
+      udisNome: _corta(aparelho.udisNome, kNomeDispositivoMax),
+      udisSistemaOperacional: _corta(aparelho.udisSistemaOperacional, kSistemaOperacionalMax),
+      udloIp: aparelho.udloIp,
+    );
+    if (dispositivo.udisDeviceId.isEmpty ||
+        dispositivo.udisNome.isEmpty ||
+        dispositivo.udisSistemaOperacional.isEmpty) {
+      return Result.error(HandledException(message: 'dispositivoIndisponivel'));
+    }
+
+    final result = await loginRepository.registrarDispositivo(dispositivo);
+    if (result case Error(error: final error)) Log.print(error.toString(), name: kApp, title: 'Dispositivo');
+    return switch (result) {
+      Ok() => const Result.ok(null),
+      Error(error: final error) => Result.error(error),
+    };
+  }
+
+  /// Depois de um login com sucesso, dispara o registro do aparelho sem esperar.
+  Result<LoginModel> _logado(Result<LoginModel> result) {
+    if (result is Ok) unawaited(registrarDispositivo());
+    return result;
+  }
+
+  static String _corta(String valor, int maximo) {
+    final texto = valor.trim();
+    return texto.length <= maximo ? texto : texto.substring(0, maximo);
   }
 
   Result<LoginModel> _saveSession(Result<LoginModel> result) {
