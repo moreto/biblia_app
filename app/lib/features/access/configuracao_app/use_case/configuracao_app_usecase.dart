@@ -10,7 +10,7 @@ import '../repository/configuracao_app_repository.dart';
 /// - a configuração é lida uma vez e guardada em [AppSession]; chamadas seguintes usam o que está em memória;
 /// - `kCryptKeyB64` é obrigatória e precisa ser uma chave AES-256 (base64 de 32 bytes), senão a configuração é
 ///   recusada e nada é gravado;
-/// - `kAccessTokenId` passa a ser o access token dos headers; sem ele continua valendo [kAccessTokenId].
+/// - `kAccessTokenId` passa a ser o access token dos headers; sem ele o header vai vazio.
 class ConfiguracaoAppUseCase {
   ConfiguracaoAppUseCase({required this.configuracaoAppRepository, AppSession? session})
     : _session = session ?? AppSession.instance;

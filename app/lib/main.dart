@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:app/app.dart';
 import 'package:app/config/app_config.dart';
 import 'package:app/config/dependencies.dart';
@@ -13,8 +11,9 @@ Future<void> main() async {
   configDependencies();
   // Aplica o tema e o idioma escolhidos pelo usuário já na abertura do app.
   await locator<AppConfig>().load();
-  // Chaves do app (criptografia e access token), sem segurar a abertura. Se falhar (ex.: sem rede),
-  // login/registro tentam de novo antes de criptografar a senha.
-  unawaited(ConfiguracaoAppUseCase(configuracaoAppRepository: locator<ConfiguracaoAppRepository>()).carregar());
+  // Chaves do app (criptografia e access token). Precisa terminar antes do runApp: as traduções e as demais
+  // rotas fora da área logada usam o x-access-token que vem daqui. Se falhar (ex.: sem rede), login/registro
+  // tentam de novo antes de criptografar a senha.
+  await ConfiguracaoAppUseCase(configuracaoAppRepository: locator<ConfiguracaoAppRepository>()).carregar();
   runApp(const MyApp());
 }

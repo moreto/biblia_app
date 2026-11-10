@@ -15,7 +15,7 @@ class AppSession {
   /// Chave AES-256 (base64, 32 bytes) compartilhada com a API para criptografar a senha.
   String? get cryptKeyB64 => _cryptKeyB64;
 
-  /// Access token devolvido pela API. Antes da primeira leitura o header usa [kAccessTokenId].
+  /// Access token devolvido pela API. Antes da primeira leitura o header vai vazio.
   String? get accessTokenId => _accessTokenId;
 
   /// A configuração já foi lida da API.

@@ -41,12 +41,12 @@ void main() {
     expect(Header.buildHeaders()['x-access-token'], 'tokenApi');
   });
 
-  test('sem kAccessTokenId mantém o access token embutido', () async {
+  test('sem kAccessTokenId o header vai com o access token vazio', () async {
     final repo = _FakeRepository(Result.ok(_itens(accessTokenId: null)));
     await ConfiguracaoAppUseCase(configuracaoAppRepository: repo).carregar();
 
     expect(AppSession.instance.accessTokenId, isNull);
-    expect(Header.buildHeaders()['x-access-token'], kAccessTokenId);
+    expect(Header.buildHeaders()['x-access-token'], kVazio);
   });
 
   test('lê a API uma vez só', () async {
