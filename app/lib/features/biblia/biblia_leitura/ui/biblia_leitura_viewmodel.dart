@@ -36,18 +36,42 @@ import '../versiculo_indicacao/use_case/versiculo_indicacao_usuario_usecase.dart
 /// - [indicacoesCommand], [indicarCommand] e [removerIndicacaoCommand] tratam a indicação do versículo selecionado;
 /// - [indicados] são os usuários que recebem a indicação do usuário, carregados com ela; [buscarUsuarios] procura
 ///   destinatários, [adicionarIndicadoCommand] inclui e [removerIndicadoCommand] remove.
+///
+/// Com [destino] (ex.: versículo aberto a partir de um renomado), a leitura carrega na versão do destino, abre o
+/// capítulo direto e destaca o versículo; [versiculoAlvo] indica à view para onde rolar (lido uma vez com
+/// [consumirVersiculoAlvo]).
 class BibliaLeituraViewmodel extends ChangeNotifier {
   BibliaLeituraViewmodel({
     required this.bibliaLeituraUseCase,
     required this.versiculoIndicacaoUseCase,
     required this.versiculoReacaoUseCase,
     required this.versiculoIndicacaoUsuarioUseCase,
+    this.destino,
   }) {
     Log.print(super.runtimeType);
     carregarCommand.execute();
   }
 
   final VersiculoReacaoUseCase versiculoReacaoUseCase;
+
+  /// Onde a leitura abre direto; nulo abre no índice.
+  final LeituraDestino? destino;
+
+  /// A tela foi aberta direto num capítulo: voltar sai da tela em vez de ir ao índice.
+  bool get abertaPorDestino => destino != null;
+
+  int? _versiculoAlvo;
+
+  /// Versículo do [destino] para onde a view deve rolar; nulo quando não há rolagem pendente.
+  int? get versiculoAlvo => _versiculoAlvo;
+
+  /// Devolve [versiculoAlvo] e o limpa, para a rolagem acontecer uma única vez.
+  int? consumirVersiculoAlvo() {
+    final alvo = _versiculoAlvo;
+    _versiculoAlvo = null;
+    return alvo;
+  }
+
   final VersiculoIndicacaoUsuarioUseCase versiculoIndicacaoUsuarioUseCase;
 
   late final Command1<VersiculoReacaoModel, VersiculoTextoModel> marcarVersiculoCommand = Command1(_marcarVersiculo);
@@ -340,13 +364,14 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
     _testamentos = (testamentos as Ok<List<TestamentoModel>>).value;
     _livros = (livros as Ok<List<LivroModel>>).value;
 
-    final versao = _versao ?? bibliaLeituraUseCase.versaoInicial(_versoes);
+    final versao = _versao ?? bibliaLeituraUseCase.versaoDoDestino(_versoes, destino);
     if (versao == null) {
       notifyListeners();
       return Result.error(HandledException(message: 'nenhumaVersaoDisponivel'));
     }
 
     final result = await _carregarVersao(versao);
+    if (result is Ok && _capitulo == null) await _abrirDestino();
     notifyListeners();
     return result;
   }
@@ -375,6 +400,20 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
         Log.print(error.toString(), name: kApp, title: 'Erro');
     }
     return const Result.ok(null);
+  }
+
+  /// Abre o capítulo do [destino] (se existir na versão) e destaca o versículo.
+  Future<void> _abrirDestino() async {
+    final alvo = destino;
+    final indice = _indice;
+    if (alvo == null || indice == null || !bibliaLeituraUseCase.destinoDisponivel(indice, alvo)) return;
+
+    final result = await _abrirCapitulo(alvo.capitulo);
+    if (result case Ok(value: final versiculos)) {
+      final versId = bibliaLeituraUseCase.versiculoDoDestino(versiculos, alvo.versNumero);
+      _versiculoDestacado = versId;
+      _versiculoAlvo = versId;
+    }
   }
 
   Future<Result<void>> _trocarVersao(VersaoModel versao) async {

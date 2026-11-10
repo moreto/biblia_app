@@ -21,6 +21,41 @@ typedef ProgressoLivro = ({int completos, int emAndamento, int total, double fra
 /// [lido] indica se a ação marcou (true) ou desmarcou (false).
 typedef FeedbackLeitura = ({String mensagem, bool lido});
 
+/// Ponto em que a leitura abre direto, sem passar pelo índice (ex.: versículo de um renomado).
+///
+/// Viaja na rota como query string (`/biblia-leitura?versaId=1&livrId=43&capiNumero=3&versNumero=16`); [versaId] e
+/// [versNumero] são opcionais.
+class LeituraDestino {
+  const LeituraDestino({this.versaId, required this.livrId, required this.capiNumero, this.versNumero});
+
+  final int? versaId;
+  final int livrId;
+  final int capiNumero;
+  final int? versNumero;
+
+  CapituloRef get capitulo => (livrId: livrId, capiNumero: capiNumero);
+
+  Map<String, String> toQuery() => {
+    if (versaId != null) 'versaId': '$versaId',
+    'livrId': '$livrId',
+    'capiNumero': '$capiNumero',
+    if (versNumero != null) 'versNumero': '$versNumero',
+  };
+
+  /// Destino lido da query string; nulo se livro ou capítulo estiverem ausentes ou inválidos.
+  static LeituraDestino? fromQuery(Map<String, String> query) {
+    final livrId = int.tryParse(query['livrId'] ?? '');
+    final capiNumero = int.tryParse(query['capiNumero'] ?? '');
+    if (livrId == null || capiNumero == null || livrId < 1 || capiNumero < 1) return null;
+    return LeituraDestino(
+      versaId: int.tryParse(query['versaId'] ?? ''),
+      livrId: livrId,
+      capiNumero: capiNumero,
+      versNumero: int.tryParse(query['versNumero'] ?? ''),
+    );
+  }
+}
+
 /// Regras da leitura da Bíblia:
 /// - o índice da versão define quais capítulos existem (só os que têm versículos na versão);
 /// - o progresso vem de `versiculo-reacao/lidos`: um capítulo está lido quando todos os versículos estão marcados;
@@ -53,6 +88,29 @@ class BibliaLeituraUseCase {
       if (versao.versaId == salva) return versao;
     }
     return versoes.firstOrNull;
+  }
+
+  /// Versão em que a leitura abre quando há [destino]: a versão do destino, se estiver entre as [versoes]; senão a
+  /// de [versaoInicial].
+  VersaoModel? versaoDoDestino(List<VersaoModel> versoes, LeituraDestino? destino) {
+    final versaId = destino?.versaId;
+    for (final versao in versoes) {
+      if (versao.versaId == versaId) return versao;
+    }
+    return versaoInicial(versoes);
+  }
+
+  /// O destino pode ser aberto: o capítulo existe no [indice] da versão.
+  bool destinoDisponivel(Map<int, List<IndiceCapituloModel>> indice, LeituraDestino destino) =>
+      indice[destino.livrId]?.any((c) => c.capiNumero == destino.capiNumero) ?? false;
+
+  /// `versId` do versículo de número [versNumero] no capítulo carregado; nulo se não houver.
+  int? versiculoDoDestino(List<VersiculoTextoModel> versiculos, int? versNumero) {
+    if (versNumero == null) return null;
+    for (final versiculo in versiculos) {
+      if (versiculo.versNumero == versNumero) return versiculo.versId;
+    }
+    return null;
   }
 
   /// Guarda a versão escolhida para as próximas aberturas do app.

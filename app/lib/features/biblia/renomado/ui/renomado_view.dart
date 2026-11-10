@@ -5,9 +5,11 @@ import 'package:app/l10n/app_localizations.dart';
 import 'package:commons/commons.dart';
 import 'package:components/components.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:service/service.dart';
 
 import '../../../../data/model/biblia/renomado_model.dart';
+import '../../../../routing/routes.dart';
 import 'renomado_viewmodel.dart';
 
 /// Lista de renomados (`GET /v1/renomado`), na ordem definida pelo use case.
@@ -16,7 +18,9 @@ import 'renomado_viewmodel.dart';
 /// - Depois disso, a lista é mantida: a atualização (AppBar ou puxar para baixo) mostra uma barra de progresso
 ///   e um erro aparece em SnackBar.
 ///
-/// Ícones (em [IconsMap.mdiIcons]): [iconeRenomado] e [iconeAtualizar].
+/// - Tocar num renomado abre os versículos dele (`Routes.versiculoRenomado`).
+///
+/// Ícones (em [IconsMap.mdiIcons]): [iconeRenomado], [iconeAbrir] e [iconeAtualizar].
 class RenomadoView extends StatefulWidget {
   const RenomadoView({super.key, required this.viewModel});
 
@@ -25,6 +29,9 @@ class RenomadoView extends StatefulWidget {
   /// Ícone de cada renomado e da lista vazia; também serve de `menu_icone` do menu da tela.
   static const iconeRenomado = 'account-star-outline';
   static const iconeAtualizar = 'refresh';
+
+  /// Indica que o card abre os versículos do renomado.
+  static const iconeAbrir = 'chevron-right';
 
   /// Ícone de [IconsMap.mdiIcons] pela chave; usa [fallback] se a chave não estiver mapeada.
   static Widget icone(String chave, IconData fallback, {Color? color, double? size}) =>
@@ -122,33 +129,38 @@ class _RenomadoViewState extends State<RenomadoView> {
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            CircleAvatar(
-              backgroundColor: scheme.primaryContainer,
-              child: RenomadoView.icone(
-                RenomadoView.iconeRenomado,
-                Icons.star_outline,
-                color: scheme.onPrimaryContainer,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => context.push('${Routes.versiculoRenomado}/${renomado.renoId}', extra: renomado),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CircleAvatar(
+                backgroundColor: scheme.primaryContainer,
+                child: RenomadoView.icone(
+                  RenomadoView.iconeRenomado,
+                  Icons.star_outline,
+                  color: scheme.onPrimaryContainer,
+                ),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(renomado.renoNome, style: textTheme.titleMedium),
-                  if (texto != null) ...[
-                    const SizedBox(height: 4),
-                    Text(texto, style: textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant, height: 1.4)),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(renomado.renoNome, style: textTheme.titleMedium),
+                    if (texto != null) ...[
+                      const SizedBox(height: 4),
+                      Text(texto, style: textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant, height: 1.4)),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-          ],
+              RenomadoView.icone(RenomadoView.iconeAbrir, Icons.chevron_right, color: scheme.outline),
+            ],
+          ),
         ),
       ),
     );

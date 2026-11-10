@@ -10,10 +10,15 @@ import '../../features/biblia/biblia_leitura/ui/biblia_leitura_viewmodel.dart';
 import '../../features/biblia/biblia_leitura/use_case/biblia_leitura_usecase.dart';
 import '../../features/biblia/biblia_leitura/versiculo_indicacao/repository/versiculo_indicacao_repository.dart';
 import '../../features/biblia/biblia_leitura/versiculo_indicacao/repository/versiculo_indicacao_usuario_repository.dart';
+import '../../data/model/biblia/renomado_model.dart';
 import '../../features/biblia/renomado/repository/renomado_repository.dart';
 import '../../features/biblia/renomado/ui/renomado_view.dart';
 import '../../features/biblia/renomado/ui/renomado_viewmodel.dart';
 import '../../features/biblia/renomado/use_case/renomado_usecase.dart';
+import '../../features/biblia/versiculo_renomado/repository/versiculo_renomado_repository.dart';
+import '../../features/biblia/versiculo_renomado/ui/versiculo_renomado_view.dart';
+import '../../features/biblia/versiculo_renomado/ui/versiculo_renomado_viewmodel.dart';
+import '../../features/biblia/versiculo_renomado/use_case/versiculo_renomado_usecase.dart';
 import '../../features/dashboard/widgets/versiculo_reacao/repository/versiculo_reacao_repository.dart';
 import '../../features/dashboard/widgets/versiculo_reacao/use_case/versiculo_reacao_usecase.dart';
 import '../routes.dart';
@@ -37,6 +42,8 @@ class BibliaRouter {
           versiculoIndicacaoUsuarioUseCase: VersiculoIndicacaoUsuarioUseCase(
             versiculoIndicacaoUsuarioRepository: locator<VersiculoIndicacaoUsuarioRepository>(),
           ),
+          // Abertura direta num versículo (ex.: a partir dos versículos de um renomado).
+          destino: LeituraDestino.fromQuery(state.uri.queryParameters),
         );
         return BibliaLeituraView(viewModel: viewModel);
       },
@@ -48,6 +55,24 @@ class BibliaRouter {
           renomadoUseCase: RenomadoUseCase(renomadoRepository: locator<RenomadoRepository>()),
         );
         return RenomadoView(viewModel: viewModel);
+      },
+    ),
+    GoRoute(
+      path: '${Routes.versiculoRenomado}/:renoId',
+      builder: (context, state) {
+        final extra = state.extra;
+        final viewModel = VersiculoRenomadoViewmodel(
+          renoId: int.tryParse(state.pathParameters['renoId'] ?? '') ?? 0,
+          renomado: extra is RenomadoModel ? extra : null,
+          versiculoRenomadoUseCase: VersiculoRenomadoUseCase(
+            versiculoRenomadoRepository: locator<VersiculoRenomadoRepository>(),
+            bibliaLeituraUseCase: BibliaLeituraUseCase(
+              bibliaLeituraRepository: locator<BibliaLeituraRepository>(),
+              versaoPreferencia: locator<AppConfig>(),
+            ),
+          ),
+        );
+        return VersiculoRenomadoView(viewModel: viewModel);
       },
     ),
   };

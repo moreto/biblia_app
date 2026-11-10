@@ -312,12 +312,13 @@ void main() {
   VersiculoIndicacaoUsuarioUseCase indicadoUseCase() =>
       VersiculoIndicacaoUsuarioUseCase(versiculoIndicacaoUsuarioRepository: indicados);
 
-  Future<BibliaLeituraViewmodel> criarViewModel() async {
+  Future<BibliaLeituraViewmodel> criarViewModel({LeituraDestino? destino}) async {
     final viewModel = BibliaLeituraViewmodel(
       bibliaLeituraUseCase: leituraUseCase(),
       versiculoIndicacaoUseCase: indicacaoUseCase(),
       versiculoReacaoUseCase: reacaoUseCase(),
       versiculoIndicacaoUsuarioUseCase: indicadoUseCase(),
+      destino: destino,
     );
     await pumpEventQueue();
     return viewModel;
@@ -452,6 +453,57 @@ void main() {
       expect(uc.nomeExibicao(udetNome: ' ', udetUsuario: 'pedro'), 'pedro');
       expect(uc.nomeExibicao(udetNome: 'Maria', udetUsuario: 'maria'), 'Maria');
       expect(uc.nomeExibicao(), isNull);
+    });
+  });
+
+  group('LeituraDestino', () {
+    test('vai e volta pela query string', () {
+      const destino = LeituraDestino(versaId: 2, livrId: 43, capiNumero: 3, versNumero: 16);
+      final lido = LeituraDestino.fromQuery(destino.toQuery())!;
+      expect((lido.versaId, lido.livrId, lido.capiNumero, lido.versNumero), (2, 43, 3, 16));
+    });
+
+    test('sem livro ou capítulo válidos não há destino', () {
+      expect(LeituraDestino.fromQuery(const {}), isNull);
+      expect(LeituraDestino.fromQuery(const {'livrId': '43'}), isNull);
+      expect(LeituraDestino.fromQuery(const {'livrId': 'x', 'capiNumero': '1'}), isNull);
+      expect(LeituraDestino.fromQuery(const {'livrId': '0', 'capiNumero': '1'}), isNull);
+    });
+  });
+
+  group('BibliaLeituraViewmodel com destino', () {
+    test('abre na versão do destino, no capítulo, com o versículo destacado', () async {
+      final viewModel = await criarViewModel(
+        destino: LeituraDestino(versaId: _nvi.versaId, livrId: _joao.livrId, capiNumero: 1, versNumero: 2),
+      );
+
+      expect(viewModel.versao?.versaId, _nvi.versaId);
+      expect(viewModel.capitulo, (livrId: _joao.livrId, capiNumero: 1));
+      expect(viewModel.versiculoDestacado, 43102);
+      expect(viewModel.consumirVersiculoAlvo(), 43102);
+      expect(viewModel.consumirVersiculoAlvo(), isNull);
+      expect(viewModel.abertaPorDestino, isTrue);
+      expect(preferencia.versaoId, isNull, reason: 'abrir pelo destino não troca a versão salva');
+    });
+
+    test('versão do destino inexistente usa a versão salva', () async {
+      preferencia.versaoId = _arc.versaId;
+      final viewModel = await criarViewModel(
+        destino: LeituraDestino(versaId: 99, livrId: _genesis.livrId, capiNumero: 2),
+      );
+
+      expect(viewModel.versao?.versaId, _arc.versaId);
+      expect(viewModel.capitulo, (livrId: _genesis.livrId, capiNumero: 2));
+      expect(viewModel.versiculoDestacado, isNull);
+    });
+
+    test('capítulo fora do índice da versão fica no índice', () async {
+      final viewModel = await criarViewModel(
+        destino: LeituraDestino(versaId: _nvi.versaId, livrId: _genesis.livrId, capiNumero: 1, versNumero: 1),
+      );
+
+      expect(viewModel.indice, isNotNull);
+      expect(viewModel.capitulo, isNull);
     });
   });
 

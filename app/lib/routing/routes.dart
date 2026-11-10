@@ -22,4 +22,7 @@ abstract final class Routes {
   // biblia
   static const bibliaLeitura = '/biblia-leitura';
   static const renomado = '/renomado';
+
+  /// Versículos de um renomado: `/versiculo-renomado/:renoId` (o `RenomadoModel` pode ir no `extra`).
+  static const versiculoRenomado = '/versiculo-renomado';
 }

@@ -26,6 +26,8 @@ import '../features/biblia/biblia_leitura/versiculo_indicacao/repository/versicu
 import '../features/biblia/biblia_leitura/versiculo_indicacao/repository/versiculo_indicacao_usuario_repository_impl.dart';
 import '../features/biblia/renomado/repository/renomado_repository.dart';
 import '../features/biblia/renomado/repository/renomado_repository_impl.dart';
+import '../features/biblia/versiculo_renomado/repository/versiculo_renomado_repository.dart';
+import '../features/biblia/versiculo_renomado/repository/versiculo_renomado_repository_impl.dart';
 import '../features/dashboard/repository/dashboard_repository.dart';
 import '../features/dashboard/repository/dashboard_repository_impl.dart';
 import '../features/dashboard/widgets/musica/repository/musica_repository.dart';
@@ -60,4 +62,5 @@ void configDependencies() {
   locator.registerLazySingleton<VersiculoIndicacaoRepository>(() => VersiculoIndicacaoRepositoryImpl());
   locator.registerLazySingleton<VersiculoIndicacaoUsuarioRepository>(() => VersiculoIndicacaoUsuarioRepositoryImpl());
   locator.registerLazySingleton<RenomadoRepository>(() => RenomadoRepositoryImpl());
+  locator.registerLazySingleton<VersiculoRenomadoRepository>(() => VersiculoRenomadoRepositoryImpl());
 }

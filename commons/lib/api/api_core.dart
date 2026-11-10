@@ -52,6 +52,7 @@ enum ApiCore {
   versiculoIndicacao('/v1/versiculo-indicacao', kDesHost, kPrdHost, HeaderType.loggedArea),
   versiculoIndicacaoCapitulo('/v1/versiculo-indicacao/capitulo', kDesHost, kPrdHost, HeaderType.loggedArea),
   versiculoIndicacaoUsuario('/v1/versiculo-indicacao-usuario', kDesHost, kPrdHost, HeaderType.loggedArea),
+  versiculoRenomado('/v1/versiculo-renomado', kDesHost, kPrdHost, HeaderType.loggedArea),
   versiculoReacao('/v1/versiculo-reacao', kDesHost, kPrdHost, HeaderType.loggedArea),
   versiculoReacaoCapitulo('/v1/versiculo-reacao/capitulo', kDesHost, kPrdHost, HeaderType.loggedArea),
   versiculoReacaoLidos('/v1/versiculo-reacao/lidos', kDesHost, kPrdHost, HeaderType.loggedArea);

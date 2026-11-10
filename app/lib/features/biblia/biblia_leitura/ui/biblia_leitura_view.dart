@@ -33,6 +33,8 @@ import 'widgets/versiculo_indicacao_sheet.dart';
 ///   para recebê-la (`/v1/versiculo-indicacao-usuario` e `/v1/usuario/busca`).
 /// - Versão (`/v1/versao`): seleção no topo do índice, acima do filtro de testamentos.
 /// - AppBar: histórico de leitura, orientação da tela e tema.
+/// - Aberta com destino (`/biblia-leitura?versaId=&livrId=&capiNumero=&versNumero=`, ex.: versículo de um renomado):
+///   abre direto no capítulo, na versão do destino, rola até o versículo e o destaca; voltar sai da tela.
 ///
 /// Ícones (em [IconsMap.mdiIcons]): [iconeLeitura], [iconeHistorico], [iconeVersao], [iconeAnterior],
 /// [iconeProximo], [iconeLido], [iconeNaoLido], [iconeParcial], [iconeComentarIndicar], [iconeIndicadoSemComentario],
@@ -101,6 +103,24 @@ class BibliaLeituraView extends StatefulWidget {
 
 class _BibliaLeituraViewState extends State<BibliaLeituraView> {
   BibliaLeituraViewmodel get _vm => widget.viewModel;
+
+  /// Versículo do destino para onde rolar depois de montar a lista, e a chave da linha dele.
+  int? _rolarPara;
+  final GlobalKey _alvoKey = GlobalKey();
+
+  /// Rola até o versículo do destino quando o capítulo é aberto direto (ex.: a partir de um renomado).
+  void _agendarRolagem() {
+    final alvo = _vm.consumirVersiculoAlvo();
+    if (alvo == null) return;
+    _rolarPara = alvo;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final alvoContext = _alvoKey.currentContext;
+      if (alvoContext != null && alvoContext.mounted) {
+        Scrollable.ensureVisible(alvoContext, alignment: 0.2, duration: const Duration(milliseconds: 300));
+      }
+      _rolarPara = null;
+    });
+  }
 
   /// Comandos cujo erro vira SnackBar. O erro do carregamento inicial aparece na tela, em [_erroCarregamento].
   List<Listenable> _comandos(BibliaLeituraViewmodel vm) => [
@@ -209,7 +229,7 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
   PreferredSizeWidget _appBar(AppLocalizations strings) {
     final ref = _vm.capitulo;
     return AppBar(
-      leading: ref == null
+      leading: ref == null || _vm.abertaPorDestino
           ? null
           : IconButton(
               tooltip: strings.translate('voltar'),
@@ -403,8 +423,11 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
     final textTheme = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
     final lido = _vm.lidoAtual;
+    _agendarRolagem();
 
     return ListView.builder(
+      // Enquanto há rolagem pendente, monta o capítulo inteiro para a linha do versículo existir.
+      scrollCacheExtent: _rolarPara != null ? const ScrollCacheExtent.pixels(100000) : null,
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       itemCount: versiculos.length + 1,
       itemBuilder: (_, index) {
@@ -433,6 +456,7 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
         }
         final versiculo = versiculos[index - 1];
         return Row(
+          key: versiculo.versId == _rolarPara ? _alvoKey : null,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
@@ -580,7 +604,7 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
     }
 
     return PopScope(
-      canPop: !lendo,
+      canPop: !lendo || _vm.abertaPorDestino,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop && lendo) _vm.fecharCapitulo();
       },
