@@ -69,6 +69,8 @@ class IconsMap {
     'at': MdiIcons.at,
     // Indicação de versículo: busca de usuários para indicar (VersiculoIndicacaoSheet).
     'account-search-outline': MdiIcons.accountSearchOutline,
+    // Renomados (RenomadoView.iconeRenomado); também serve de menu_icone da tela. 'refresh' já mapeado acima.
+    'account-star-outline': MdiIcons.accountStarOutline,
     // ...
   };
 }

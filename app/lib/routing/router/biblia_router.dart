@@ -10,6 +10,10 @@ import '../../features/biblia/biblia_leitura/ui/biblia_leitura_viewmodel.dart';
 import '../../features/biblia/biblia_leitura/use_case/biblia_leitura_usecase.dart';
 import '../../features/biblia/biblia_leitura/versiculo_indicacao/repository/versiculo_indicacao_repository.dart';
 import '../../features/biblia/biblia_leitura/versiculo_indicacao/repository/versiculo_indicacao_usuario_repository.dart';
+import '../../features/biblia/renomado/repository/renomado_repository.dart';
+import '../../features/biblia/renomado/ui/renomado_view.dart';
+import '../../features/biblia/renomado/ui/renomado_viewmodel.dart';
+import '../../features/biblia/renomado/use_case/renomado_usecase.dart';
 import '../../features/dashboard/widgets/versiculo_reacao/repository/versiculo_reacao_repository.dart';
 import '../../features/dashboard/widgets/versiculo_reacao/use_case/versiculo_reacao_usecase.dart';
 import '../routes.dart';
@@ -35,6 +39,15 @@ class BibliaRouter {
           ),
         );
         return BibliaLeituraView(viewModel: viewModel);
+      },
+    ),
+    GoRoute(
+      path: Routes.renomado,
+      builder: (context, state) {
+        final viewModel = RenomadoViewmodel(
+          renomadoUseCase: RenomadoUseCase(renomadoRepository: locator<RenomadoRepository>()),
+        );
+        return RenomadoView(viewModel: viewModel);
       },
     ),
   };

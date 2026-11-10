@@ -21,4 +21,5 @@ abstract final class Routes {
 
   // biblia
   static const bibliaLeitura = '/biblia-leitura';
+  static const renomado = '/renomado';
 }

@@ -44,6 +44,7 @@ enum ApiCore {
   musicaAleatoria('/v1/musica/aleatoria', kDesHost, kPrdHost, HeaderType.loggedArea),
   notificacao('/v1/notificacao', kDesHost, kPrdHost, HeaderType.loggedArea),
   oracaoAleatoria('/v1/oracao/aleatoria', kDesHost, kPrdHost, HeaderType.loggedArea),
+  renomado('/v1/renomado', kDesHost, kPrdHost, HeaderType.loggedArea),
   testamento('/v1/testamento', kDesHost, kPrdHost, HeaderType.loggedArea),
   usuarioBusca('/v1/usuario/busca', kDesHost, kPrdHost, HeaderType.loggedArea),
   versao('/v1/versao', kDesHost, kPrdHost, HeaderType.loggedArea),

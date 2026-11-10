@@ -33,10 +33,8 @@ class RegistroRepositoryImpl implements RegistroRepository {
     required String usuario,
   }) async {
     try {
-      final response = await DioProvider.of(ApiCore.usuarioAtivacaoConfirmar).request(
-        verb: Verb.post,
-        body: {'email': email, 'key': codigo, 'nome': nome, 'usuario': usuario},
-      );
+      final response = await DioProvider.of(ApiCore.usuarioAtivacaoConfirmar)
+          .request(verb: Verb.post, body: {'email': email, 'key': codigo, 'nome': nome, 'usuario': usuario});
       switch (response) {
         case Ok():
           return const Result.ok(null);
