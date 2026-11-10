@@ -193,7 +193,7 @@ class _DashboardViewState extends State<DashboardView> {
           const ThemeModeButton(),
           const OrientationButton(),
           IconButton(
-            tooltip: AppLocalizations.of(context).translate('Sair'),
+            tooltip: AppLocalizations.of(context).translate('sair'),
             onPressed: () => context.push(Routes.loggof),
             icon: const Icon(Icons.logout),
           ),

@@ -18,7 +18,10 @@ class LoggofView extends StatelessWidget {
     final strings = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text(strings.translate('Encerrar sessão')), actions: const [OrientationButton(), ThemeModeButton()]),
+      appBar: AppBar(
+        title: Text(strings.translate('encerrarSessao')),
+        actions: const [OrientationButton(), ThemeModeButton()],
+      ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -28,7 +31,7 @@ class LoggofView extends StatelessWidget {
               const Icon(Icons.logout, size: 56),
               const SizedBox(height: 16),
               Text(
-                strings.translate('Deseja sair da aplicação?'),
+                strings.translate('desejaSairAplicacao'),
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
@@ -39,7 +42,7 @@ class LoggofView extends StatelessWidget {
                   context.go(Routes.home);
                 },
                 icon: const Icon(Icons.logout),
-                label: Text(strings.translate('Sair')),
+                label: Text(strings.translate('sair')),
               ),
               TextButton(
                 onPressed: () {
@@ -49,7 +52,7 @@ class LoggofView extends StatelessWidget {
                     context.go(Routes.dashboard);
                   }
                 },
-                child: Text(strings.translate('Cancelar')),
+                child: Text(strings.translate('cancelar')),
               ),
             ],
           ),

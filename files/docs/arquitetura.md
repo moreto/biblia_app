@@ -67,4 +67,3 @@ A dashboard monta a `NavigationBar` com os menus de `GET /v1/menu`. Menus com fi
 - **Segredos no código:** `kCryptKeyB64` e `kAccessTokenId` ficam em [`commons/lib/commons/constants.dart`](../../commons/lib/commons/constants.dart) e vão para o binário.
 - **Hosts:** `kDesHost` e `kPrdHost` apontam hoje para o mesmo IP local. O `DioProvider` usa `prd` em release e `des` nas demais builds.
 - **Rotas sem proteção:** o `redirect` do `GoRouter` só registra a rota em log. Nada impede abrir `/dashboard` sem login. Nesse caso, as chamadas `loggedArea` falham com `headerInvalido`.
-- **Traduções antigas:** algumas telas antigas (logoff, `Sair` na dashboard) passam o texto em pt-BR no lugar da chave. Funciona porque o `translate` também procura pelo texto em pt-BR.

@@ -44,7 +44,7 @@ FROM (VALUES
 WHERE NOT EXISTS (SELECT 1 FROM public.traducao t WHERE t.trad_chave = v.trad_chave);
 ```
 
-Scripts existentes: `traducao_biblia_leitura`, `traducao_configuracao`, `traducao_menu`, `traducao_musica`, `traducao_oracao`, `traducao_orientacao`, `traducao_versiculo` e `traducao_versiculo_reacao`.
+Scripts existentes: `traducao_biblia_leitura`, `traducao_configuracao`, `traducao_loggof`, `traducao_menu`, `traducao_musica`, `traducao_oracao`, `traducao_orientacao`, `traducao_versiculo` e `traducao_versiculo_reacao`.
 
 ## Ícones
 
