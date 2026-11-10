@@ -10,6 +10,10 @@ void main() {
       }
     });
 
+    test('/ (sem tela própria) vai para a home', () {
+      expect(authRedirect(path: Routes.splash, isLogged: false), Routes.home);
+    });
+
     test('rotas da área logada voltam para a home', () {
       for (final path in [
         Routes.dashboard,
@@ -34,6 +38,7 @@ void main() {
     test('home e login vão para a dashboard', () {
       expect(authRedirect(path: Routes.home, isLogged: true), Routes.dashboard);
       expect(authRedirect(path: Routes.login, isLogged: true), Routes.dashboard);
+      expect(authRedirect(path: Routes.splash, isLogged: true), Routes.dashboard);
     });
   });
 }

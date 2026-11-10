@@ -87,8 +87,11 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
   BibliaLeituraViewmodel get _vm => widget.viewModel;
 
   /// Comandos cujo erro vira SnackBar. O erro do carregamento inicial aparece na tela, em [_erroCarregamento].
-  List<Listenable> _comandos(BibliaLeituraViewmodel vm) =>
-      [vm.versaoCommand, vm.marcarLidoCommand, vm.marcarVersiculoCommand];
+  List<Listenable> _comandos(BibliaLeituraViewmodel vm) => [
+    vm.versaoCommand,
+    vm.marcarLidoCommand,
+    vm.marcarVersiculoCommand,
+  ];
 
   @override
   void initState() {
@@ -289,10 +292,7 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
         ),
         child: Text(
           livro.livrAbrev,
-          style: TextStyle(
-            fontSize: 12,
-            color: completo ? scheme.onSecondaryContainer : scheme.onSurfaceVariant,
-          ),
+          style: TextStyle(fontSize: 12, color: completo ? scheme.onSecondaryContainer : scheme.onSurfaceVariant),
         ),
       ),
       title: Text(livro.livrNome),

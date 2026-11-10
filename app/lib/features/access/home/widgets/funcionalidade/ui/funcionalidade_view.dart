@@ -11,7 +11,8 @@ import 'funcionalidade_viewmodel.dart';
 ///
 /// - Carregando: indicador de progresso dentro do card.
 /// - Com a lista: ícone, nome e descrição de cada funcionalidade; as inativas aparecem esmaecidas e com
-///   o selo "Em breve".
+///   o selo "Em breve". A lista rola dentro do card, limitada a [alturaMaximaLista], para ficar no
+///   tamanho dos cards da dashboard.
 /// - Erro: mensagem traduzida e "Tentar novamente".
 ///
 /// Ícones (em [IconsMap.mdiIcons]): [iconeCard], [iconeTentarNovamente] e o `funcIcone` de cada item
@@ -20,6 +21,9 @@ class FuncionalidadeView extends StatefulWidget {
   const FuncionalidadeView({super.key, required this.viewModel});
 
   final FuncionalidadeViewmodel viewModel;
+
+  /// Altura máxima da lista dentro do card (cerca de três itens e meio, para indicar que há rolagem).
+  static const alturaMaximaLista = 240.0;
 
   /// Chave do ícone do cabeçalho do card.
   static const iconeCard = 'apps';
@@ -32,6 +36,7 @@ class FuncionalidadeView extends StatefulWidget {
 }
 
 class _FuncionalidadeViewState extends State<FuncionalidadeView> {
+  final _scrollController = ScrollController();
   @override
   void initState() {
     super.initState();
@@ -48,6 +53,7 @@ class _FuncionalidadeViewState extends State<FuncionalidadeView> {
   @override
   void dispose() {
     widget.viewModel.listarCommand.removeListener(_onResult);
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -173,9 +179,21 @@ class _FuncionalidadeViewState extends State<FuncionalidadeView> {
   }
 
   Widget _conteudo(List<FuncionalidadeModel> funcionalidades, AppLocalizations strings) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [for (final funcionalidade in funcionalidades) _item(funcionalidade, strings)],
+    // A lista rola dentro do card; a barra fica visível para indicar que há mais itens.
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxHeight: FuncionalidadeView.alturaMaximaLista),
+      child: Scrollbar(
+        controller: _scrollController,
+        thumbVisibility: true,
+        child: SingleChildScrollView(
+          controller: _scrollController,
+          padding: const EdgeInsets.only(right: 12, bottom: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [for (final funcionalidade in funcionalidades) _item(funcionalidade, strings)],
+          ),
+        ),
+      ),
     );
   }
 
@@ -206,7 +224,7 @@ class _FuncionalidadeViewState extends State<FuncionalidadeView> {
                 Text(strings.translate('funcionalidades'), style: Theme.of(context).textTheme.labelLarge),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             corpo,
           ],
         ),

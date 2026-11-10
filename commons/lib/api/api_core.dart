@@ -29,7 +29,7 @@ enum ApiCore {
   configuracaoApp('/v1/configuracao-app', kDesHost, kPrdHost, HeaderType.minimal),
   registro('/v1/acesso/registro', kDesHost, kPrdHost, HeaderType.basicInfo),
   usuarioAtivacaoConfirmar('/v1/usuario-ativacao/confirmar', kDesHost, kPrdHost, HeaderType.basicInfo),
-  // Pública (fora da área logada): a API valida só o x-access-token.
+  // Pública e sem headers de acesso: lista as funcionalidades na home.
   funcionalidade('/v1/funcionalidade', kDesHost, kPrdHost, HeaderType.minimal),
   menu('/v1/menu', kDesHost, kPrdHost, HeaderType.loggedArea),
   log('/v1/log', kDesHost, kPrdHost, HeaderType.loggedArea),

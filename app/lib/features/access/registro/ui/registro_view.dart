@@ -101,9 +101,8 @@ class _RegistroViewState extends State<RegistroView> {
     } else if (command.completed) {
       command.clearResult();
       final strings = AppLocalizations.of(context);
-      ScaffoldMessenger.maybeOf(
-        context,
-      )?.showSnackBar(SnackBar(content: Text(strings.translate('contaAtivadaFacaLogin'))));
+      ScaffoldMessenger.maybeOf(context)
+          ?.showSnackBar(SnackBar(content: Text(strings.translate('contaAtivadaFacaLogin'))));
       context.pop(_vm.emailCadastrado);
     }
   }
@@ -154,8 +153,7 @@ class _RegistroViewState extends State<RegistroView> {
 
   String? _validateSenha(String? value) => _translate(_vm.validateSenha(value));
 
-  String? _validateConfirmacao(String? value) =>
-      _translate(_vm.validateConfirmacao(_senhaController.text, value));
+  String? _validateConfirmacao(String? value) => _translate(_vm.validateConfirmacao(_senhaController.text, value));
 
   String? _validateCodigo(String? value) => _translate(_vm.validateCodigo(value));
 
@@ -269,19 +267,13 @@ class _RegistroViewState extends State<RegistroView> {
       const SizedBox(height: 24),
       FilledButton(onPressed: _vm.running ? null : _registrar, child: Text(strings.translate('criarConta'))),
       const SizedBox(height: 8),
-      TextButton(
-        onPressed: _vm.running ? null : () => context.pop(),
-        child: Text(strings.translate('jaTemConta')),
-      ),
+      TextButton(onPressed: _vm.running ? null : () => context.pop(), child: Text(strings.translate('jaTemConta'))),
     ];
   }
 
   List<Widget> _ativacaoSection(AppLocalizations strings) {
     return [
-      Text(
-        '${strings.translate('codigoAtivacaoEnviado')}\n${_vm.emailCadastrado ?? ''}',
-        textAlign: TextAlign.center,
-      ),
+      Text('${strings.translate('codigoAtivacaoEnviado')}\n${_vm.emailCadastrado ?? ''}', textAlign: TextAlign.center),
       const SizedBox(height: 16),
       TextFormField(
         controller: _codigoController,

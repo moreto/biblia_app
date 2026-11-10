@@ -17,7 +17,7 @@ class HomeView extends StatefulWidget {
 
   final HomeViewmodel viewModel;
 
-  /// Viewmodel do card de funcionalidades exibido no corpo da home, acima do botão de login.
+  /// Viewmodel do card de funcionalidades exibido no corpo da home.
   final FuncionalidadeViewmodel funcionalidadeViewModel;
 
   @override
@@ -25,7 +25,8 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
-  int _selectedSetting = 0;
+  /// Posição do item de login na [NavigationBar], à direita de tema e idioma.
+  static const _loginIndex = 2;
 
   @override
   Widget build(BuildContext context) {
@@ -36,38 +37,53 @@ class _HomeViewState extends State<HomeView> {
         elevation: 0,
         actions: const [OrientationButton(), ThemeModeButton()],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [FuncionalidadeView(viewModel: widget.funcionalidadeViewModel)],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: Center(
-              child: ElevatedButton(
-                onPressed: () async {
-                  context.push(Routes.login);
-                },
-                child: Text(strings.translate('login')),
-              ),
-            ),
-          ),
-        ],
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [FuncionalidadeView(viewModel: widget.funcionalidadeViewModel)],
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedSetting,
-        onDestinationSelected: (index) {
-          setState(() => _selectedSetting = index);
-          _showSetting(index);
-        },
-        destinations: [
-          NavigationDestination(icon: Icon(Icons.palette_outlined), label: strings.translate('tema')),
-          NavigationDestination(icon: Icon(Icons.language), label: strings.translate('idioma')),
-        ],
+      // Tema, idioma e login são atalhos: nenhum item fica selecionado, então todos usam a mesma cor
+      // (sem a pílula e sem a troca de cor do item selecionado).
+      bottomNavigationBar: NavigationBarTheme(
+        data: _atalhosTheme(context),
+        child: NavigationBar(
+          indicatorColor: Colors.transparent,
+          onDestinationSelected: (index) {
+            if (index == _loginIndex) {
+              context.push(Routes.login);
+              return;
+            }
+            _showSetting(index);
+          },
+          destinations: [
+            NavigationDestination(icon: Icon(Icons.palette_outlined), label: strings.translate('tema')),
+            NavigationDestination(icon: Icon(Icons.language), label: strings.translate('idioma')),
+            // Login em destaque: borda e ícone na cor primária.
+            NavigationDestination(icon: _loginIcon(context), label: strings.translate('login')),
+          ],
+        ),
       ),
+    );
+  }
+
+  /// Mesma cor de ícone e texto em qualquer estado (a do item não selecionado do Material 3).
+  NavigationBarThemeData _atalhosTheme(BuildContext context) {
+    final theme = Theme.of(context);
+    final cor = theme.colorScheme.onSurfaceVariant;
+    return NavigationBarTheme.of(context).copyWith(
+      iconTheme: WidgetStatePropertyAll(IconThemeData(color: cor)),
+      labelTextStyle: WidgetStatePropertyAll(theme.textTheme.labelMedium?.copyWith(color: cor)),
+    );
+  }
+
+  Widget _loginIcon(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      decoration: BoxDecoration(
+        border: Border.all(color: primary, width: 1.5),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Icon(Icons.login, color: primary),
     );
   }
 

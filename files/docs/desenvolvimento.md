@@ -14,7 +14,7 @@ São criados `lib/features/<nome>/{repository,use_case,ui}` e `test/features/<no
 
 1. Mova a pasta para o domínio certo (ex.: `features/admin/<nome>` ou `features/dashboard/widgets/<nome>`) e ajuste os imports relativos.
 2. Crie o model em `lib/data/model/<dominio>/` com `fromJson` e `toJson`.
-3. Acrescente o endpoint em `ApiCore` ([`commons/lib/commons/api_core.dart`](../../commons/lib/commons/api_core.dart)), normalmente com `HeaderType.loggedArea`.
+3. Acrescente o endpoint em `ApiCore` ([`commons/lib/api/api_core.dart`](../../commons/lib/api/api_core.dart)), normalmente com `HeaderType.loggedArea`.
 4. Troque o `healt` do esqueleto pelos métodos reais. As regras de negócio ficam no use case.
 5. Registre o repository em [`config/dependencies.dart`](../../app/lib/config/dependencies.dart).
 6. Crie a rota: constante em `routes.dart` e `GoRoute` no `*_router.dart` do domínio. Para um card da dashboard, veja a próxima seção.
@@ -44,7 +44,7 @@ FROM (VALUES
 WHERE NOT EXISTS (SELECT 1 FROM public.traducao t WHERE t.trad_chave = v.trad_chave);
 ```
 
-Scripts existentes: `traducao_biblia_leitura`, `traducao_configuracao`, `traducao_loggof`, `traducao_menu`, `traducao_musica`, `traducao_oracao`, `traducao_orientacao`, `traducao_versiculo` e `traducao_versiculo_reacao`.
+Scripts existentes: `traducao_biblia_leitura`, `traducao_configuracao`, `traducao_configuracao_app`, `traducao_funcionalidade`, `traducao_loggof`, `traducao_menu`, `traducao_musica`, `traducao_oracao`, `traducao_orientacao`, `traducao_registro`, `traducao_service`, `traducao_versiculo` e `traducao_versiculo_reacao`. O `funcionalidade.sql` cria os dados da tabela de funcionalidades.
 
 ## Ícones
 
@@ -56,14 +56,14 @@ Scripts existentes: `traducao_biblia_leitura`, `traducao_configuracao`, `traduca
 
 ## Testes
 
-Os testes ficam em [`app/test/features/<feature>/`](../../app/test/features) e não acessam a API:
+Os testes ficam em [`app/test/features/<feature>/`](../../app/test/features), [`app/test/routing/`](../../app/test/routing), [`commons/test/`](../../commons/test) (criptografia, headers e sessões) e [`components/test/`](../../components/test). Nenhum acessa a API:
 
 - O repository é trocado por um fake que implementa o contrato (ex.: `_FakeOracaoRepository`, que devolve uma lista de `Result` em ordem).
 - `_TestLocalizationsDelegate` carrega `AppLocalizations` sem traduções, então os textos aparecem como as chaves (`find.text('outraMusica')`).
 - Efeitos externos entram por injeção. Exemplo: `MusicaUseCase(abrirUrl: ...)` substitui o `url_launcher`.
 - Cubra o use case (regras e conversão de erros), o model (`fromJson`), o viewmodel (estado) e a view (renderização e interação).
 
-Validação, em `app/`:
+Validação, em `app/`, `commons/` e `components/`:
 
 ```bash
 dart format -l 120 lib test

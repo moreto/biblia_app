@@ -9,7 +9,7 @@ O repositório tem quatro pacotes Dart, ligados por `path` no `pubspec.yaml`:
 | Pacote | Conteúdo |
 |---|---|
 | [`app/`](app) | O aplicativo: features, rotas, injeção de dependências, traduções e ícones |
-| [`commons/`](commons) | Endpoints (`ApiCore`), headers, `Result`, sessão, secure storage, criptografia, log e constantes |
+| [`commons/`](commons) | Endpoints (`ApiCore`), headers, `Result`, sessões (`AuthSession`, `AppSession`), secure storage, criptografia, log e constantes |
 | [`service/`](service) | Cliente HTTP (`DioProvider`) e exceções de serviço |
 | [`components/`](components) | Tema (cores, tipografia, espaçamento) e componentes visuais compartilhados |
 
@@ -22,7 +22,7 @@ Outras pastas:
 
 ## Como rodar
 
-1. Suba a `biblia_api` e ajuste `kDesHost` / `kPrdHost` em [`commons/lib/commons/api_core.dart`](commons/lib/commons/api_core.dart) para o endereço dela.
+1. Suba a `biblia_api` e ajuste `kDesHost` / `kPrdHost` em [`commons/lib/api/api_core.dart`](commons/lib/api/api_core.dart) para o endereço dela. Com `localhost`, o emulador Android usa `10.0.2.2` automaticamente; em aparelho físico, use o IP da máquina.
 2. Instale as dependências de todos os pacotes: `./utils/scripts/pub_get.sh`. Com `--clean`, roda `flutter clean` antes.
 3. Rode o app a partir de `app/`: `flutter run`.
 
@@ -30,9 +30,10 @@ Em `app/`, `./update.sh` refaz tudo do zero. Ele apaga os `pubspec.lock` e o `Po
 
 ## Validação
 
-Rode em `app/`:
+Rode em `app/`, `commons/` e `components/`:
 
 ```bash
+dart format -l 120 lib test
 flutter analyze
 flutter test
 ```

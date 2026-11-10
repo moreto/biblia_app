@@ -30,7 +30,7 @@ A mensagem de erro sai da exceção. `HandledException.message` e `HttpServiceEx
 
 ## Injeção de dependências e rotas
 
-- [`config/dependencies.dart`](../../app/lib/config/dependencies.dart): registra os repositories no `GetIt` (`locator`) como `registerLazySingleton<XRepository>(() => XRepositoryImpl())`.
+- [`config/dependencies.dart`](../../app/lib/config/dependencies.dart): registra o `AppConfig` e os repositories no `GetIt` (`locator`) como `registerLazySingleton<XRepository>(() => XRepositoryImpl())`.
 - [`routing/router/*_router.dart`](../../app/lib/routing/router): cada grupo de rotas cria o viewmodel e o use case no `builder` do `GoRoute`, pegando o repository do `locator`. As constantes de caminho ficam em [`routing/routes.dart`](../../app/lib/routing/routes.dart) e o `GoRouter` é montado em [`routing/router.dart`](../../app/lib/routing/router.dart).
 - [`config/providers.dart`](../../app/lib/config/providers.dart): registra só o `AppConfig` (tema e idioma) como `ChangeNotifierProvider`.
 
@@ -38,9 +38,17 @@ A mensagem de erro sai da exceção. `HandledException.message` e `HttpServiceEx
 
 | Classe | Onde | Conteúdo |
 |---|---|---|
-| `AuthSession` | `commons` | Token e `usuaId` do login, usados nos headers `loggedArea`. É gravada pelo `LoginUseCase` e limpa no logoff. |
+| `AppSession` | `commons` | Configuração de `GET /v1/configuracao-app`: `cryptKeyB64` (chave AES da senha) e `accessTokenId` (header `x-access-token`). Lida no `main` pelo `ConfiguracaoAppUseCase`, não depende do usuário e não é limpa no logoff. |
+| `AuthSession` | `commons` | Token e `usuaId` do login, usados nos headers `loggedUser` e `loggedArea`. É gravada pelo `LoginUseCase` e limpa no logoff. |
 | `UsuarioSession` | [`config/usuario_session.dart`](../../app/lib/config/usuario_session.dart) | Detalhe do usuário logado. |
-| `AppConfig` | [`config/app_config.dart`](../../app/lib/config/app_config.dart) | Tema (`ThemeMode`) e idioma, persistidos no secure storage (`kColorScheme`, `kSelectedLanguage`). `ThemeModeButton` e `OrientationButton` alteram essas preferências. |
+| `AppConfig` | [`config/app_config.dart`](../../app/lib/config/app_config.dart) | Tema (`ThemeMode`), idioma e versão da Bíblia, persistidos no secure storage (`kColorScheme`, `kSelectedLanguage`, `kSelectedBibleVersion`). `ThemeModeButton` e `OrientationButton` alteram tema e idioma; a versão é exposta aos use cases pela interface [`VersaoPreferencia`](../../app/lib/config/versao_preferencia.dart). |
+
+## Proteção de rotas
+
+O `redirect` do `GoRouter` chama `authRedirect` ([`routing/auth_guard.dart`](../../app/lib/routing/auth_guard.dart)):
+
+- Sem login, só `/home`, `/login` e `/registro` abrem; as demais rotas (e `/`, que não tem tela) vão para `/home`.
+- Com login, `/`, `/home` e `/login` vão para `/dashboard`.
 
 ## Traduções
 
@@ -64,6 +72,6 @@ A dashboard monta a `NavigationBar` com os menus de `GET /v1/menu`. Menus com fi
 
 ## Pontos de atenção conhecidos
 
-- **Segredos no código:** `kCryptKeyB64` e `kAccessTokenId` ficam em [`commons/lib/commons/constants.dart`](../../commons/lib/commons/constants.dart) e vão para o binário.
-- **Hosts:** `kDesHost` e `kPrdHost` apontam hoje para o mesmo IP local. O `DioProvider` usa `prd` em release e `des` nas demais builds.
-- **Rotas sem proteção:** o `redirect` do `GoRouter` só registra a rota em log. Nada impede abrir `/dashboard` sem login. Nesse caso, as chamadas `loggedArea` falham com `headerInvalido`.
+- **Configuração na abertura:** a chave de criptografia e o access token vêm de `GET /v1/configuracao-app` (sem headers de acesso). Se a chamada falhar no `main`, as rotas `basicInfo` (traduções, login, registro) saem com `x-access-token` vazio; login e registro tentam ler a configuração de novo antes de criptografar a senha.
+- **Hosts:** `kDesHost` é `localhost` (no emulador Android o `DioProvider` troca por `10.0.2.2`) e `kPrdHost` é um IP externo. O `DioProvider` usa `prd` em release e `des` nas demais builds.
+- **HTTP sem TLS:** a API responde em `http`. O Android (a partir do 9) e o iOS (ATS) bloqueiam `http` em release sem configuração extra (`usesCleartextTraffic` / `NSAppTransportSecurity`), que hoje não existe no projeto. O ideal é servir a API em `https`.

@@ -59,7 +59,9 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         localizationsDelegates: const [_TestLocalizationsDelegate(), DefaultMaterialLocalizations.delegate],
-        home: Scaffold(body: SingleChildScrollView(child: FuncionalidadeView(viewModel: viewModel))),
+        home: Scaffold(
+          body: SingleChildScrollView(child: FuncionalidadeView(viewModel: viewModel)),
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -68,7 +70,9 @@ void main() {
   group('FuncionalidadeUseCase', () {
     test('repassa a lista na ordem da API', () async {
       final useCase = FuncionalidadeUseCase(
-        funcionalidadeRepository: _FakeFuncionalidadeRepository([Result.ok([_leitura, _musica])]),
+        funcionalidadeRepository: _FakeFuncionalidadeRepository([
+          Result.ok([_leitura, _musica]),
+        ]),
       );
       final lista = (await useCase.listar() as Ok<List<FuncionalidadeModel>>).value;
       expect(lista.map((f) => f.funcId), [1, 2]);
@@ -81,7 +85,9 @@ void main() {
 
     test('erros são repassados sem alteração', () async {
       final erro = HandledException(message: 'erroApi');
-      final useCase = FuncionalidadeUseCase(funcionalidadeRepository: _FakeFuncionalidadeRepository([Result.error(erro)]));
+      final useCase = FuncionalidadeUseCase(
+        funcionalidadeRepository: _FakeFuncionalidadeRepository([Result.error(erro)]),
+      );
       expect((await useCase.listar() as Error).error, same(erro));
     });
   });
@@ -113,7 +119,9 @@ void main() {
 
   group('FuncionalidadeViewmodel', () {
     test('carrega a lista ao ser criado', () async {
-      final viewModel = criar([Result.ok([_leitura, _musica])]);
+      final viewModel = criar([
+        Result.ok([_leitura, _musica]),
+      ]);
       await pumpEventQueue();
       expect(viewModel.funcionalidades?.length, 2);
     });
@@ -121,12 +129,33 @@ void main() {
 
   group('FuncionalidadeView', () {
     testWidgets('mostra as funcionalidades e marca as inativas como "Em breve"', (tester) async {
-      await montar(tester, criar([Result.ok([_leitura, _musica])]));
+      await montar(
+        tester,
+        criar([
+          Result.ok([_leitura, _musica]),
+        ]),
+      );
 
       expect(find.text('funcionalidades'), findsOneWidget);
       expect(find.text('Leitura Biblica'), findsOneWidget);
       expect(find.text('Card com uma música sorteada.'), findsOneWidget);
       expect(find.text('emBreve'), findsOneWidget);
+    });
+
+    testWidgets('lista longa rola dentro do card, com altura limitada', (tester) async {
+      final lista = [
+        for (var i = 1; i <= 10; i++)
+          FuncionalidadeModel(funcId: i, funcNome: 'Func $i', funcDescricao: '', funcIcone: '', funcAtivo: true),
+      ];
+      await montar(tester, criar([Result.ok(lista)]));
+
+      final lista0 = find.byType(SingleChildScrollView).last;
+      expect(tester.getSize(lista0).height, lessThanOrEqualTo(FuncionalidadeView.alturaMaximaLista));
+      expect(find.text('Func 10').hitTestable(), findsNothing);
+
+      await tester.drag(lista0, const Offset(0, -1000));
+      await tester.pumpAndSettle();
+      expect(find.text('Func 10').hitTestable(), findsOneWidget);
     });
 
     testWidgets('erro no carregamento mostra a mensagem e tenta novamente', (tester) async {

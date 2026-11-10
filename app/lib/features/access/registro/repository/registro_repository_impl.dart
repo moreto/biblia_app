@@ -8,9 +8,8 @@ class RegistroRepositoryImpl implements RegistroRepository {
   @override
   Future<Result<RegistroModel>> registrar({required String email, required String senha}) async {
     try {
-      final response = await DioProvider.of(
-        ApiCore.registro,
-      ).request(verb: Verb.post, body: {'email': email, 'senha': senha});
+      final response = await DioProvider.of(ApiCore.registro)
+          .request(verb: Verb.post, body: {'email': email, 'senha': senha});
       switch (response) {
         case Ok(value: final value) when value is Map:
           return Result.ok(RegistroModel.fromJson(Map<String, dynamic>.from(value)));
@@ -29,9 +28,8 @@ class RegistroRepositoryImpl implements RegistroRepository {
   @override
   Future<Result<void>> ativar({required String email, required String codigo}) async {
     try {
-      final response = await DioProvider.of(
-        ApiCore.usuarioAtivacaoConfirmar,
-      ).request(verb: Verb.post, body: {'email': email, 'key': codigo});
+      final response = await DioProvider.of(ApiCore.usuarioAtivacaoConfirmar)
+          .request(verb: Verb.post, body: {'email': email, 'key': codigo});
       switch (response) {
         case Ok():
           return const Result.ok(null);

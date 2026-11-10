@@ -101,7 +101,9 @@ class _FakeBibliaLeituraRepository implements BibliaLeituraRepository {
       if (i >= 0) {
         reacoes[i] = reacoes[i].copyWith(vreaLido: lido);
       } else if (lido) {
-        reacoes.add(VersiculoReacaoModel(vreaId: 900 + reacoes.length, versId: versId, usuaId: _usuario, vreaLido: true));
+        reacoes.add(
+          VersiculoReacaoModel(vreaId: 900 + reacoes.length, versId: versId, usuaId: _usuario, vreaLido: true),
+        );
       }
     }
     return Result.ok(total);

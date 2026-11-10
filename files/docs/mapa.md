@@ -1,14 +1,15 @@
 # Mapa do código
 
-Para cada tela: rota, feature, use case e endpoints. Os caminhos de feature são relativos a `app/lib/features/`. Os endpoints estão em `ApiCore` ([`commons/lib/commons/api_core.dart`](../../commons/lib/commons/api_core.dart)), com o prefixo `/api`. A `biblia_api` documenta cada endpoint em `files/docs/mapa.md`.
+Para cada tela: rota, feature, use case e endpoints. Os caminhos de feature são relativos a `app/lib/features/`. Os endpoints estão em `ApiCore` ([`commons/lib/api/api_core.dart`](../../commons/lib/api/api_core.dart)), com o prefixo `/api`. A `biblia_api` documenta cada endpoint em `files/docs/mapa.md`.
 
 ## Acesso (`AccessRouter`)
 
 | Rota | Feature | Use case | Endpoints | Comportamento |
 |---|---|---|---|---|
-| `/home` (inicial) | [access/home](../../app/lib/features/access/home) | `HomeUseCase.healt` | `ApiCore.healt` (`/api`) | Verifica se a API responde. Tem atalhos de tema e idioma e leva ao login. |
-| — (card) | [access/home/widgets/funcionalidade](../../app/lib/features/access/home/widgets/funcionalidade) | `FuncionalidadeUseCase.listar` | `/v1/funcionalidade` (público) | Lista as funcionalidades do app na ordem da API. As inativas aparecem esmaecidas, com o selo "Em breve". |
-| `/login` | [access/login](../../app/lib/features/access/login) | `LoginUseCase.login`, `otpSend`, `otpVerify` | `/v1/acesso/login`, `/v1/otp/send`, `/v1/otp/verify` | Valida e-mail e código de 6 dígitos, criptografa a senha (AES-GCM, `kCryptKeyB64`) e grava `AuthSession`. Depois vai para `/dashboard`. O link "Criar conta" abre `/registro`. |
+| — (abertura) | [access/configuracao_app](../../app/lib/features/access/configuracao_app) | `ConfiguracaoAppUseCase.carregar`, `cryptKeyB64` | `/v1/configuracao-app` (público, sem headers de acesso) | Chamado no `main`, antes do `runApp`. Valida `kCryptKeyB64` (AES-256, 32 bytes) e grava a `AppSession`. Login e registro usam o mesmo use case para obter a chave. |
+| `/home` (inicial) | [access/home](../../app/lib/features/access/home) | `HomeUseCase.healt` | `ApiCore.healt` (`/api`) | Verifica se a API responde. A `NavigationBar` tem tema, idioma e, à direita, o login. |
+| — (card) | [access/home/widgets/funcionalidade](../../app/lib/features/access/home/widgets/funcionalidade) | `FuncionalidadeUseCase.listar` | `/v1/funcionalidade` (público, sem headers de acesso) | Lista as funcionalidades do app na ordem da API. As inativas aparecem esmaecidas, com o selo "Em breve". |
+| `/login` | [access/login](../../app/lib/features/access/login) | `LoginUseCase.login`, `otpSend`, `otpVerify` | `/v1/acesso/login`, `/v1/otp/send`, `/v1/otp/verify` | Valida e-mail e código de 6 dígitos, criptografa a senha (AES-GCM, chave de `AppSession`) e grava `AuthSession`. Depois vai para `/dashboard`. O link "Criar conta" abre `/registro`. |
 | `/registro` | [access/registro](../../app/lib/features/access/registro) | `RegistroUseCase.registrar`, `ativar` | `/v1/acesso/registro`, `/v1/usuario-ativacao/confirmar` (públicos) | Valida e-mail, senha (mínimo 6) e confirmação, criptografa a senha e cria o usuário inativo. Depois pede o código de 6 dígitos enviado ao e-mail e ativa a conta. Volta ao login com o e-mail preenchido. |
 
 ## Comum (`CommonRouter`)
@@ -43,7 +44,9 @@ Para cada tela: rota, feature, use case e endpoints. Os caminhos de feature são
 | [`config/dependencies.dart`](../../app/lib/config/dependencies.dart) | Registro dos repositories no `GetIt` |
 | [`config/command.dart`](../../app/lib/config/command.dart) | `Command0` / `Command1` |
 | [`config/icons_map.dart`](../../app/lib/config/icons_map.dart) | Chave MDI → `IconData` (menus e cards) |
-| [`config/app_config.dart`](../../app/lib/config/app_config.dart) | Tema e idioma persistidos |
+| [`config/app_config.dart`](../../app/lib/config/app_config.dart) | Tema, idioma e versão da Bíblia persistidos |
+| [`config/versao_preferencia.dart`](../../app/lib/config/versao_preferencia.dart) | Interface da versão da Bíblia escolhida (implementada por `AppConfig`) |
+| [`routing/auth_guard.dart`](../../app/lib/routing/auth_guard.dart) | Rotas públicas e redirecionamento conforme a sessão |
 | [`config/theme_mode_button.dart`](../../app/lib/config/theme_mode_button.dart), [`orientation_button.dart`](../../app/lib/config/orientation_button.dart) | Botões da AppBar |
 | [`config/device_info.dart`](../../app/lib/config/device_info.dart) | Informações do dispositivo (a chamada em `main.dart` está comentada) |
 | [`l10n/`](../../app/lib/l10n) | `AppLocalizations` e repository de `/v1/traducao` |

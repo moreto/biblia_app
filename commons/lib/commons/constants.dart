@@ -11,8 +11,6 @@ const String kSelectedBibleVersion = 'selectedBibleVersion';
 const String kApp = 'Bbl App';
 const String kApi = 'Bbl Api';
 
-// config
-
 // chaves (`citeChave`) devolvidas por GET /v1/configuracao-app
 const String kConfCryptKey = 'kCryptKey';
 const String kConfCryptKeyB64 = 'kCryptKeyB64';

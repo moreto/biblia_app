@@ -11,5 +11,5 @@ Visão por camada do app Flutter. Para instalação e execução, veja o [README
 
 Pontos de entrada:
 
-- [`app/lib/main.dart`](../../app/lib/main.dart): registra as dependências (`configDependencies`), carrega tema e idioma salvos (`AppConfig.load`) e chama `runApp`.
+- [`app/lib/main.dart`](../../app/lib/main.dart): registra as dependências (`configDependencies`), carrega tema e idioma salvos (`AppConfig.load`), lê a configuração do app (`ConfiguracaoAppUseCase.carregar`: chave de criptografia e access token) e chama `runApp`.
 - [`app/lib/app.dart`](../../app/lib/app.dart): monta o `MaterialApp.router` com o tema de `components`, as traduções (`AppLocalizations`) e o `GoRouter`.

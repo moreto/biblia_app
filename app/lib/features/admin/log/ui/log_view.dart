@@ -77,17 +77,13 @@ class _LogViewState extends State<LogView> {
   String _formatDate(DateTime date) {
     final localDate = date.toLocal();
     final formattedDate = MaterialLocalizations.of(context).formatMediumDate(localDate);
-    final formattedTime = MaterialLocalizations.of(context).formatTimeOfDay(
-      TimeOfDay.fromDateTime(localDate),
-    );
+    final formattedTime = MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime(localDate));
     return '$formattedDate $formattedTime';
   }
 
   Widget _buildLog(LogModel log) {
     final strings = AppLocalizations.of(context);
-    final title = log.logTexto?.trim().isNotEmpty == true
-        ? log.logTexto!
-        : '${strings.translate('log')} ${log.logId}';
+    final title = log.logTexto?.trim().isNotEmpty == true ? log.logTexto! : '${strings.translate('log')} ${log.logId}';
     final details = log.logInfo;
 
     return Card(

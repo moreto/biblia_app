@@ -16,7 +16,13 @@ class DioProvider {
 
   DioProvider.of(this._apiCore)
     : _header = Header.getHeader(_apiCore.headerType),
-      _url = (kReleaseMode ? _apiCore.prd : _apiCore.des) + _apiCore.endpoint;
+      _url = _resolveHost(kReleaseMode ? _apiCore.prd : _apiCore.des) + _apiCore.endpoint;
+
+  /// No emulador Android, `localhost` é o próprio emulador; o computador fica em `10.0.2.2`.
+  static String _resolveHost(String host) {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return host;
+    return host.replaceFirst('://localhost', '://10.0.2.2');
+  }
 
   Future<Result<dynamic>> request({
     required Verb verb,
@@ -38,7 +44,10 @@ class DioProvider {
     try {
       if (verb == Verb.put && body == null) {
         return Result.error(
-          HttpServiceException(exception: Exception('oCorpoDaRequisitacaoObrig'), message: 'oCorpoDaRequisitacaoObrig'),
+          HttpServiceException(
+            exception: Exception('corpoRequisicaoObrigatorio'),
+            message: 'corpoRequisicaoObrigatorio',
+          ),
         );
       }
 

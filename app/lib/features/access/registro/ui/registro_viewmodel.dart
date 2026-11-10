@@ -19,8 +19,9 @@ class RegistroViewmodel extends ChangeNotifier {
 
   final RegistroUseCase registroUseCase;
 
-  late final Command1<RegistroModel, ({String email, String senha, String confirmacao})> registrarCommand =
-      Command1(_registrar);
+  late final Command1<RegistroModel, ({String email, String senha, String confirmacao})> registrarCommand = Command1(
+    _registrar,
+  );
   late final Command1<void, ({String email, String codigo})> ativarCommand = Command1(_ativar);
 
   List<Command> get _commands => [registrarCommand, ativarCommand];
@@ -60,11 +61,7 @@ class RegistroViewmodel extends ChangeNotifier {
   // ---------- chamadas ----------
 
   Future<Result<RegistroModel>> _registrar(({String email, String senha, String confirmacao}) args) async {
-    final result = await registroUseCase.registrar(
-      email: args.email,
-      senha: args.senha,
-      confirmacao: args.confirmacao,
-    );
+    final result = await registroUseCase.registrar(email: args.email, senha: args.senha, confirmacao: args.confirmacao);
     switch (result) {
       case Ok<RegistroModel>(value: final registro):
         _emailCadastrado = registro.usuaEmail;
