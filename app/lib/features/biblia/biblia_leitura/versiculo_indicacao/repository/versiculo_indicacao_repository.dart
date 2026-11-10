@@ -1,6 +1,6 @@
 import 'package:commons/commons.dart';
 
-import '../../../../data/model/biblia/versiculo_indicacao_model.dart';
+import '../../../../../data/model/biblia/versiculo_indicacao_model.dart';
 
 /// Acesso às indicações de versículo (`/v1/versiculo-indicacao`).
 abstract class VersiculoIndicacaoRepository {

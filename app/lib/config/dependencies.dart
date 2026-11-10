@@ -1,7 +1,5 @@
 import 'package:get_it/get_it.dart';
 
-import 'app_config.dart';
-
 import '../features/access/configuracao_app/repository/configuracao_app_repository.dart';
 import '../features/access/configuracao_app/repository/configuracao_app_repository_impl.dart';
 import '../features/access/home/repository/home_repository.dart';
@@ -22,10 +20,10 @@ import '../features/admin/notificacao/repository/notificacao_repository.dart';
 import '../features/admin/notificacao/repository/notificacao_repository_impl.dart';
 import '../features/biblia/biblia_leitura/repository/biblia_leitura_repository.dart';
 import '../features/biblia/biblia_leitura/repository/biblia_leitura_repository_impl.dart';
-import '../features/biblia/versiculo_indicacao/repository/versiculo_indicacao_repository.dart';
-import '../features/biblia/versiculo_indicacao/repository/versiculo_indicacao_repository_impl.dart';
-import '../features/biblia/versiculo_indicacao/repository/versiculo_indicacao_usuario_repository.dart';
-import '../features/biblia/versiculo_indicacao/repository/versiculo_indicacao_usuario_repository_impl.dart';
+import '../features/biblia/biblia_leitura/versiculo_indicacao/repository/versiculo_indicacao_repository.dart';
+import '../features/biblia/biblia_leitura/versiculo_indicacao/repository/versiculo_indicacao_repository_impl.dart';
+import '../features/biblia/biblia_leitura/versiculo_indicacao/repository/versiculo_indicacao_usuario_repository.dart';
+import '../features/biblia/biblia_leitura/versiculo_indicacao/repository/versiculo_indicacao_usuario_repository_impl.dart';
 import '../features/dashboard/repository/dashboard_repository.dart';
 import '../features/dashboard/repository/dashboard_repository_impl.dart';
 import '../features/dashboard/widgets/musica/repository/musica_repository.dart';
@@ -36,6 +34,7 @@ import '../features/dashboard/widgets/versiculo/repository/versiculo_repository.
 import '../features/dashboard/widgets/versiculo/repository/versiculo_repository_impl.dart';
 import '../features/dashboard/widgets/versiculo_reacao/repository/versiculo_reacao_repository.dart';
 import '../features/dashboard/widgets/versiculo_reacao/repository/versiculo_reacao_repository_impl.dart';
+import 'app_config.dart';
 
 final GetIt locator = GetIt.instance;
 

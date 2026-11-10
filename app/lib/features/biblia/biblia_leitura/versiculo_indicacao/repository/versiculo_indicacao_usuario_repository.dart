@@ -1,7 +1,7 @@
 import 'package:commons/commons.dart';
 
-import '../../../../data/model/biblia/versiculo_indicacao_usuario_model.dart';
-import '../../../../data/model/usuario/usuario_resumo_model.dart';
+import '../../../../../data/model/biblia/versiculo_indicacao_usuario_model.dart';
+import '../../../../../data/model/usuario/usuario_resumo_model.dart';
 
 /// Acesso aos usuários que recebem uma indicação de versículo (`/v1/versiculo-indicacao-usuario`) e à busca de
 /// usuários para escolher os destinatários (`/v1/usuario/busca`).

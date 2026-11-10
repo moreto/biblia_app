@@ -1,8 +1,8 @@
 import 'package:commons/commons.dart';
 import 'package:service/service.dart';
 
-import '../../../../data/model/biblia/versiculo_indicacao_usuario_model.dart';
-import '../../../../data/model/usuario/usuario_resumo_model.dart';
+import '../../../../../data/model/biblia/versiculo_indicacao_usuario_model.dart';
+import '../../../../../data/model/usuario/usuario_resumo_model.dart';
 import 'versiculo_indicacao_usuario_repository.dart';
 
 class VersiculoIndicacaoUsuarioRepositoryImpl implements VersiculoIndicacaoUsuarioRepository {
@@ -26,9 +26,8 @@ class VersiculoIndicacaoUsuarioRepositoryImpl implements VersiculoIndicacaoUsuar
   @override
   Future<Result<void>> excluir(int viusId) async {
     try {
-      final response = await DioProvider.of(
-        ApiCore.versiculoIndicacaoUsuario,
-      ).request(verb: Verb.delete, pathParam: viusId);
+      final response = await DioProvider.of(ApiCore.versiculoIndicacaoUsuario)
+          .request(verb: Verb.delete, pathParam: viusId);
       switch (response) {
         case Ok():
           return const Result.ok(null);

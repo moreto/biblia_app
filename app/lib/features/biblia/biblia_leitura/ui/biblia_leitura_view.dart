@@ -11,8 +11,8 @@ import 'package:service/service.dart';
 
 import '../../../../data/model/biblia/livro_model.dart';
 import '../../../../data/model/biblia/versiculo_texto_model.dart';
-import '../../versiculo_indicacao/use_case/versiculo_indicacao_usecase.dart';
 import '../use_case/biblia_leitura_usecase.dart';
+import '../versiculo_indicacao/use_case/versiculo_indicacao_usecase.dart';
 import 'biblia_leitura_viewmodel.dart';
 import 'widgets/capitulo_chip.dart';
 import 'widgets/historico_leitura_sheet.dart';

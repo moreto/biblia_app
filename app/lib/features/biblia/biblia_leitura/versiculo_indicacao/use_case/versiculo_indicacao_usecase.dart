@@ -1,6 +1,6 @@
 import 'package:commons/commons.dart';
 
-import '../../../../data/model/biblia/versiculo_indicacao_model.dart';
+import '../../../../../data/model/biblia/versiculo_indicacao_model.dart';
 import '../repository/versiculo_indicacao_repository.dart';
 
 /// Indicações de um versículo: quantas existem e qual é a do usuário logado.

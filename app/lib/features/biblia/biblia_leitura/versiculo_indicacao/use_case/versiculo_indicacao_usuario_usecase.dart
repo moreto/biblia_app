@@ -1,9 +1,9 @@
 import 'package:commons/commons.dart';
 import 'package:service/service.dart';
 
-import '../../../../data/model/biblia/versiculo_indicacao_model.dart';
-import '../../../../data/model/biblia/versiculo_indicacao_usuario_model.dart';
-import '../../../../data/model/usuario/usuario_resumo_model.dart';
+import '../../../../../data/model/biblia/versiculo_indicacao_model.dart';
+import '../../../../../data/model/biblia/versiculo_indicacao_usuario_model.dart';
+import '../../../../../data/model/usuario/usuario_resumo_model.dart';
 import '../repository/versiculo_indicacao_usuario_repository.dart';
 
 /// Regras dos usuários que recebem a indicação de um versículo:

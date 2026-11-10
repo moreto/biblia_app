@@ -1,7 +1,7 @@
 import 'package:commons/commons.dart';
 import 'package:service/service.dart';
 
-import '../../../../data/model/biblia/versiculo_indicacao_model.dart';
+import '../../../../../data/model/biblia/versiculo_indicacao_model.dart';
 import 'versiculo_indicacao_repository.dart';
 
 class VersiculoIndicacaoRepositoryImpl implements VersiculoIndicacaoRepository {

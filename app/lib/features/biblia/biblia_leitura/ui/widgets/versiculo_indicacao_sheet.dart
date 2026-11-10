@@ -4,7 +4,7 @@ import 'package:app/config/command.dart';
 import 'package:app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
-import '../../../versiculo_indicacao/use_case/versiculo_indicacao_usecase.dart';
+import '../../versiculo_indicacao/use_case/versiculo_indicacao_usecase.dart';
 import '../biblia_leitura_view.dart';
 import '../biblia_leitura_viewmodel.dart';
 

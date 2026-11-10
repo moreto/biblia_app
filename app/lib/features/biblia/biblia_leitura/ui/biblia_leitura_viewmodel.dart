@@ -9,13 +9,13 @@ import '../../../../data/model/biblia/testamento_model.dart';
 import '../../../../data/model/biblia/versao_model.dart';
 import '../../../../data/model/biblia/versiculo_indicacao_model.dart';
 import '../../../../data/model/biblia/versiculo_indicacao_usuario_model.dart';
-import '../../../../data/model/usuario/usuario_resumo_model.dart';
 import '../../../../data/model/biblia/versiculo_texto_model.dart';
+import '../../../../data/model/usuario/usuario_resumo_model.dart';
 import '../../../../data/model/versiculo/versiculo_reacao_model.dart';
 import '../../../dashboard/widgets/versiculo_reacao/use_case/versiculo_reacao_usecase.dart';
-import '../../versiculo_indicacao/use_case/versiculo_indicacao_usecase.dart';
-import '../../versiculo_indicacao/use_case/versiculo_indicacao_usuario_usecase.dart';
 import '../use_case/biblia_leitura_usecase.dart';
+import '../versiculo_indicacao/use_case/versiculo_indicacao_usecase.dart';
+import '../versiculo_indicacao/use_case/versiculo_indicacao_usuario_usecase.dart';
 
 /// Estado da leitura da Bíblia.
 ///
@@ -481,7 +481,11 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
             _lidos = {..._lidos}..remove(chave);
             if (progresso != null) _lidos[chave] = progresso;
           }
-          _feedback = bibliaLeituraUseCase.mensagemVersiculo(lido: reacao.vreaLido, antes: antes, depois: _lidos[chave]);
+          _feedback = bibliaLeituraUseCase.mensagemVersiculo(
+            lido: reacao.vreaLido,
+            antes: antes,
+            depois: _lidos[chave],
+          );
         }
       case Error<VersiculoReacaoModel>(error: final error):
         Log.print(error.toString(), name: kApp, title: 'Erro');
