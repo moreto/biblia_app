@@ -11,6 +11,9 @@ class AuthSession {
   int? get userId => _userId;
   int? get emprId => _emprId;
 
+  /// Há usuário logado (token e usuário gravados pelo login).
+  bool get isLogged => (_token?.isNotEmpty ?? false) && (_userId ?? 0) > 0;
+
   void setLoggedUser({required String token, required int userId, int? emprId}) {
     if (token.isEmpty || userId <= 0) {
       throw ArgumentError('tokenInvalido');

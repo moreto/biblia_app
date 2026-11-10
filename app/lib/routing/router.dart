@@ -3,6 +3,7 @@ import 'package:commons/commons.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 
+import 'auth_guard.dart';
 import 'router/access_router.dart';
 import 'router/biblia_router.dart';
 import 'router/configuracao_router.dart';
@@ -16,7 +17,7 @@ GoRouter router() => GoRouter(
   // debugLogDiagnostics: true,
   redirect: (BuildContext context, GoRouterState state) {
     Log.print(state.uri.toString(), title: 'Route', name: kApp);
-    return null;
+    return authRedirect(path: state.uri.path, isLogged: AuthSession.instance.isLogged);
   },
   // refreshListenable: authRepository,
   routes: [
