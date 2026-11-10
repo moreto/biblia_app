@@ -23,6 +23,8 @@ enum ApiCore {
   login('/v1/acesso/login', kDesHost, kPrdHost, HeaderType.basicInfo),
   otpSend('/v1/otp/send', kDesHost, kPrdHost, HeaderType.basicInfo),
   otpVerify('/v1/otp/verify', kDesHost, kPrdHost, HeaderType.basicInfo),
+  // Pública (fora da área logada): a API valida só o x-access-token.
+  configuracaoApp('/v1/configuracao-app', kDesHost, kPrdHost, HeaderType.basicInfo),
   registro('/v1/acesso/registro', kDesHost, kPrdHost, HeaderType.basicInfo),
   usuarioAtivacaoConfirmar('/v1/usuario-ativacao/confirmar', kDesHost, kPrdHost, HeaderType.basicInfo),
   // Pública (fora da área logada): a API valida só o x-access-token.
@@ -99,6 +101,10 @@ class Header {
   }
 
   static Map<String, String> buildHeaders() {
-    return {...header, 'x-access-interface': 'App', 'x-access-token': kAccessTokenId};
+    return {
+      ...header,
+      'x-access-interface': 'App',
+      'x-access-token': AppSession.instance.accessTokenId ?? kAccessTokenId,
+    };
   }
 }

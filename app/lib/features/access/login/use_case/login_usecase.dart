@@ -2,13 +2,17 @@ import 'package:commons/commons.dart';
 import 'package:service/service.dart';
 
 import '../../../../data/model/login_model.dart';
+import '../../configuracao_app/use_case/configuracao_app_usecase.dart';
 import '../repository/login_repository.dart';
 
 /// Regras de negócio do login. As validações devolvem a chave de tradução do erro, ou null se o valor é válido.
 class LoginUseCase {
-  LoginUseCase({required this.loginRepository});
+  LoginUseCase({required this.loginRepository, required this.configuracaoAppUseCase});
 
   final LoginRepository loginRepository;
+
+  /// Fornece a chave de criptografia da senha, lida de `GET /v1/configuracao-app`.
+  final ConfiguracaoAppUseCase configuracaoAppUseCase;
   final Encrypt _encrypt = Encrypt();
 
   static final _emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
@@ -47,9 +51,17 @@ class LoginUseCase {
     final invalid = validateEmail(email) ?? validateSenha(senha);
     if (invalid != null) return Result.error(HandledException(message: invalid));
 
+    final String chave;
+    switch (await configuracaoAppUseCase.cryptKeyB64()) {
+      case Ok<String>(value: final value):
+        chave = value;
+      case Error<String>(error: final error):
+        return Result.error(error);
+    }
+
     final String senhaCriptografada;
     try {
-      senhaCriptografada = await _encrypt.encryptString(senha, kCryptKeyB64);
+      senhaCriptografada = await _encrypt.encryptString(senha, chave);
     } catch (_) {
       return Result.error(HandledException(message: kDefaultAppError));
     }

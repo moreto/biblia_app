@@ -1,4 +1,7 @@
+import 'package:app/data/model/configuracao/configuracao_app_model.dart';
 import 'package:app/data/model/registro_model.dart';
+import 'package:app/features/access/configuracao_app/repository/configuracao_app_repository.dart';
+import 'package:app/features/access/configuracao_app/use_case/configuracao_app_usecase.dart';
 import 'package:app/features/access/registro/repository/registro_repository.dart';
 import 'package:app/features/access/registro/ui/registro_view.dart';
 import 'package:app/features/access/registro/ui/registro_viewmodel.dart';
@@ -38,6 +41,15 @@ class _FakeRegistroRepository implements RegistroRepository {
   }
 }
 
+/// Chave AES-256 de teste devolvida como `kCryptKeyB64` pela configuração do app.
+const _chaveTeste = '5oAaa+hIOTQzGUxHYn8o6mHfQqEi9PXb4kBGpCQ+fn0=';
+
+class _FakeConfiguracaoAppRepository implements ConfiguracaoAppRepository {
+  @override
+  Future<Result<List<ConfiguracaoAppModel>>> listar() async =>
+      const Result.ok([ConfiguracaoAppModel(citeChave: kConfCryptKeyB64, citeValor: _chaveTeste)]);
+}
+
 class _TestLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _TestLocalizationsDelegate();
 
@@ -55,9 +67,15 @@ class _TestLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations>
 void main() {
   late _FakeRegistroRepository repository;
 
-  setUp(() => repository = _FakeRegistroRepository());
+  setUp(() {
+    repository = _FakeRegistroRepository();
+    AppSession.instance.clear();
+  });
 
-  RegistroUseCase useCase() => RegistroUseCase(registroRepository: repository);
+  RegistroUseCase useCase() => RegistroUseCase(
+    registroRepository: repository,
+    configuracaoAppUseCase: ConfiguracaoAppUseCase(configuracaoAppRepository: _FakeConfiguracaoAppRepository()),
+  );
 
   group('RegistroUseCase', () {
     test('valida e-mail, senha mínima e confirmação', () {
@@ -79,7 +97,7 @@ void main() {
       expect(result, isA<Ok<RegistroModel>>());
       expect(repository.registros.single.email, 'novo@biblia.com');
       expect(repository.registros.single.senha, isNot('segredo'));
-      expect(await Encrypt().decryptString(repository.registros.single.senha, kCryptKeyB64), 'segredo');
+      expect(await Encrypt().decryptString(repository.registros.single.senha, _chaveTeste), 'segredo');
     });
 
     test('dados inválidos não chamam a API', () async {

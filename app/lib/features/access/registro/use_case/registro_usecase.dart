@@ -2,6 +2,7 @@ import 'package:commons/commons.dart';
 import 'package:service/service.dart';
 
 import '../../../../data/model/registro_model.dart';
+import '../../configuracao_app/use_case/configuracao_app_usecase.dart';
 import '../repository/registro_repository.dart';
 
 /// Regras de negócio do cadastro de usuário. As validações devolvem a chave de tradução do erro, ou null se o
@@ -12,11 +13,14 @@ import '../repository/registro_repository.dart';
 /// - a API cria o usuário inativo e envia um código de 6 dígitos ao e-mail; a conta só é ativada ao confirmar
 ///   esse código.
 class RegistroUseCase {
-  RegistroUseCase({required this.registroRepository}) {
+  RegistroUseCase({required this.registroRepository, required this.configuracaoAppUseCase}) {
     Log.print(super.runtimeType);
   }
 
   final RegistroRepository registroRepository;
+
+  /// Fornece a chave de criptografia da senha, lida de `GET /v1/configuracao-app`.
+  final ConfiguracaoAppUseCase configuracaoAppUseCase;
   final Encrypt _encrypt = Encrypt();
 
   /// Tamanho mínimo da senha no cadastro.
@@ -69,9 +73,17 @@ class RegistroUseCase {
     final invalid = validateEmail(email) ?? validateSenha(senha) ?? validateConfirmacao(senha, confirmacao);
     if (invalid != null) return Result.error(HandledException(message: invalid));
 
+    final String chave;
+    switch (await configuracaoAppUseCase.cryptKeyB64()) {
+      case Ok<String>(value: final value):
+        chave = value;
+      case Error<String>(error: final error):
+        return Result.error(error);
+    }
+
     final String senhaCriptografada;
     try {
-      senhaCriptografada = await _encrypt.encryptString(senha, kCryptKeyB64);
+      senhaCriptografada = await _encrypt.encryptString(senha, chave);
     } catch (_) {
       return Result.error(HandledException(message: kDefaultAppError));
     }

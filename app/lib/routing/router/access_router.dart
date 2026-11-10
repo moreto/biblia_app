@@ -1,6 +1,8 @@
 import 'package:go_router/go_router.dart';
 
 import '../../config/dependencies.dart';
+import '../../features/access/configuracao_app/repository/configuracao_app_repository.dart';
+import '../../features/access/configuracao_app/use_case/configuracao_app_usecase.dart';
 import '../../features/access/home/repository/home_repository.dart';
 import '../../features/access/home/ui/home_view.dart';
 import '../../features/access/home/ui/home_viewmodel.dart';
@@ -35,7 +37,14 @@ abstract final class AccessRouter {
     GoRoute(
       path: Routes.login,
       builder: (context, state) {
-        final viewModel = LoginViewmodel(loginUseCase: LoginUseCase(loginRepository: locator<LoginRepository>()));
+        final viewModel = LoginViewmodel(
+          loginUseCase: LoginUseCase(
+            loginRepository: locator<LoginRepository>(),
+            configuracaoAppUseCase: ConfiguracaoAppUseCase(
+              configuracaoAppRepository: locator<ConfiguracaoAppRepository>(),
+            ),
+          ),
+        );
         return LoginView(viewModel: viewModel);
       },
     ),
@@ -44,7 +53,12 @@ abstract final class AccessRouter {
       path: Routes.registro,
       builder: (context, state) {
         final viewModel = RegistroViewmodel(
-          registroUseCase: RegistroUseCase(registroRepository: locator<RegistroRepository>()),
+          registroUseCase: RegistroUseCase(
+            registroRepository: locator<RegistroRepository>(),
+            configuracaoAppUseCase: ConfiguracaoAppUseCase(
+              configuracaoAppRepository: locator<ConfiguracaoAppRepository>(),
+            ),
+          ),
         );
         return RegistroView(viewModel: viewModel);
       },
