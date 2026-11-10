@@ -15,22 +15,25 @@ enum HeaderType { minimal, basicInfo, loggedUser, loggedArea }
 // const String kPrdHost = 'http://192.168.1.45:3000/api';
 
 // prod
-// const String kDesHost = 'http://192.168.1.45:3000/api';
-const String kDesHost = 'http://localhost:3000/api';
+const String kDesHost = 'http://192.168.1.45:3000/api';
+// const String kDesHost = 'http://localhost:3000/api';
 const String kPrdHost = 'http://179.252.135.186:3000/api';
 
 enum ApiCore {
+  // Pública (fora da área logada)
+  healt('', kDesHost, kPrdHost, HeaderType.minimal),
+  configuracaoApp('/v1/configuracao-app', kDesHost, kPrdHost, HeaderType.minimal),
+  funcionalidade('/v1/funcionalidade', kDesHost, kPrdHost, HeaderType.minimal),
+
   // Pública (fora da área logada): a API valida só o x-access-token.
+  registro('/v1/acesso/registro', kDesHost, kPrdHost, HeaderType.basicInfo),
   traducao('/v1/traducao', kDesHost, kPrdHost, HeaderType.basicInfo),
   login('/v1/acesso/login', kDesHost, kPrdHost, HeaderType.basicInfo),
   otpSend('/v1/otp/send', kDesHost, kPrdHost, HeaderType.basicInfo),
   otpVerify('/v1/otp/verify', kDesHost, kPrdHost, HeaderType.basicInfo),
-  // Pública e sem headers de acesso: é dela que vem o x-access-token das demais rotas.
-  configuracaoApp('/v1/configuracao-app', kDesHost, kPrdHost, HeaderType.minimal),
-  registro('/v1/acesso/registro', kDesHost, kPrdHost, HeaderType.basicInfo),
   usuarioAtivacaoConfirmar('/v1/usuario-ativacao/confirmar', kDesHost, kPrdHost, HeaderType.basicInfo),
-  // Pública e sem headers de acesso: lista as funcionalidades na home.
-  funcionalidade('/v1/funcionalidade', kDesHost, kPrdHost, HeaderType.minimal),
+
+  // Area Logada (requere autenticação)
   menu('/v1/menu', kDesHost, kPrdHost, HeaderType.loggedArea),
   log('/v1/log', kDesHost, kPrdHost, HeaderType.loggedArea),
   notificacao('/v1/notificacao', kDesHost, kPrdHost, HeaderType.loggedArea),
@@ -50,8 +53,7 @@ enum ApiCore {
   testamento('/v1/testamento', kDesHost, kPrdHost, HeaderType.loggedArea),
   livro('/v1/livro', kDesHost, kPrdHost, HeaderType.loggedArea),
   bibliaIndice('/v1/biblia/indice', kDesHost, kPrdHost, HeaderType.loggedArea),
-  bibliaCapitulo('/v1/biblia/capitulo', kDesHost, kPrdHost, HeaderType.loggedArea),
-  healt('', kDesHost, kPrdHost, HeaderType.minimal);
+  bibliaCapitulo('/v1/biblia/capitulo', kDesHost, kPrdHost, HeaderType.loggedArea);
 
   const ApiCore(this.endpoint, this.des, this.prd, this.headerType);
   final String endpoint;
