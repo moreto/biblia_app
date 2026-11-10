@@ -6,6 +6,7 @@ import 'package:app/l10n/app_localizations.dart';
 import 'package:commons/commons.dart';
 import 'package:components/components.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:service/service.dart';
 
 import '../../../../data/model/biblia/livro_model.dart';
@@ -125,10 +126,44 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
       if (command.error) {
         final mensagem = BibliaLeituraView.mensagemErro(command.result);
         command.clearResult();
-        ScaffoldMessenger.maybeOf(context)
-            ?.showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).translate(mensagem))));
+        _mostrarMensagem(mensagem);
       }
     }
+    // Confirmação da marcação de lido (capítulo ou versículo).
+    if (_vm.consumirFeedback() case (:final mensagem, :final lido)) {
+      HapticFeedback.lightImpact();
+      _mostrarMensagem(mensagem, lido: lido);
+    }
+  }
+
+  /// SnackBar com a [mensagem] (chave de tradução); substitui a anterior para não acumular em toques seguidos.
+  /// [lido] mostra o ícone de lido (true) ou não lido (false) da confirmação; nulo é erro, sem ícone.
+  void _mostrarMensagem(String mensagem, {bool? lido}) {
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    if (messenger == null) return;
+    final scheme = Theme.of(context).colorScheme;
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: lido == null ? 4 : 2),
+          content: Row(
+            children: [
+              if (lido != null) ...[
+                BibliaLeituraView.icone(
+                  lido ? BibliaLeituraView.iconeLido : BibliaLeituraView.iconeNaoLido,
+                  lido ? Icons.check_circle : Icons.check_circle_outline,
+                  size: 20,
+                  color: scheme.inversePrimary,
+                ),
+                const SizedBox(width: 12),
+              ],
+              Expanded(child: Text(AppLocalizations.of(context).translate(mensagem))),
+            ],
+          ),
+        ),
+      );
   }
 
   void _abrirHistorico() {

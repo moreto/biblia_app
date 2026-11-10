@@ -373,10 +373,13 @@ void main() {
       await viewModel.marcarLidoCommand.execute();
       expect(viewModel.lidoAtual?.completo, isTrue);
       expect(viewModel.capitulosLidosDo(_genesis.livrId), 2);
+      expect(viewModel.consumirFeedback(), (mensagem: 'capituloMarcadoLido', lido: true));
+      expect(viewModel.feedback, isNull);
 
       await viewModel.marcarLidoCommand.execute();
       expect(viewModel.lidoAtual, isNull);
       expect(repository.marcacoes.map((m) => m.lido), [true, false]);
+      expect(viewModel.consumirFeedback(), (mensagem: 'capituloDesmarcadoLido', lido: false));
     });
 
     test('erro ao marcar mantém o progresso anterior', () async {
@@ -428,15 +431,18 @@ void main() {
       expect(viewModel.versiculoLido(1202), isTrue);
       expect(viewModel.lidoAtual?.completo, isTrue);
       expect(viewModel.capitulosLidosDo(_genesis.livrId), 2);
+      expect(viewModel.consumirFeedback(), (mensagem: 'capituloConcluido', lido: true));
 
       await viewModel.marcarVersiculoCommand.execute(viewModel.versiculos![0]);
       expect(viewModel.versiculoLido(1201), isFalse);
       expect(viewModel.lidoAtual?.versLidos, 1);
+      expect(viewModel.consumirFeedback(), (mensagem: 'versiculoDesmarcadoLido', lido: false));
       expect(repository.reacoes.firstWhere((r) => r.versId == 1201).vreaComentario, 'Amém');
 
       await viewModel.marcarVersiculoCommand.execute(viewModel.versiculos![0]);
       expect(repository.reacoes.firstWhere((r) => r.versId == 1201).vreaComentario, 'Amém');
       expect(repository.reacoes.where((r) => r.versId == 1201), hasLength(1));
+      expect(viewModel.consumirFeedback(), (mensagem: 'capituloConcluido', lido: true));
     });
 
     test('desmarcar todos os versículos remove o capítulo do progresso', () async {
@@ -535,6 +541,12 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('capituloLido'), findsOneWidget);
       expect(find.text('desmarcarCapituloLido'), findsOneWidget);
+      expect(find.text('capituloMarcadoLido'), findsOneWidget);
+
+      await tester.tap(find.text('desmarcarCapituloLido'));
+      await tester.pumpAndSettle();
+      expect(find.text('capituloDesmarcadoLido'), findsOneWidget);
+      expect(find.text('capituloMarcadoLido'), findsNothing);
     });
 
     testWidgets('a versão é escolhida no índice, acima dos testamentos, e não na AppBar', (tester) async {
@@ -598,6 +610,7 @@ void main() {
       expect(find.byTooltip('desmarcarVersiculoLido'), findsOneWidget);
       expect(find.text('1/2 versiculosLidos'), findsOneWidget);
       expect(find.byType(VersiculoIndicacaoSheet), findsNothing);
+      expect(find.text('versiculoMarcadoLido'), findsOneWidget);
     });
   });
 }

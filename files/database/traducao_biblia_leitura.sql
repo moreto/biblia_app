@@ -26,6 +26,11 @@ FROM (VALUES
   ('indicarVersiculo', 'Indicar versículo', 'Recomendar versículo', 'Recommend verse'),
   ('atualizarIndicacao', 'Atualizar indicação', 'Actualizar recomendación', 'Update recommendation'),
   ('removerIndicacao', 'Remover indicação', 'Quitar recomendación', 'Remove recommendation'),
-  ('formatoIndicacaoInvalido', 'Formato de indicação inválido', 'Formato de recomendación inválido', 'Invalid recommendation format')
+  ('formatoIndicacaoInvalido', 'Formato de indicação inválido', 'Formato de recomendación inválido', 'Invalid recommendation format'),
+  ('capituloMarcadoLido', 'Capítulo marcado como lido', 'Capítulo marcado como leído', 'Chapter marked as read'),
+  ('capituloDesmarcadoLido', 'Capítulo desmarcado como lido', 'Capítulo desmarcado como leído', 'Chapter marked as unread'),
+  ('versiculoMarcadoLido', 'Versículo marcado como lido', 'Versículo marcado como leído', 'Verse marked as read'),
+  ('versiculoDesmarcadoLido', 'Versículo desmarcado como lido', 'Versículo desmarcado como leído', 'Verse marked as unread'),
+  ('capituloConcluido', 'Capítulo concluído!', '¡Capítulo concluido!', 'Chapter completed!')
 ) AS v (trad_chave, trad_pt_br, trad_es_es, trad_en_us)
 WHERE NOT EXISTS (SELECT 1 FROM public.traducao t WHERE t.trad_chave = v.trad_chave);

@@ -24,6 +24,8 @@ import '../use_case/biblia_leitura_usecase.dart';
 ///   [fecharCapitulo] volta ao índice;
 /// - [marcarLidoCommand] marca o capítulo aberto como lido (ou desmarca, se já estava completo);
 /// - [marcarVersiculoCommand] marca um versículo como lido (ou desmarca), mantendo o comentário da reação;
+/// - depois de marcar ou desmarcar (capítulo ou versículo), [feedback] guarda a chave da mensagem de confirmação,
+///   lida uma única vez pela view com [consumirFeedback];
 /// - [indicacoesCommand], [indicarCommand] e [removerIndicacaoCommand] tratam a indicação do versículo selecionado.
 class BibliaLeituraViewmodel extends ChangeNotifier {
   BibliaLeituraViewmodel({
@@ -48,6 +50,17 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
   /// Versículo cuja marcação está sendo gravada; nulo quando nenhum.
   int? _versiculoGravando;
   int? get versiculoGravando => _versiculoGravando;
+
+  /// Confirmação da última marcação (capítulo ou versículo); nula se não há mensagem pendente.
+  FeedbackLeitura? _feedback;
+  FeedbackLeitura? get feedback => _feedback;
+
+  /// Devolve a confirmação pendente de [feedback] e a limpa, para ser mostrada uma única vez.
+  FeedbackLeitura? consumirFeedback() {
+    final mensagem = _feedback;
+    _feedback = null;
+    return mensagem;
+  }
 
   final BibliaLeituraUseCase bibliaLeituraUseCase;
   final VersiculoIndicacaoUseCase versiculoIndicacaoUseCase;
@@ -312,12 +325,14 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
         if (ref != null && _capitulo == ref) {
           _reacoes = {..._reacoes, reacao.versId: reacao};
           final capitulo = capitulosDo(ref.livrId).where((c) => c.capiNumero == ref.capiNumero).firstOrNull;
+          final chave = CapituloLidoModel.chaveDe(ref.livrId, ref.capiNumero);
+          final antes = _lidos[chave];
           if (capitulo != null) {
-            final chave = CapituloLidoModel.chaveDe(ref.livrId, ref.capiNumero);
             final progresso = bibliaLeituraUseCase.progressoCapitulo(capitulo, livroDe(ref.livrId), _reacoes);
             _lidos = {..._lidos}..remove(chave);
             if (progresso != null) _lidos[chave] = progresso;
           }
+          _feedback = bibliaLeituraUseCase.mensagemVersiculo(lido: reacao.vreaLido, antes: antes, depois: _lidos[chave]);
         }
       case Error<VersiculoReacaoModel>(error: final error):
         Log.print(error.toString(), name: kApp, title: 'Erro');
@@ -350,6 +365,7 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
         final chave = CapituloLidoModel.chaveDe(ref.livrId, ref.capiNumero);
         _lidos = {..._lidos}..remove(chave);
         if (lido != null) _lidos[chave] = lido;
+        _feedback = bibliaLeituraUseCase.mensagemCapitulo(lido);
         await _recarregarReacoes();
       case Error<CapituloLidoModel?>(error: final error):
         Log.print(error.toString(), name: kApp, title: 'Erro');

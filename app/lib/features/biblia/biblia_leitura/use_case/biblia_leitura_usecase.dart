@@ -17,6 +17,10 @@ typedef CapituloRef = ({int livrId, int capiNumero});
 /// versículos lidos no livro.
 typedef ProgressoLivro = ({int completos, int emAndamento, int total, double fracao});
 
+/// Confirmação mostrada ao usuário depois de marcar ou desmarcar a leitura: [mensagem] é a chave de tradução e
+/// [lido] indica se a ação marcou (true) ou desmarcou (false).
+typedef FeedbackLeitura = ({String mensagem, bool lido});
+
 /// Regras da leitura da Bíblia:
 /// - o índice da versão define quais capítulos existem (só os que têm versículos na versão);
 /// - o progresso vem de `versiculo-reacao/lidos`: um capítulo está lido quando todos os versículos estão marcados;
@@ -26,7 +30,9 @@ typedef ProgressoLivro = ({int completos, int emAndamento, int total, double fra
 /// - o histórico de leitura lista os capítulos do mais recente para o mais antigo;
 /// - o filtro de testamentos mostra o Novo Testamento antes do Antigo;
 /// - a leitura abre na versão salva em [versaoPreferencia] (a primeira, se não há versão salva ou se a salva não
-///   existe mais) e cada troca de versão é salva.
+///   existe mais) e cada troca de versão é salva;
+/// - toda marcação (capítulo ou versículo) devolve uma mensagem de confirmação ao usuário ([mensagemCapitulo] e
+///   [mensagemVersiculo]); ao marcar o último versículo que faltava, a mensagem avisa que o capítulo foi concluído.
 class BibliaLeituraUseCase {
   BibliaLeituraUseCase({required this.bibliaLeituraRepository, this.versaoPreferencia}) {
     Log.print(super.runtimeType);
@@ -112,6 +118,19 @@ class BibliaLeituraUseCase {
       return livro != 0 ? livro : a.capiNumero.compareTo(b.capiNumero);
     });
     return lista;
+  }
+
+  /// Confirmação de [alternarCapitulo]: [lido] é o progresso devolvido (nulo = desmarcado).
+  FeedbackLeitura mensagemCapitulo(CapituloLidoModel? lido) => (lido?.completo ?? false)
+      ? (mensagem: 'capituloMarcadoLido', lido: true)
+      : (mensagem: 'capituloDesmarcadoLido', lido: false);
+
+  /// Confirmação ao marcar ou desmarcar um versículo. [antes] e [depois] são o progresso do capítulo antes e depois
+  /// da marcação: se o capítulo ficou completo agora, avisa que ele foi concluído.
+  FeedbackLeitura mensagemVersiculo({required bool lido, CapituloLidoModel? antes, CapituloLidoModel? depois}) {
+    if (!lido) return (mensagem: 'versiculoDesmarcadoLido', lido: false);
+    final concluiu = (depois?.completo ?? false) && !(antes?.completo ?? false);
+    return (mensagem: concluiu ? 'capituloConcluido' : 'versiculoMarcadoLido', lido: true);
   }
 
   /// Marca o capítulo como lido, ou desmarca se [atual] já estava completo. Devolve o novo progresso do
