@@ -8,10 +8,13 @@ import '../../../../data/model/biblia/livro_model.dart';
 import '../../../../data/model/biblia/testamento_model.dart';
 import '../../../../data/model/biblia/versao_model.dart';
 import '../../../../data/model/biblia/versiculo_indicacao_model.dart';
+import '../../../../data/model/biblia/versiculo_indicacao_usuario_model.dart';
+import '../../../../data/model/usuario/usuario_resumo_model.dart';
 import '../../../../data/model/biblia/versiculo_texto_model.dart';
 import '../../../../data/model/versiculo/versiculo_reacao_model.dart';
 import '../../../dashboard/widgets/versiculo_reacao/use_case/versiculo_reacao_usecase.dart';
 import '../../versiculo_indicacao/use_case/versiculo_indicacao_usecase.dart';
+import '../../versiculo_indicacao/use_case/versiculo_indicacao_usuario_usecase.dart';
 import '../use_case/biblia_leitura_usecase.dart';
 
 /// Estado da leitura da Bíblia.
@@ -24,20 +27,28 @@ import '../use_case/biblia_leitura_usecase.dart';
 ///   [fecharCapitulo] volta ao índice;
 /// - [marcarLidoCommand] marca o capítulo aberto como lido (ou desmarca, se já estava completo);
 /// - [marcarVersiculoCommand] marca um versículo como lido (ou desmarca), mantendo o comentário da reação;
+/// - [destacarVersiculo] marca (ou desmarca) a linha tocada como indicativo de onde o usuário está lendo; é só
+///   visual, não grava nada, e some ao trocar de capítulo;
+/// - [estadoIndicacao] diz se o usuário indicou o versículo e se comentou, pelas indicações dele no capítulo
+///   (carregadas ao abrir o capítulo e atualizadas ao indicar ou remover);
 /// - depois de marcar ou desmarcar (capítulo ou versículo), [feedback] guarda a chave da mensagem de confirmação,
 ///   lida uma única vez pela view com [consumirFeedback];
-/// - [indicacoesCommand], [indicarCommand] e [removerIndicacaoCommand] tratam a indicação do versículo selecionado.
+/// - [indicacoesCommand], [indicarCommand] e [removerIndicacaoCommand] tratam a indicação do versículo selecionado;
+/// - [indicados] são os usuários que recebem a indicação do usuário, carregados com ela; [buscarUsuarios] procura
+///   destinatários, [adicionarIndicadoCommand] inclui e [removerIndicadoCommand] remove.
 class BibliaLeituraViewmodel extends ChangeNotifier {
   BibliaLeituraViewmodel({
     required this.bibliaLeituraUseCase,
     required this.versiculoIndicacaoUseCase,
     required this.versiculoReacaoUseCase,
+    required this.versiculoIndicacaoUsuarioUseCase,
   }) {
     Log.print(super.runtimeType);
     carregarCommand.execute();
   }
 
   final VersiculoReacaoUseCase versiculoReacaoUseCase;
+  final VersiculoIndicacaoUsuarioUseCase versiculoIndicacaoUsuarioUseCase;
 
   late final Command1<VersiculoReacaoModel, VersiculoTextoModel> marcarVersiculoCommand = Command1(_marcarVersiculo);
 
@@ -46,6 +57,23 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
 
   /// O versículo está marcado como lido pelo usuário.
   bool versiculoLido(int versId) => _reacoes[versId]?.vreaLido ?? false;
+
+  /// Indicações do usuário aos versículos do capítulo aberto, por `versId`.
+  Map<int, VersiculoIndicacaoModel> _indicacoesCapitulo = const {};
+
+  /// Estado da indicação do usuário ao versículo (não indicado, indicado ou com comentário).
+  EstadoIndicacao estadoIndicacao(int versId) => versiculoIndicacaoUseCase.estado(_indicacoesCapitulo[versId]);
+
+  int? _versiculoDestacado;
+
+  /// Versículo tocado como indicativo de leitura; nulo quando nenhum.
+  int? get versiculoDestacado => _versiculoDestacado;
+
+  /// Destaca a linha do versículo [versId] como indicativo de leitura; tocar de novo remove o destaque.
+  void destacarVersiculo(int versId) {
+    _versiculoDestacado = _versiculoDestacado == versId ? null : versId;
+    notifyListeners();
+  }
 
   /// Versículo cuja marcação está sendo gravada; nulo quando nenhum.
   int? _versiculoGravando;
@@ -74,6 +102,37 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
   /// Argumento: comentário opcional da indicação.
   late final Command1<VersiculoIndicacaoModel, String?> indicarCommand = Command1(_indicar);
   late final Command0<void> removerIndicacaoCommand = Command0(_removerIndicacao);
+  late final Command1<VersiculoIndicacaoUsuarioModel, UsuarioResumoModel> adicionarIndicadoCommand = Command1(
+    _adicionarIndicado,
+  );
+  late final Command1<void, VersiculoIndicacaoUsuarioModel> removerIndicadoCommand = Command1(_removerIndicado);
+
+  List<VersiculoIndicacaoUsuarioModel> _indicados = const [];
+
+  /// Usuários que recebem a indicação do usuário ao [versiculoSelecionado].
+  List<VersiculoIndicacaoUsuarioModel> get indicados => _indicados;
+
+  List<UsuarioResumoModel> _usuariosEncontrados = const [];
+
+  /// Resultado da última [buscarUsuarios], sem quem já está em [indicados].
+  List<UsuarioResumoModel> get usuariosEncontrados => _usuariosEncontrados;
+
+  bool _buscandoUsuarios = false;
+  bool get buscandoUsuarios => _buscandoUsuarios;
+
+  /// Chave de tradução do erro da última busca de usuários; nula se não houve erro.
+  String? _erroBuscaUsuarios;
+  String? get erroBuscaUsuarios => _erroBuscaUsuarios;
+
+  /// Numera as buscas para descartar respostas de buscas antigas (o usuário continua digitando).
+  int _buscaSequencia = 0;
+
+  /// Nome mostrado de um usuário (nome completo ou, sem ele, nome de usuário).
+  String? nomeUsuario({String? udetNome, String? udetUsuario}) =>
+      versiculoIndicacaoUsuarioUseCase.nomeExibicao(udetNome: udetNome, udetUsuario: udetUsuario);
+
+  /// Tamanho mínimo do texto para buscar usuários.
+  int get buscaUsuarioMinimo => VersiculoIndicacaoUsuarioUseCase.buscaMinimo;
 
   List<VersaoModel> _versoes = const [];
   List<VersaoModel> get versoes => _versoes;
@@ -171,6 +230,8 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
     _capitulo = null;
     _versiculos = null;
     _reacoes = const {};
+    _indicacoesCapitulo = const {};
+    _versiculoDestacado = null;
     _limparVersiculo();
     notifyListeners();
   }
@@ -178,6 +239,84 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
   void _limparVersiculo() {
     _versiculoSelecionado = null;
     _indicacoes = null;
+    _limparIndicados();
+  }
+
+  void _limparIndicados() {
+    _indicados = const [];
+    limparBuscaUsuarios(notificar: false);
+  }
+
+  /// Limpa o resultado da busca de usuários (e descarta uma busca em andamento).
+  void limparBuscaUsuarios({bool notificar = true}) {
+    _buscaSequencia++;
+    _usuariosEncontrados = const [];
+    _buscandoUsuarios = false;
+    _erroBuscaUsuarios = null;
+    if (notificar) notifyListeners();
+  }
+
+  /// Busca destinatários para a indicação pelo [texto] (nome ou nome de usuário). Só a resposta da busca mais
+  /// recente é usada.
+  Future<void> buscarUsuarios(String texto) async {
+    final sequencia = ++_buscaSequencia;
+    _buscandoUsuarios = true;
+    _erroBuscaUsuarios = null;
+    notifyListeners();
+
+    final result = await versiculoIndicacaoUsuarioUseCase.buscar(texto, _indicados);
+    if (sequencia != _buscaSequencia) return;
+    switch (result) {
+      case Ok<List<UsuarioResumoModel>>(value: final value):
+        _usuariosEncontrados = value;
+      case Error<List<UsuarioResumoModel>>(error: final error):
+        _usuariosEncontrados = const [];
+        _erroBuscaUsuarios = versiculoIndicacaoUsuarioUseCase.errorMessage(error);
+        Log.print(error.toString(), name: kApp, title: 'Erro');
+    }
+    _buscandoUsuarios = false;
+    notifyListeners();
+  }
+
+  /// Carrega os destinatários da indicação [minha] do versículo [versId]; falha deixa a lista vazia.
+  Future<void> _carregarIndicados(int versId, VersiculoIndicacaoModel? minha) async {
+    final result = await versiculoIndicacaoUsuarioUseCase.usuarios(minha);
+    if (_versiculoSelecionado?.versId != versId) return;
+    switch (result) {
+      case Ok<List<VersiculoIndicacaoUsuarioModel>>(value: final value):
+        _indicados = value;
+      case Error<List<VersiculoIndicacaoUsuarioModel>>(error: final error):
+        _indicados = const [];
+        Log.print(error.toString(), name: kApp, title: 'Erro');
+    }
+  }
+
+  Future<Result<VersiculoIndicacaoUsuarioModel>> _adicionarIndicado(UsuarioResumoModel usuario) async {
+    final versId = _versiculoSelecionado?.versId;
+    final result = await versiculoIndicacaoUsuarioUseCase.adicionar(_indicacoes?.minha, usuario, _indicados);
+    switch (result) {
+      case Ok<VersiculoIndicacaoUsuarioModel>(value: final indicado):
+        if (_versiculoSelecionado?.versId == versId) {
+          _indicados = [..._indicados, indicado];
+          _usuariosEncontrados = _usuariosEncontrados.where((u) => u.usuaId != usuario.usuaId).toList();
+        }
+      case Error<VersiculoIndicacaoUsuarioModel>(error: final error):
+        Log.print(error.toString(), name: kApp, title: 'Erro');
+    }
+    notifyListeners();
+    return result;
+  }
+
+  Future<Result<void>> _removerIndicado(VersiculoIndicacaoUsuarioModel indicado) async {
+    final result = await versiculoIndicacaoUsuarioUseCase.remover(indicado);
+    switch (result) {
+      case Ok<void>():
+        _indicados = _indicados.where((i) => i.viusId != indicado.viusId).toList();
+      case Error<void>(error: final error):
+        Log.print(error.toString(), name: kApp, title: 'Erro');
+    }
+    notifyListeners();
+    return result;
   }
 
   Future<Result<void>> _carregar() async {
@@ -269,12 +408,15 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
     _capitulo = ref;
     _versiculos = null;
     _reacoes = const {};
+    _indicacoesCapitulo = const {};
+    _versiculoDestacado = null;
     _limparVersiculo();
     notifyListeners();
 
-    final (result, reacoes) = await (
+    final (result, reacoes, indicacoes) = await (
       bibliaLeituraUseCase.capitulo(versao.versaId, ref),
       bibliaLeituraUseCase.reacoesCapitulo(versao.versaId, ref),
+      versiculoIndicacaoUseCase.indicacoesCapitulo(versao.versaId, ref.livrId, ref.capiNumero),
     ).wait;
     // Ignora a resposta se outro capítulo foi aberto enquanto este carregava.
     final atual = _capitulo == ref;
@@ -289,6 +431,13 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
       case Ok<Map<int, VersiculoReacaoModel>>(value: final value):
         if (atual) _reacoes = value;
       case Error<Map<int, VersiculoReacaoModel>>(error: final error):
+        Log.print(error.toString(), name: kApp, title: 'Erro');
+    }
+    // Falha nas indicações também não impede a leitura: os ícones aparecem como não indicados.
+    switch (indicacoes) {
+      case Ok<Map<int, VersiculoIndicacaoModel>>(value: final value):
+        if (atual) _indicacoesCapitulo = value;
+      case Error<Map<int, VersiculoIndicacaoModel>>(error: final error):
         Log.print(error.toString(), name: kApp, title: 'Erro');
     }
 
@@ -378,12 +527,16 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
   Future<Result<IndicacoesVersiculo>> _carregarIndicacoes(VersiculoTextoModel versiculo) async {
     _versiculoSelecionado = versiculo;
     _indicacoes = null;
+    _limparIndicados();
     notifyListeners();
 
     final result = await versiculoIndicacaoUseCase.indicacoes(versiculo.versId);
     switch (result) {
       case Ok<IndicacoesVersiculo>(value: final value):
-        if (_versiculoSelecionado?.versId == versiculo.versId) _indicacoes = value;
+        if (_versiculoSelecionado?.versId == versiculo.versId) {
+          await _carregarIndicados(versiculo.versId, value.minha);
+          if (_versiculoSelecionado?.versId == versiculo.versId) _indicacoes = value;
+        }
       case Error<IndicacoesVersiculo>(error: final error):
         Log.print(error.toString(), name: kApp, title: 'Erro');
     }
@@ -407,6 +560,9 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
           final total = _indicacoes?.total ?? 0;
           _indicacoes = (total: atual == null ? total + 1 : total, minha: indicacao);
         }
+        if (_versiculos?.any((v) => v.versId == indicacao.versId) ?? false) {
+          _indicacoesCapitulo = {..._indicacoesCapitulo, indicacao.versId: indicacao};
+        }
       case Error<VersiculoIndicacaoModel>(error: final error):
         Log.print(error.toString(), name: kApp, title: 'Erro');
     }
@@ -427,6 +583,8 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
       case Ok<void>():
         final total = _indicacoes?.total ?? 1;
         _indicacoes = (total: total > 0 ? total - 1 : 0, minha: null);
+        _indicacoesCapitulo = {..._indicacoesCapitulo}..remove(atual.versId);
+        _limparIndicados();
       case Error<void>(error: final error):
         Log.print(error.toString(), name: kApp, title: 'Erro');
     }
@@ -445,6 +603,8 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
     indicacoesCommand.dispose();
     indicarCommand.dispose();
     removerIndicacaoCommand.dispose();
+    adicionarIndicadoCommand.dispose();
+    removerIndicadoCommand.dispose();
     super.dispose();
   }
 }

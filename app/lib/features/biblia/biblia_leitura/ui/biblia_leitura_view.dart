@@ -11,6 +11,7 @@ import 'package:service/service.dart';
 
 import '../../../../data/model/biblia/livro_model.dart';
 import '../../../../data/model/biblia/versiculo_texto_model.dart';
+import '../../versiculo_indicacao/use_case/versiculo_indicacao_usecase.dart';
 import '../use_case/biblia_leitura_usecase.dart';
 import 'biblia_leitura_viewmodel.dart';
 import 'widgets/capitulo_chip.dart';
@@ -24,14 +25,19 @@ import 'widgets/versiculo_indicacao_sheet.dart';
 ///   está lido, parcialmente lido ou não lido (`/v1/versiculo-reacao/lidos/:versaId`).
 /// - Leitura: versículos do capítulo (`/v1/biblia/capitulo/...`), navegação para o capítulo anterior/próximo e
 ///   botão para marcar ou desmarcar o capítulo como lido (`PUT /v1/versiculo-reacao/capitulo`).
-/// - Tocar um versículo abre as indicações dele (`/v1/versiculo-indicacao`), onde o usuário indica, altera o
-///   comentário ou remove a indicação.
+/// - Tocar na linha do versículo só a destaca, como indicativo de onde o usuário está lendo (tocar de novo remove).
+/// - Ao lado de cada versículo há duas ações empilhadas, que mudam conforme o estado: em cima, marcar ou desmarcar
+///   como lido; embaixo, comentário e indicação, que mostra se o versículo não foi indicado, foi indicado sem
+///   comentário ou tem comentário (`/v1/versiculo-indicacao/capitulo/...`). Só esse ícone abre a indicação
+///   (`/v1/versiculo-indicacao`), onde o usuário indica, altera o comentário, remove a indicação e escolhe usuários
+///   para recebê-la (`/v1/versiculo-indicacao-usuario` e `/v1/usuario/busca`).
 /// - Versão (`/v1/versao`): seleção no topo do índice, acima do filtro de testamentos.
 /// - AppBar: histórico de leitura, orientação da tela e tema.
 ///
 /// Ícones (em [IconsMap.mdiIcons]): [iconeLeitura], [iconeHistorico], [iconeVersao], [iconeAnterior],
-/// [iconeProximo], [iconeLido], [iconeNaoLido], [iconeParcial], [iconeIndicar], [iconeIndicado],
-/// [iconeRemover] e [iconeTentarNovamente].
+/// [iconeProximo], [iconeLido], [iconeNaoLido], [iconeParcial], [iconeComentarIndicar], [iconeIndicadoSemComentario],
+/// [iconeComentado], [iconeIndicar],
+/// [iconeIndicado], [iconeRemover] e [iconeTentarNovamente].
 class BibliaLeituraView extends StatefulWidget {
   const BibliaLeituraView({super.key, required this.viewModel});
 
@@ -57,6 +63,15 @@ class BibliaLeituraView extends StatefulWidget {
 
   /// Capítulo com parte dos versículos lidos.
   static const iconeParcial = 'progress-check';
+
+  /// Ação, abaixo do ícone de lido, que abre o comentário e a indicação: versículo ainda não indicado.
+  static const iconeComentarIndicar = 'comment-text-outline';
+
+  /// Mesma ação, com o versículo indicado sem comentário.
+  static const iconeIndicadoSemComentario = 'comment-check-outline';
+
+  /// Mesma ação, com o versículo indicado e comentado.
+  static const iconeComentado = 'comment-text';
 
   /// Versículo ainda não indicado pelo usuário.
   static const iconeIndicar = 'thumb-up-outline';
@@ -423,24 +438,34 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
             Expanded(
               child: InkWell(
                 borderRadius: BorderRadius.circular(8),
-                onTap: () => _abrirVersiculo(versiculo),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-                  child: Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(
-                          text: '${versiculo.versNumero}  ',
-                          style: textTheme.labelMedium?.copyWith(color: scheme.primary, fontWeight: FontWeight.bold),
-                        ),
-                        TextSpan(text: versiculo.versTexto, style: textTheme.bodyLarge?.copyWith(height: 1.5)),
-                      ],
+                onTap: () => _vm.destacarVersiculo(versiculo.versId),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  decoration: BoxDecoration(
+                    color: _vm.versiculoDestacado == versiculo.versId ? _corDestaque() : Colors.transparent,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                    child: Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text: '${versiculo.versNumero}  ',
+                            style: textTheme.labelMedium?.copyWith(color: scheme.primary, fontWeight: FontWeight.bold),
+                          ),
+                          TextSpan(text: versiculo.versTexto, style: textTheme.bodyLarge?.copyWith(height: 1.5)),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-            _marcaVersiculo(versiculo, strings),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [_marcaVersiculo(versiculo, strings), _comentarIndicarVersiculo(versiculo, strings)],
+            ),
           ],
         );
       },
@@ -465,6 +490,38 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
               size: 20,
               color: lido ? scheme.primary : scheme.outline,
             ),
+    );
+  }
+
+  /// Cor do destaque da linha tocada: o amarelo de destaque da leitura, se o tema tiver [ReadingColors].
+  Color _corDestaque() =>
+      Theme.of(context).extension<ReadingColors>()?.highlightYellow ?? Theme.of(context).colorScheme.secondaryContainer;
+
+  /// Ícone, abaixo do de lido, que abre o comentário e a indicação do versículo. Como o de lido, muda com o estado:
+  /// contorno (não indicado), indicado sem comentário e preenchido (com comentário), na cor primária quando indicado.
+  Widget _comentarIndicarVersiculo(VersiculoTextoModel versiculo, AppLocalizations strings) {
+    final scheme = Theme.of(context).colorScheme;
+    final estado = _vm.estadoIndicacao(versiculo.versId);
+    final (chave, fallback, tooltip) = switch (estado) {
+      EstadoIndicacao.nenhuma => (
+        BibliaLeituraView.iconeComentarIndicar,
+        Icons.comment_outlined,
+        'comentarIndicarVersiculo',
+      ),
+      EstadoIndicacao.indicado => (
+        BibliaLeituraView.iconeIndicadoSemComentario,
+        Icons.mark_chat_read_outlined,
+        'versiculoIndicadoSemComentario',
+      ),
+      EstadoIndicacao.comentado => (BibliaLeituraView.iconeComentado, Icons.comment, 'versiculoComComentario'),
+    };
+    final indicado = estado != EstadoIndicacao.nenhuma;
+
+    return IconButton(
+      tooltip: strings.translate(tooltip),
+      visualDensity: VisualDensity.compact,
+      onPressed: () => _abrirVersiculo(versiculo),
+      icon: BibliaLeituraView.icone(chave, fallback, size: 20, color: indicado ? scheme.primary : scheme.outline),
     );
   }
 

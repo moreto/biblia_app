@@ -6,9 +6,15 @@ import 'versiculo_indicacao_repository.dart';
 
 class VersiculoIndicacaoRepositoryImpl implements VersiculoIndicacaoRepository {
   @override
-  Future<Result<List<VersiculoIndicacaoModel>>> indicacoes(int versId) async {
+  Future<Result<List<VersiculoIndicacaoModel>>> indicacoes(int versId) => _lista(ApiCore.versiculoIndicacao, versId);
+
+  @override
+  Future<Result<List<VersiculoIndicacaoModel>>> indicacoesCapitulo(int versaId, int livrId, int capiNumero) =>
+      _lista(ApiCore.versiculoIndicacaoCapitulo, '$versaId/$livrId/$capiNumero');
+
+  Future<Result<List<VersiculoIndicacaoModel>>> _lista(ApiCore api, Object pathParam) async {
     try {
-      final response = await DioProvider.of(ApiCore.versiculoIndicacao).request(verb: Verb.get, pathParam: versId);
+      final response = await DioProvider.of(api).request(verb: Verb.get, pathParam: pathParam);
       switch (response) {
         case Ok(value: final value) when value is List:
           return Result.ok(

@@ -1,6 +1,6 @@
 # biblia_app
 
-App Flutter do projeto Bíblia: leitura da Bíblia com marcação de capítulos e versículos lidos, dashboard com cards de oração, versículo e música, e telas administrativas (menu, configuração, log e notificação). Consome a API [`biblia_api`](../biblia_api) e traz textos e menus do banco: as traduções vêm de `/v1/traducao` e os menus de `/v1/menu`.
+App Flutter do projeto Bíblia: leitura da Bíblia com marcação de capítulos e versículos lidos e indicação de versículos (com comentário e usuários que recebem a indicação), dashboard com cards de oração, versículo e música, e telas administrativas (menu, configuração, log e notificação). Consome a API [`biblia_api`](../biblia_api) e traz textos e menus do banco: as traduções vêm de `/v1/traducao` e os menus de `/v1/menu`.
 
 ## Estrutura
 

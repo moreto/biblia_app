@@ -31,6 +31,19 @@ FROM (VALUES
   ('capituloDesmarcadoLido', 'Capítulo desmarcado como lido', 'Capítulo desmarcado como leído', 'Chapter marked as unread'),
   ('versiculoMarcadoLido', 'Versículo marcado como lido', 'Versículo marcado como leído', 'Verse marked as read'),
   ('versiculoDesmarcadoLido', 'Versículo desmarcado como lido', 'Versículo desmarcado como leído', 'Verse marked as unread'),
-  ('capituloConcluido', 'Capítulo concluído!', '¡Capítulo concluido!', 'Chapter completed!')
+  ('capituloConcluido', 'Capítulo concluído!', '¡Capítulo concluido!', 'Chapter completed!'),
+  ('indicarPara', 'Indicar para', 'Recomendar a', 'Recommend to'),
+  ('indiqueParaAdicionarUsuarios', 'Indique o versículo para poder enviá-lo a outros usuários', 'Recomienda el versículo para poder enviarlo a otros usuarios', 'Recommend the verse to be able to send it to other users'),
+  ('indiqueAntesDeAdicionarUsuarios', 'Indique o versículo antes de adicionar usuários', 'Recomienda el versículo antes de agregar usuarios', 'Recommend the verse before adding users'),
+  ('nenhumUsuarioIndicado', 'Nenhum usuário adicionado', 'Ningún usuario agregado', 'No users added'),
+  ('buscarUsuario', 'Buscar usuário', 'Buscar usuario', 'Search user'),
+  ('buscarUsuarioDica', 'Nome ou nome de usuário', 'Nombre o nombre de usuario', 'Name or username'),
+  ('nenhumUsuarioEncontrado', 'Nenhum usuário encontrado', 'Ningún usuario encontrado', 'No users found'),
+  ('adicionarUsuarioIndicado', 'Adicionar à indicação', 'Agregar a la recomendación', 'Add to recommendation'),
+  ('removerUsuarioIndicado', 'Remover da indicação', 'Quitar de la recomendación', 'Remove from recommendation'),
+  ('comentarIndicarVersiculo', 'Comentar e indicar versículo', 'Comentar y recomendar versículo', 'Comment on and recommend verse'),
+  ('versiculoIndicadoSemComentario', 'Versículo indicado, sem comentário', 'Versículo recomendado, sin comentario', 'Verse recommended, no comment'),
+  ('versiculoComComentario', 'Versículo indicado com comentário', 'Versículo recomendado con comentario', 'Verse recommended with a comment'),
+  ('usuarioJaIndicado', 'Este usuário já recebeu a indicação', 'Este usuario ya recibió la recomendación', 'This user has already received the recommendation')
 ) AS v (trad_chave, trad_pt_br, trad_es_es, trad_en_us)
 WHERE NOT EXISTS (SELECT 1 FROM public.traducao t WHERE t.trad_chave = v.trad_chave);

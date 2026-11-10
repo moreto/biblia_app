@@ -24,6 +24,8 @@ import '../features/biblia/biblia_leitura/repository/biblia_leitura_repository.d
 import '../features/biblia/biblia_leitura/repository/biblia_leitura_repository_impl.dart';
 import '../features/biblia/versiculo_indicacao/repository/versiculo_indicacao_repository.dart';
 import '../features/biblia/versiculo_indicacao/repository/versiculo_indicacao_repository_impl.dart';
+import '../features/biblia/versiculo_indicacao/repository/versiculo_indicacao_usuario_repository.dart';
+import '../features/biblia/versiculo_indicacao/repository/versiculo_indicacao_usuario_repository_impl.dart';
 import '../features/dashboard/repository/dashboard_repository.dart';
 import '../features/dashboard/repository/dashboard_repository_impl.dart';
 import '../features/dashboard/widgets/musica/repository/musica_repository.dart';
@@ -55,4 +57,5 @@ void configDependencies() {
   locator.registerLazySingleton<VersiculoReacaoRepository>(() => VersiculoReacaoRepositoryImpl());
   locator.registerLazySingleton<BibliaLeituraRepository>(() => BibliaLeituraRepositoryImpl());
   locator.registerLazySingleton<VersiculoIndicacaoRepository>(() => VersiculoIndicacaoRepositoryImpl());
+  locator.registerLazySingleton<VersiculoIndicacaoUsuarioRepository>(() => VersiculoIndicacaoUsuarioRepositoryImpl());
 }

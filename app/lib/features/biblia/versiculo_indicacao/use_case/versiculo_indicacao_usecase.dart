@@ -6,11 +6,25 @@ import '../repository/versiculo_indicacao_repository.dart';
 /// Indicações de um versículo: quantas existem e qual é a do usuário logado.
 typedef IndicacoesVersiculo = ({int total, VersiculoIndicacaoModel? minha});
 
+/// Estado da indicação do usuário a um versículo, mostrado no ícone ao lado dele na leitura.
+enum EstadoIndicacao {
+  /// O usuário não indicou o versículo.
+  nenhuma,
+
+  /// Indicado, sem comentário.
+  indicado,
+
+  /// Indicado, com comentário.
+  comentado,
+}
+
 /// Regras da indicação de versículo:
 /// - o GET da API devolve as indicações de todos os usuários; o total conta todas e só uma é do usuário logado;
 /// - indicar inclui (POST) se o usuário ainda não indicou, senão altera o comentário (PUT);
 /// - o comentário é aparado (vazio grava nulo) e tem no máximo [comentarioMaximo] caracteres;
-/// - remover exclui a indicação do usuário (DELETE).
+/// - remover exclui a indicação do usuário (DELETE);
+/// - na leitura, as indicações do usuário no capítulo definem o [EstadoIndicacao] de cada versículo: comentário só
+///   com espaços conta como sem comentário.
 class VersiculoIndicacaoUseCase {
   VersiculoIndicacaoUseCase({required this.versiculoIndicacaoRepository, int? Function()? usuarioLogado})
     : _usuarioLogado = usuarioLogado ?? (() => AuthSession.instance.userId) {
@@ -46,6 +60,24 @@ class VersiculoIndicacaoUseCase {
       case Error<List<VersiculoIndicacaoModel>>(error: final error):
         return Result.error(error);
     }
+  }
+
+  /// Indicações do usuário aos versículos do capítulo, indexadas por `versId`.
+  Future<Result<Map<int, VersiculoIndicacaoModel>>> indicacoesCapitulo(int versaId, int livrId, int capiNumero) async {
+    final result = await versiculoIndicacaoRepository.indicacoesCapitulo(versaId, livrId, capiNumero);
+    switch (result) {
+      case Ok<List<VersiculoIndicacaoModel>>(value: final lista):
+        return Result.ok({for (final indicacao in lista) indicacao.versId: indicacao});
+      case Error<List<VersiculoIndicacaoModel>>(error: final error):
+        return Result.error(error);
+    }
+  }
+
+  /// Estado da [indicacao] do usuário a um versículo (nula = não indicado).
+  EstadoIndicacao estado(VersiculoIndicacaoModel? indicacao) {
+    if (indicacao == null) return EstadoIndicacao.nenhuma;
+    final comentario = indicacao.vindComentario?.trim() ?? '';
+    return comentario.isEmpty ? EstadoIndicacao.indicado : EstadoIndicacao.comentado;
   }
 
   /// Grava a indicação do usuário ao versículo: inclui se [atual] for nulo, senão altera o comentário.

@@ -22,6 +22,9 @@ class IconsMap {
     'check-circle': MdiIcons.checkCircle,
     'check-circle-outline': MdiIcons.checkCircleOutline,
     'comment-text-outline': MdiIcons.commentTextOutline,
+    // Leitura: estado da indicação do versículo (BibliaLeituraView.iconeIndicadoSemComentario / iconeComentado).
+    'comment-check-outline': MdiIcons.commentCheckOutline,
+    'comment-text': MdiIcons.commentText,
     // Leitura da Bíblia (BibliaLeituraView.icone*); 'book-open-variant' também serve de menu_icone da leitura.
     'book-open-variant': MdiIcons.bookOpenVariant,
     'history': MdiIcons.history,
@@ -64,6 +67,8 @@ class IconsMap {
     'shield-check-outline': MdiIcons.shieldCheckOutline,
     'account-outline': MdiIcons.accountOutline,
     'at': MdiIcons.at,
+    // Indicação de versículo: busca de usuários para indicar (VersiculoIndicacaoSheet).
+    'account-search-outline': MdiIcons.accountSearchOutline,
     // ...
   };
 }

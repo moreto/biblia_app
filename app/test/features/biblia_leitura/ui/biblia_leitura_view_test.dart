@@ -5,6 +5,8 @@ import 'package:app/data/model/biblia/livro_model.dart';
 import 'package:app/data/model/biblia/testamento_model.dart';
 import 'package:app/data/model/biblia/versao_model.dart';
 import 'package:app/data/model/biblia/versiculo_indicacao_model.dart';
+import 'package:app/data/model/biblia/versiculo_indicacao_usuario_model.dart';
+import 'package:app/data/model/usuario/usuario_resumo_model.dart';
 import 'package:app/data/model/biblia/versiculo_texto_model.dart';
 import 'package:app/data/model/versiculo/versiculo_reacao_model.dart';
 import 'package:app/features/biblia/biblia_leitura/repository/biblia_leitura_repository.dart';
@@ -14,7 +16,9 @@ import 'package:app/features/biblia/biblia_leitura/ui/widgets/capitulo_chip.dart
 import 'package:app/features/biblia/biblia_leitura/ui/widgets/versiculo_indicacao_sheet.dart';
 import 'package:app/features/biblia/biblia_leitura/use_case/biblia_leitura_usecase.dart';
 import 'package:app/features/biblia/versiculo_indicacao/repository/versiculo_indicacao_repository.dart';
+import 'package:app/features/biblia/versiculo_indicacao/repository/versiculo_indicacao_usuario_repository.dart';
 import 'package:app/features/biblia/versiculo_indicacao/use_case/versiculo_indicacao_usecase.dart';
+import 'package:app/features/biblia/versiculo_indicacao/use_case/versiculo_indicacao_usuario_usecase.dart';
 import 'package:app/features/dashboard/widgets/versiculo_reacao/repository/versiculo_reacao_repository.dart';
 import 'package:app/features/dashboard/widgets/versiculo_reacao/use_case/versiculo_reacao_usecase.dart';
 import 'package:app/l10n/app_localizations.dart';
@@ -157,6 +161,11 @@ class _FakeVersiculoIndicacaoRepository implements VersiculoIndicacaoRepository 
   Future<Result<List<VersiculoIndicacaoModel>>> indicacoes(int versId) async =>
       Result.ok(registros.where((r) => r.versId == versId).toList());
 
+  /// Os `versId` de teste seguem `livro`, `capítulo` e `versículo` com 2 dígitos (ex.: 43101 = João 1:1).
+  @override
+  Future<Result<List<VersiculoIndicacaoModel>>> indicacoesCapitulo(int versaId, int livrId, int capiNumero) async =>
+      Result.ok(registros.where((r) => r.usuaId == _usuario && r.versId ~/ 100 == livrId * 10 + capiNumero).toList());
+
   @override
   Future<Result<VersiculoIndicacaoModel>> incluir(VersiculoIndicacaoModel indicacao) async {
     final gravada = VersiculoIndicacaoModel(
@@ -182,6 +191,51 @@ class _FakeVersiculoIndicacaoRepository implements VersiculoIndicacaoRepository 
     excluidos.add(vindId);
     registros.removeWhere((r) => r.vindId == vindId);
     return const Result.ok(null);
+  }
+}
+
+/// Destinatários das indicações e usuários cadastrados em memória. [buscas] guarda os textos enviados à busca.
+class _FakeVersiculoIndicacaoUsuarioRepository implements VersiculoIndicacaoUsuarioRepository {
+  final registros = <VersiculoIndicacaoUsuarioModel>[];
+  final buscas = <String>[];
+  final cadastrados = const [
+    UsuarioResumoModel(usuaId: 21, udetNome: 'Maria da Silva', udetUsuario: 'maria'),
+    UsuarioResumoModel(usuaId: 22, udetNome: 'Mariana Souza', udetUsuario: 'mari'),
+    UsuarioResumoModel(usuaId: 23, udetUsuario: 'pedro'),
+  ];
+  int _proximoId = 100;
+
+  @override
+  Future<Result<List<VersiculoIndicacaoUsuarioModel>>> usuarios(int vindId) async =>
+      Result.ok(registros.where((r) => r.vindId == vindId).toList());
+
+  @override
+  Future<Result<VersiculoIndicacaoUsuarioModel>> incluir({required int vindId, required int usuaId}) async {
+    final registro = VersiculoIndicacaoUsuarioModel(viusId: _proximoId++, vindId: vindId, usuaId: usuaId);
+    registros.add(registro);
+    return Result.ok(registro);
+  }
+
+  @override
+  Future<Result<VersiculoIndicacaoUsuarioModel>> alterar({
+    required int viusId,
+    required int vindId,
+    required int usuaId,
+  }) async => Result.ok(VersiculoIndicacaoUsuarioModel(viusId: viusId, vindId: vindId, usuaId: usuaId));
+
+  @override
+  Future<Result<void>> excluir(int viusId) async {
+    registros.removeWhere((r) => r.viusId == viusId);
+    return const Result.ok(null);
+  }
+
+  @override
+  Future<Result<List<UsuarioResumoModel>>> buscarUsuarios(String texto) async {
+    buscas.add(texto);
+    final termo = texto.toLowerCase();
+    return Result.ok(
+      cadastrados.where((u) => '${u.udetNome ?? ''} ${u.udetUsuario ?? ''}'.toLowerCase().contains(termo)).toList(),
+    );
   }
 }
 
@@ -223,6 +277,7 @@ CapituloLidoModel _lido(LivroModel livro, int capitulo, int lidos, int total, [D
 void main() {
   late _FakeBibliaLeituraRepository repository;
   late _FakeVersiculoIndicacaoRepository indicacoes;
+  late _FakeVersiculoIndicacaoUsuarioRepository indicados;
   late _FakeVersaoPreferencia preferencia;
 
   setUp(() {
@@ -239,6 +294,7 @@ void main() {
       const VersiculoReacaoModel(vreaId: 1, versId: 1201, usuaId: _usuario, vreaComentario: 'Amém', vreaLido: true),
     );
     indicacoes = _FakeVersiculoIndicacaoRepository();
+    indicados = _FakeVersiculoIndicacaoUsuarioRepository();
     preferencia = _FakeVersaoPreferencia();
   });
 
@@ -253,11 +309,15 @@ void main() {
   VersiculoIndicacaoUseCase indicacaoUseCase() =>
       VersiculoIndicacaoUseCase(versiculoIndicacaoRepository: indicacoes, usuarioLogado: () => _usuario);
 
+  VersiculoIndicacaoUsuarioUseCase indicadoUseCase() =>
+      VersiculoIndicacaoUsuarioUseCase(versiculoIndicacaoUsuarioRepository: indicados);
+
   Future<BibliaLeituraViewmodel> criarViewModel() async {
     final viewModel = BibliaLeituraViewmodel(
       bibliaLeituraUseCase: leituraUseCase(),
       versiculoIndicacaoUseCase: indicacaoUseCase(),
       versiculoReacaoUseCase: reacaoUseCase(),
+      versiculoIndicacaoUsuarioUseCase: indicadoUseCase(),
     );
     await pumpEventQueue();
     return viewModel;
@@ -344,6 +404,57 @@ void main() {
     });
   });
 
+  group('VersiculoIndicacaoUsuarioUseCase', () {
+    const indicacao = VersiculoIndicacaoModel(vindId: 9, versId: 43101, usuaId: _usuario);
+    const maria = UsuarioResumoModel(usuaId: 21, udetNome: 'Maria da Silva', udetUsuario: 'maria');
+
+    test('busca com menos de 2 caracteres não chama a API e esconde quem já foi indicado', () async {
+      final uc = indicadoUseCase();
+      expect((await uc.buscar(' m ', const [])) as Ok, isA<Ok<List<UsuarioResumoModel>>>());
+      expect(indicados.buscas, isEmpty);
+
+      const jaIndicado = VersiculoIndicacaoUsuarioModel(viusId: 1, vindId: 9, usuaId: 21);
+      final result = await uc.buscar(' mar ', const [jaIndicado]);
+      expect((result as Ok<List<UsuarioResumoModel>>).value.map((u) => u.usuaId), [22]);
+      expect(indicados.buscas, ['mar']);
+    });
+
+    test('adicionar exige a indicação gravada e não repete o usuário', () async {
+      final uc = indicadoUseCase();
+      final semIndicacao = await uc.adicionar(null, maria, const []);
+      expect(((semIndicacao as Error).error as HandledException).message, 'indiqueAntesDeAdicionarUsuarios');
+
+      final adicionado = await uc.adicionar(indicacao, maria, const []);
+      final registro = (adicionado as Ok<VersiculoIndicacaoUsuarioModel>).value;
+      expect((registro.vindId, registro.usuaId, registro.udetNome), (9, 21, 'Maria da Silva'));
+
+      final repetido = await uc.adicionar(indicacao, maria, [registro]);
+      expect(((repetido as Error).error as HandledException).message, 'usuarioJaIndicado');
+      expect(indicados.registros, hasLength(1));
+    });
+
+    test('estado da indicação: nenhuma, indicado sem comentário e comentado', () {
+      final uc = indicacaoUseCase();
+      expect(uc.estado(null), EstadoIndicacao.nenhuma);
+      expect(
+        uc.estado(const VersiculoIndicacaoModel(vindId: 1, versId: 1, vindComentario: '  ')),
+        EstadoIndicacao.indicado,
+      );
+      expect(
+        uc.estado(const VersiculoIndicacaoModel(vindId: 1, versId: 1, vindComentario: 'Lindo')),
+        EstadoIndicacao.comentado,
+      );
+    });
+
+    test('lista vazia sem indicação gravada e nome mostrado cai para o nome de usuário', () async {
+      final uc = indicadoUseCase();
+      expect(((await uc.usuarios(null)) as Ok<List<VersiculoIndicacaoUsuarioModel>>).value, isEmpty);
+      expect(uc.nomeExibicao(udetNome: ' ', udetUsuario: 'pedro'), 'pedro');
+      expect(uc.nomeExibicao(udetNome: 'Maria', udetUsuario: 'maria'), 'Maria');
+      expect(uc.nomeExibicao(), isNull);
+    });
+  });
+
   group('BibliaLeituraViewmodel', () {
     test('carrega versões, livros, índice e progresso da primeira versão', () async {
       final viewModel = await criarViewModel();
@@ -414,6 +525,63 @@ void main() {
       await viewModel.removerIndicacaoCommand.execute();
       expect(viewModel.indicacoes?.total, 0);
       expect(viewModel.indicacoes?.minha, isNull);
+    });
+
+    test('abre o capítulo com o estado da indicação de cada versículo e atualiza ao indicar e remover', () async {
+      indicacoes.registros.add(
+        const VersiculoIndicacaoModel(vindId: 1, versId: 43102, usuaId: _usuario, vindComentario: 'Lindo'),
+      );
+      final viewModel = await criarViewModel();
+      await viewModel.abrirCapituloCommand.execute((livrId: 43, capiNumero: 1));
+      expect(viewModel.estadoIndicacao(43101), EstadoIndicacao.nenhuma);
+      expect(viewModel.estadoIndicacao(43102), EstadoIndicacao.comentado);
+
+      await viewModel.indicacoesCommand.execute(viewModel.versiculos!.first);
+      await viewModel.indicarCommand.execute(null);
+      expect(viewModel.estadoIndicacao(43101), EstadoIndicacao.indicado);
+      await viewModel.indicarCommand.execute('Amém');
+      expect(viewModel.estadoIndicacao(43101), EstadoIndicacao.comentado);
+
+      await viewModel.removerIndicacaoCommand.execute();
+      expect(viewModel.estadoIndicacao(43101), EstadoIndicacao.nenhuma);
+    });
+
+    test('tocar na linha destaca o versículo e tocar de novo remove; trocar de capítulo limpa', () async {
+      final viewModel = await criarViewModel();
+      await viewModel.abrirCapituloCommand.execute((livrId: 43, capiNumero: 1));
+      viewModel.destacarVersiculo(43101);
+      expect(viewModel.versiculoDestacado, 43101);
+      viewModel.destacarVersiculo(43102);
+      expect(viewModel.versiculoDestacado, 43102);
+      viewModel.destacarVersiculo(43102);
+      expect(viewModel.versiculoDestacado, isNull);
+
+      viewModel.destacarVersiculo(43101);
+      await viewModel.abrirCapituloCommand.execute((livrId: 1, capiNumero: 2));
+      expect(viewModel.versiculoDestacado, isNull);
+    });
+
+    test('busca, adiciona e remove usuários da indicação', () async {
+      final viewModel = await criarViewModel();
+      await viewModel.abrirCapituloCommand.execute((livrId: 43, capiNumero: 1));
+      await viewModel.indicacoesCommand.execute(viewModel.versiculos!.first);
+      await viewModel.indicarCommand.execute(null);
+      expect(viewModel.indicados, isEmpty);
+
+      await viewModel.buscarUsuarios('mar');
+      expect(viewModel.usuariosEncontrados.map((u) => u.usuaId), [21, 22]);
+
+      await viewModel.adicionarIndicadoCommand.execute(viewModel.usuariosEncontrados.first);
+      expect(viewModel.indicados.map((i) => (i.usuaId, i.udetNome)), [(21, 'Maria da Silva')]);
+      expect(viewModel.usuariosEncontrados.map((u) => u.usuaId), [22]);
+
+      // Reabrir o versículo carrega os destinatários da indicação.
+      await viewModel.indicacoesCommand.execute(viewModel.versiculos!.first);
+      expect(viewModel.indicados.map((i) => i.usuaId), [21]);
+
+      await viewModel.removerIndicadoCommand.execute(viewModel.indicados.single);
+      expect(viewModel.indicados, isEmpty);
+      expect(indicados.registros, isEmpty);
     });
 
     test('abre o capítulo com o estado lido de cada versículo', () async {
@@ -510,6 +678,7 @@ void main() {
         bibliaLeituraUseCase: leituraUseCase(),
         versiculoIndicacaoUseCase: indicacaoUseCase(),
         versiculoReacaoUseCase: reacaoUseCase(),
+        versiculoIndicacaoUsuarioUseCase: indicadoUseCase(),
       );
       await tester.pumpWidget(
         MaterialApp(
@@ -585,15 +754,51 @@ void main() {
       await tester.tap(find.widgetWithText(CapituloChip, '1'));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.textContaining('João 1 texto 1'));
+      await tester.tap(find.byTooltip('comentarIndicarVersiculo').first);
       await tester.pumpAndSettle();
       expect(find.text('João 1:1'), findsOneWidget);
       expect(find.text('0 indicacoes'), findsOneWidget);
+
+      expect(find.text('indiqueParaAdicionarUsuarios'), findsOneWidget);
 
       await tester.tap(find.text('indicarVersiculo'));
       await tester.pumpAndSettle();
       expect(find.text('1 indicacoes · voceIndicou'), findsOneWidget);
       expect(find.text('removerIndicacao'), findsOneWidget);
+      expect(find.text('nenhumUsuarioIndicado'), findsOneWidget);
+    });
+
+    testWidgets('depois de indicar, busca um usuário e o adiciona à indicação', (tester) async {
+      await montar(tester);
+      await tester.tap(find.text('João'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(CapituloChip, '1'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('comentarIndicarVersiculo').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('indicarVersiculo'));
+      await tester.pumpAndSettle();
+
+      final folha = find.descendant(of: find.byType(VersiculoIndicacaoSheet), matching: find.byType(Scrollable)).first;
+      final busca = find.widgetWithText(TextField, 'buscarUsuario');
+      await tester.scrollUntilVisible(busca, 200, scrollable: folha);
+      await tester.enterText(busca, 'ped');
+      await tester.pump(VersiculoIndicacaoSheet.esperaBusca);
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(find.text('@pedro'), 200, scrollable: folha);
+      expect(find.text('@pedro'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('adicionarUsuarioIndicado'));
+      await tester.pumpAndSettle();
+      expect(find.widgetWithText(InputChip, 'pedro'), findsOneWidget);
+      expect(find.text('@pedro'), findsNothing);
+      expect(indicados.registros.single.usuaId, 23);
+
+      await tester.scrollUntilVisible(find.byTooltip('removerUsuarioIndicado'), -200, scrollable: folha);
+      await tester.tap(find.byTooltip('removerUsuarioIndicado'));
+      await tester.pumpAndSettle();
+      expect(find.byType(InputChip), findsNothing);
+      expect(indicados.registros, isEmpty);
     });
 
     testWidgets('o ícone de cada versículo marca como lido sem abrir a indicação', (tester) async {
@@ -611,6 +816,47 @@ void main() {
       expect(find.text('1/2 versiculosLidos'), findsOneWidget);
       expect(find.byType(VersiculoIndicacaoSheet), findsNothing);
       expect(find.text('versiculoMarcadoLido'), findsOneWidget);
+    });
+
+    testWidgets('tocar na linha só destaca o versículo, sem abrir a indicação', (tester) async {
+      final viewModel = await montar(tester);
+      await tester.tap(find.text('João'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(CapituloChip, '1'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.textContaining('João 1 texto 1'));
+      await tester.pumpAndSettle();
+      expect(viewModel.versiculoDestacado, 43101);
+      expect(find.byType(VersiculoIndicacaoSheet), findsNothing);
+    });
+
+    testWidgets('o ícone da indicação mostra se o versículo tem comentário', (tester) async {
+      indicacoes.registros.add(
+        const VersiculoIndicacaoModel(vindId: 1, versId: 43102, usuaId: _usuario, vindComentario: 'Lindo'),
+      );
+      await montar(tester);
+      await tester.tap(find.text('João'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(CapituloChip, '1'));
+      await tester.pumpAndSettle();
+
+      expect(find.byTooltip('comentarIndicarVersiculo'), findsOneWidget);
+      expect(find.byTooltip('versiculoComComentario'), findsOneWidget);
+    });
+
+    testWidgets('o ícone abaixo do de lido abre o comentário e a indicação do versículo', (tester) async {
+      await montar(tester);
+      await tester.tap(find.text('João'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(CapituloChip, '1'));
+      await tester.pumpAndSettle();
+
+      expect(find.byTooltip('comentarIndicarVersiculo'), findsNWidgets(2));
+      await tester.tap(find.byTooltip('comentarIndicarVersiculo').last);
+      await tester.pumpAndSettle();
+      expect(find.byType(VersiculoIndicacaoSheet), findsOneWidget);
+      expect(find.text('João 1:2'), findsOneWidget);
     });
   });
 }
