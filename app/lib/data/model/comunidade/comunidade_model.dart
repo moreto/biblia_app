@@ -1,10 +1,12 @@
 import '../biblia/json_reader.dart';
 
 /// Comunidade (`biblia.comunidade`), como devolvida por `/v1/comunidade`.
+///
+/// [comuId] é nulo enquanto a comunidade não foi gravada (corpo do POST).
 class ComunidadeModel {
-  const ComunidadeModel({required this.comuId, required this.comuNome, this.ctipId, this.cdenId, this.usuaId});
+  const ComunidadeModel({this.comuId, required this.comuNome, this.ctipId, this.cdenId, this.usuaId});
 
-  final int comuId;
+  final int? comuId;
   final String comuNome;
 
   /// Tipo (`/v1/comunidade-tipo`).

@@ -28,6 +28,8 @@ import '../features/biblia/renomado/repository/renomado_repository.dart';
 import '../features/biblia/renomado/repository/renomado_repository_impl.dart';
 import '../features/biblia/versiculo_renomado/repository/versiculo_renomado_repository.dart';
 import '../features/biblia/versiculo_renomado/repository/versiculo_renomado_repository_impl.dart';
+import '../features/comunidade/comunidade_endereco/repository/comunidade_endereco_repository.dart';
+import '../features/comunidade/comunidade_endereco/repository/comunidade_endereco_repository_impl.dart';
 import '../features/comunidade/repository/comunidade_repository.dart';
 import '../features/comunidade/repository/comunidade_repository_impl.dart';
 import '../features/dashboard/repository/dashboard_repository.dart';
@@ -66,4 +68,5 @@ void configDependencies() {
   locator.registerLazySingleton<RenomadoRepository>(() => RenomadoRepositoryImpl());
   locator.registerLazySingleton<VersiculoRenomadoRepository>(() => VersiculoRenomadoRepositoryImpl());
   locator.registerLazySingleton<ComunidadeRepository>(() => ComunidadeRepositoryImpl());
+  locator.registerLazySingleton<ComunidadeEnderecoRepository>(() => ComunidadeEnderecoRepositoryImpl());
 }

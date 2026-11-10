@@ -13,4 +13,13 @@ abstract class ComunidadeRepository {
 
   /// Denominações (`GET /v1/comunidade-denominacao`).
   Future<Result<List<ComunidadeDenominacaoModel>>> denominacoes();
+
+  /// Inclui a comunidade (`POST /v1/comunidade`); a API grava o usuário do token.
+  Future<Result<ComunidadeModel>> incluir(ComunidadeModel comunidade);
+
+  /// Altera a comunidade pelo `comuId` (`PUT /v1/comunidade`).
+  Future<Result<ComunidadeModel>> alterar(ComunidadeModel comunidade);
+
+  /// Exclui a comunidade (`DELETE /v1/comunidade/:comuId`).
+  Future<Result<void>> excluir(int comuId);
 }

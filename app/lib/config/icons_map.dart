@@ -76,6 +76,13 @@ class IconsMap {
     'church': MdiIcons.church,
     'account-group-outline': MdiIcons.accountGroupOutline,
     'account-group': MdiIcons.accountGroup,
+    // Cadastro de comunidades (ComunidadeView.iconeAdicionar / iconeAcoes / iconeEditar); 'delete-outline' já
+    // mapeado acima.
+    'plus': MdiIcons.plus,
+    'dots-vertical': MdiIcons.dotsVertical,
+    'pencil-outline': MdiIcons.pencilOutline,
+    // Aba e cards de endereços das comunidades (ComunidadeAba.enderecos / ComunidadeEnderecoView.iconeEndereco).
+    'map-marker-outline': MdiIcons.mapMarkerOutline,
     // ...
   };
 }

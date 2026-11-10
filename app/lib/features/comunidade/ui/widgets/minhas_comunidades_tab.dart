@@ -2,18 +2,33 @@ import 'package:app/l10n/app_localizations.dart';
 import 'package:components/components.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../data/model/comunidade/comunidade_model.dart';
 import '../../use_case/comunidade_usecase.dart';
 import '../comunidade_view.dart';
 import '../comunidade_viewmodel.dart';
 
+/// Ações do menu de cada comunidade.
+enum _Acao { editar, enderecos, excluir }
+
 /// Aba "Minhas comunidades": comunidades cadastradas pelo usuário, com tipo e denominação.
 ///
-/// Primeiro carregamento: progresso; se falhar, mensagem com "Tentar novamente". Depois disso a lista é mantida e
-/// a atualização (AppBar ou puxar para baixo) mostra uma barra de progresso.
+/// - Primeiro carregamento: progresso; se falhar, mensagem com "Tentar novamente". Depois disso a lista é mantida e
+///   a atualização (AppBar ou puxar para baixo), a gravação e a exclusão mostram uma barra de progresso.
+/// - Tocar no card edita ([onEditar]); o menu do card tem editar, endereços ([onEnderecos], abre a aba "Endereços"
+///   com a comunidade selecionada) e excluir ([onExcluir]).
 class MinhasComunidadesTab extends StatelessWidget {
-  const MinhasComunidadesTab({super.key, required this.viewModel});
+  const MinhasComunidadesTab({
+    super.key,
+    required this.viewModel,
+    required this.onEditar,
+    required this.onExcluir,
+    required this.onEnderecos,
+  });
 
   final ComunidadeViewmodel viewModel;
+  final ValueChanged<ComunidadeModel> onEditar;
+  final ValueChanged<ComunidadeModel> onExcluir;
+  final ValueChanged<ComunidadeModel> onEnderecos;
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +59,7 @@ class MinhasComunidadesTab extends StatelessWidget {
 
     return Column(
       children: [
-        if (command.running) const LinearProgressIndicator(),
+        if (command.running || viewModel.gravando) const LinearProgressIndicator(),
         Expanded(
           child: RefreshIndicator(
             onRefresh: command.execute,
@@ -59,7 +74,7 @@ class MinhasComunidadesTab extends StatelessWidget {
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     itemCount: comunidades.length,
-                    itemBuilder: (context, index) => _comunidade(context, comunidades[index]),
+                    itemBuilder: (context, index) => _comunidade(context, strings, comunidades[index]),
                   ),
           ),
         ),
@@ -89,40 +104,86 @@ class MinhasComunidadesTab extends StatelessWidget {
     );
   }
 
-  Widget _comunidade(BuildContext context, ComunidadeResumo resumo) {
+  Widget _comunidade(BuildContext context, AppLocalizations strings, ComunidadeResumo resumo) {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final descricao = viewModel.descricao(resumo);
+    final comunidade = resumo.comunidade;
+    final habilitado = !viewModel.gravando;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            CircleAvatar(
-              backgroundColor: scheme.primaryContainer,
-              child: ComunidadeView.icone(
-                ComunidadeView.iconeComunidade,
-                Icons.groups_outlined,
-                color: scheme.onPrimaryContainer,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: habilitado ? () => onEditar(comunidade) : null,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 4, 16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CircleAvatar(
+                backgroundColor: scheme.primaryContainer,
+                child: ComunidadeView.icone(
+                  ComunidadeView.iconeComunidade,
+                  Icons.groups_outlined,
+                  color: scheme.onPrimaryContainer,
+                ),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(resumo.comunidade.comuNome, style: textTheme.titleMedium),
-                  if (descricao != null) ...[
-                    const SizedBox(height: 4),
-                    Text(descricao, style: textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant)),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(comunidade.comuNome, style: textTheme.titleMedium),
+                    if (descricao != null) ...[
+                      const SizedBox(height: 4),
+                      Text(descricao, style: textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant)),
+                    ],
                   ],
+                ),
+              ),
+              PopupMenuButton<_Acao>(
+                tooltip: strings.translate('acoes'),
+                enabled: habilitado,
+                icon: ComunidadeView.icone(ComunidadeView.iconeAcoes, Icons.more_vert),
+                onSelected: (acao) => switch (acao) {
+                  _Acao.editar => onEditar(comunidade),
+                  _Acao.enderecos => onEnderecos(comunidade),
+                  _Acao.excluir => onExcluir(comunidade),
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: _Acao.editar,
+                    child: ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: ComunidadeView.icone(ComunidadeView.iconeEditar, Icons.edit_outlined),
+                      title: Text(strings.translate('editar')),
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: _Acao.enderecos,
+                    child: ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: ComunidadeView.icone(ComunidadeAba.enderecos.icone, Icons.place_outlined),
+                      title: Text(strings.translate('enderecos')),
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: _Acao.excluir,
+                    child: ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: ComunidadeView.icone(
+                        ComunidadeView.iconeExcluir,
+                        Icons.delete_outline,
+                        color: scheme.error,
+                      ),
+                      title: Text(strings.translate('excluir')),
+                    ),
+                  ),
                 ],
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

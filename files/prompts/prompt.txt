@@ -1,10 +1,10 @@
-construir a view de comunidade, sendo que será listada as comunidades do usuário na primeira aba, 
+construir a view de comunidade_endereco, sendo que será listada nas comunidades do usuário na segunda aba, 
 depois serão adicionadas mais abas
 internacionalizar os textos, verificar se existem na API /v1/traducao
 adicionar essa feature em uma nova pasta features/comunidade/
 
 API:
-/v1/comunidade
+/v1/comunidade-endereco
 
 gerar um script de insert no banco de dados das traduções faltantes, segue o modelo de dados abaixo:
 
