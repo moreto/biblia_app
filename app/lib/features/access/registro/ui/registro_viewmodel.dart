@@ -22,7 +22,9 @@ class RegistroViewmodel extends ChangeNotifier {
   late final Command1<RegistroModel, ({String email, String senha, String confirmacao})> registrarCommand = Command1(
     _registrar,
   );
-  late final Command1<void, ({String email, String codigo})> ativarCommand = Command1(_ativar);
+  late final Command1<void, ({String email, String codigo, String nome, String usuario})> ativarCommand = Command1(
+    _ativar,
+  );
 
   List<Command> get _commands => [registrarCommand, ativarCommand];
 
@@ -42,6 +44,8 @@ class RegistroViewmodel extends ChangeNotifier {
   String? validateConfirmacao(String? senha, String? confirmacao) =>
       registroUseCase.validateConfirmacao(senha, confirmacao);
   String? validateCodigo(String? codigo) => registroUseCase.validateCodigo(codigo);
+  String? validateNome(String? nome) => registroUseCase.validateNome(nome);
+  String? validateUsuario(String? usuario) => registroUseCase.validateUsuario(usuario);
 
   /// Chave de tradução do erro do último resultado de [command], ou null se não houve erro.
   String? errorMessage(Command command) => switch (command.result) {
@@ -72,8 +76,13 @@ class RegistroViewmodel extends ChangeNotifier {
     return result;
   }
 
-  Future<Result<void>> _ativar(({String email, String codigo}) args) async {
-    final result = await registroUseCase.ativar(email: args.email, codigo: args.codigo);
+  Future<Result<void>> _ativar(({String email, String codigo, String nome, String usuario}) args) async {
+    final result = await registroUseCase.ativar(
+      email: args.email,
+      codigo: args.codigo,
+      nome: args.nome,
+      usuario: args.usuario,
+    );
     if (result case Error(error: final error)) {
       Log.print(error.toString(), name: kApp, title: 'Erro');
     }

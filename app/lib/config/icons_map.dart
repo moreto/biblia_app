@@ -62,6 +62,8 @@ class IconsMap {
     'eye-outline': MdiIcons.eyeOutline,
     'eye-off-outline': MdiIcons.eyeOffOutline,
     'shield-check-outline': MdiIcons.shieldCheckOutline,
+    'account-outline': MdiIcons.accountOutline,
+    'at': MdiIcons.at,
     // ...
   };
 }

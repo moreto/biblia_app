@@ -18,7 +18,7 @@ import 'package:service/service.dart';
 class _FakeRegistroRepository implements RegistroRepository {
   final cadastrados = <String>{'existe@biblia.com'};
   final registros = <({String email, String senha})>[];
-  final ativacoes = <({String email, String codigo})>[];
+  final ativacoes = <({String email, String codigo, String nome, String usuario})>[];
   static const codigoValido = '123456';
 
   @override
@@ -32,8 +32,13 @@ class _FakeRegistroRepository implements RegistroRepository {
   }
 
   @override
-  Future<Result<void>> ativar({required String email, required String codigo}) async {
-    ativacoes.add((email: email, codigo: codigo));
+  Future<Result<void>> ativar({
+    required String email,
+    required String codigo,
+    required String nome,
+    required String usuario,
+  }) async {
+    ativacoes.add((email: email, codigo: codigo, nome: nome, usuario: usuario));
     if (codigo != codigoValido) {
       return Result.error(HttpServiceException(message: 'codigoAtivacaoInvalido', code: 400));
     }
@@ -92,6 +97,34 @@ void main() {
       expect(uc.validateCodigo('12a456'), 'informeCodigo6Digitos');
     });
 
+    test('valida nome completo e nome de usuário', () {
+      final uc = useCase();
+      expect(uc.validateNome('  '), 'informeNomeCompleto');
+      expect(uc.validateNome('x' * 71), 'nomeCompletoMaximo70');
+      expect(uc.validateNome(' Maria da Silva '), isNull);
+      expect(uc.validateUsuario(''), 'informeNomeUsuario');
+      expect(uc.validateUsuario('ab'), 'nomeUsuarioInvalido');
+      expect(uc.validateUsuario('maria silva'), 'nomeUsuarioInvalido');
+      expect(uc.validateUsuario('joão'), 'nomeUsuarioInvalido');
+      expect(uc.validateUsuario('x' * 31), 'nomeUsuarioInvalido');
+      expect(uc.validateUsuario(' maria.silva_1 '), isNull);
+    });
+
+    test('ativação sem nome ou usuário não chama a API', () async {
+      final uc = useCase();
+      final semNome = await uc.ativar(email: 'a@b.com', codigo: '123456', nome: '', usuario: 'maria');
+      expect(((semNome as Error).error as HandledException).message, 'informeNomeCompleto');
+      final semUsuario = await uc.ativar(email: 'a@b.com', codigo: '123456', nome: 'Maria', usuario: '');
+      expect(((semUsuario as Error).error as HandledException).message, 'informeNomeUsuario');
+      expect(repository.ativacoes, isEmpty);
+    });
+
+    test('ativação envia nome e usuário aparados', () async {
+      await useCase().ativar(email: ' a@b.com ', codigo: '123456', nome: ' Maria da Silva ', usuario: ' maria ');
+      final ativacao = repository.ativacoes.single;
+      expect((ativacao.email, ativacao.nome, ativacao.usuario), ('a@b.com', 'Maria da Silva', 'maria'));
+    });
+
     test('criptografa a senha antes de enviar e apara o e-mail', () async {
       final result = await useCase().registrar(email: ' novo@biblia.com ', senha: 'segredo', confirmacao: 'segredo');
       expect(result, isA<Ok<RegistroModel>>());
@@ -122,7 +155,12 @@ void main() {
       expect(viewModel.etapa, RegistroEtapa.ativacao);
       expect(viewModel.emailCadastrado, 'novo@biblia.com');
 
-      await viewModel.ativarCommand.execute((email: viewModel.emailCadastrado!, codigo: '123456'));
+      await viewModel.ativarCommand.execute((
+        email: viewModel.emailCadastrado!,
+        codigo: '123456',
+        nome: 'Maria da Silva',
+        usuario: 'maria',
+      ));
       expect(viewModel.ativarCommand.completed, isTrue);
       expect(repository.ativacoes.single.email, 'novo@biblia.com');
     });
@@ -189,6 +227,26 @@ void main() {
       expect(repository.registros, isEmpty);
     });
 
+    Future<void> preencherAtivacao(WidgetTester tester, {String codigo = '123456'}) async {
+      await tester.enterText(find.widgetWithText(TextFormField, 'nomeCompleto'), 'Maria da Silva');
+      await tester.enterText(find.widgetWithText(TextFormField, 'nomeUsuario'), 'maria');
+      await tester.enterText(find.widgetWithText(TextFormField, 'codigoAtivacao'), codigo);
+    }
+
+    testWidgets('ativação exige nome completo e nome de usuário', (tester) async {
+      await montar(tester);
+      await preencher(tester);
+      await tester.tap(find.widgetWithText(FilledButton, 'criarConta'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.widgetWithText(TextFormField, 'codigoAtivacao'), '123456');
+      await tester.tap(find.widgetWithText(FilledButton, 'ativarConta'));
+      await tester.pumpAndSettle();
+      expect(find.text('informeNomeCompleto'), findsWidgets);
+      expect(find.text('informeNomeUsuario'), findsWidgets);
+      expect(repository.ativacoes, isEmpty);
+    });
+
     testWidgets('cadastra, ativa e volta ao login com o e-mail', (tester) async {
       final devolvidos = await montar(tester);
       await preencher(tester);
@@ -196,11 +254,13 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.textContaining('novo@biblia.com'), findsOneWidget);
-      await tester.enterText(find.widgetWithText(TextFormField, 'codigoAtivacao'), '123456');
+      await preencherAtivacao(tester);
       await tester.tap(find.widgetWithText(FilledButton, 'ativarConta'));
       await tester.pumpAndSettle();
 
       expect(devolvidos, ['novo@biblia.com']);
+      expect(repository.ativacoes.single.nome, 'Maria da Silva');
+      expect(repository.ativacoes.single.usuario, 'maria');
       expect(find.text('contaAtivadaFacaLogin'), findsOneWidget);
     });
 
@@ -210,7 +270,7 @@ void main() {
       await tester.tap(find.widgetWithText(FilledButton, 'criarConta'));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.widgetWithText(TextFormField, 'codigoAtivacao'), '000000');
+      await preencherAtivacao(tester, codigo: '000000');
       await tester.tap(find.widgetWithText(FilledButton, 'ativarConta'));
       await tester.pumpAndSettle();
       expect(find.text('codigoAtivacaoInvalido'), findsOneWidget);

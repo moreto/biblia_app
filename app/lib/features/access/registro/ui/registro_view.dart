@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../config/command.dart';
+import '../use_case/registro_usecase.dart';
 import 'registro_viewmodel.dart';
 
 import 'package:app/config/orientation_button.dart';
@@ -13,11 +14,12 @@ import 'package:app/config/theme_mode_button.dart';
 /// Cadastro de usuário (`POST /v1/acesso/registro`), aberto pelo link "Criar conta" do login.
 ///
 /// - Dados: e-mail, senha e confirmação. Ao cadastrar, a API envia um código de 6 dígitos ao e-mail.
-/// - Ativação: código recebido (`POST /v1/usuario-ativacao/confirmar`). Ativada a conta, volta ao login
-///   devolvendo o e-mail cadastrado, para o login já vir preenchido.
+/// - Ativação: nome completo, nome de usuário e código recebido (`POST /v1/usuario-ativacao/confirmar`, que grava
+///   o nome e o usuário no detalhe do usuário). Ativada a conta, volta ao login devolvendo o e-mail cadastrado,
+///   para o login já vir preenchido.
 ///
 /// Ícones (em [IconsMap.mdiIcons]): [iconeCabecalho], [iconeEmail], [iconeSenha], [iconeConfirmacao],
-/// [iconeExibir], [iconeOcultar] e [iconeCodigo].
+/// [iconeExibir], [iconeOcultar], [iconeNome], [iconeUsuario] e [iconeCodigo].
 class RegistroView extends StatefulWidget {
   const RegistroView({super.key, required this.viewModel});
 
@@ -30,6 +32,8 @@ class RegistroView extends StatefulWidget {
   static const iconeExibir = 'eye-outline';
   static const iconeOcultar = 'eye-off-outline';
   static const iconeCodigo = 'shield-check-outline';
+  static const iconeNome = 'account-outline';
+  static const iconeUsuario = 'at';
 
   /// Ícone de [IconsMap.mdiIcons] pela chave; usa [fallback] se a chave não estiver mapeada.
   static Widget icone(String chave, IconData fallback, {Color? color, double? size}) =>
@@ -45,6 +49,8 @@ class _RegistroViewState extends State<RegistroView> {
   final _senhaController = TextEditingController();
   final _confirmacaoController = TextEditingController();
   final _codigoController = TextEditingController();
+  final _nomeController = TextEditingController();
+  final _usuarioController = TextEditingController();
   bool _senhaVisivel = false;
 
   RegistroViewmodel get _vm => widget.viewModel;
@@ -71,6 +77,8 @@ class _RegistroViewState extends State<RegistroView> {
     _senhaController.dispose();
     _confirmacaoController.dispose();
     _codigoController.dispose();
+    _nomeController.dispose();
+    _usuarioController.dispose();
     super.dispose();
   }
 
@@ -142,7 +150,12 @@ class _RegistroViewState extends State<RegistroView> {
 
   void _ativar() {
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    _vm.ativarCommand.execute((email: _vm.emailCadastrado ?? _emailController.text, codigo: _codigoController.text));
+    _vm.ativarCommand.execute((
+      email: _vm.emailCadastrado ?? _emailController.text,
+      codigo: _codigoController.text,
+      nome: _nomeController.text,
+      usuario: _usuarioController.text,
+    ));
   }
 
   // ---------- validações (regras no use case; aqui só traduz a chave) ----------
@@ -156,6 +169,10 @@ class _RegistroViewState extends State<RegistroView> {
   String? _validateConfirmacao(String? value) => _translate(_vm.validateConfirmacao(_senhaController.text, value));
 
   String? _validateCodigo(String? value) => _translate(_vm.validateCodigo(value));
+
+  String? _validateNome(String? value) => _translate(_vm.validateNome(value));
+
+  String? _validateUsuario(String? value) => _translate(_vm.validateUsuario(value));
 
   // ---------- layout ----------
 
@@ -274,6 +291,40 @@ class _RegistroViewState extends State<RegistroView> {
   List<Widget> _ativacaoSection(AppLocalizations strings) {
     return [
       Text('${strings.translate('codigoAtivacaoEnviado')}\n${_vm.emailCadastrado ?? ''}', textAlign: TextAlign.center),
+      const SizedBox(height: 16),
+      TextFormField(
+        controller: _nomeController,
+        enabled: !_vm.running,
+        keyboardType: TextInputType.name,
+        textCapitalization: TextCapitalization.words,
+        autofillHints: const [AutofillHints.name],
+        maxLength: RegistroUseCase.nomeMaximo,
+        textInputAction: TextInputAction.next,
+        decoration: InputDecoration(
+          labelText: strings.translate('nomeCompleto'),
+          hintText: strings.translate('informeNomeCompleto'),
+          prefixIcon: RegistroView.icone(RegistroView.iconeNome, Icons.person_outline),
+          counterText: '',
+        ),
+        validator: _validateNome,
+      ),
+      const SizedBox(height: 16),
+      TextFormField(
+        controller: _usuarioController,
+        enabled: !_vm.running,
+        autofillHints: const [AutofillHints.newUsername],
+        autocorrect: false,
+        enableSuggestions: false,
+        maxLength: RegistroUseCase.usuarioMaximo,
+        textInputAction: TextInputAction.next,
+        decoration: InputDecoration(
+          labelText: strings.translate('nomeUsuario'),
+          hintText: strings.translate('informeNomeUsuario'),
+          prefixIcon: RegistroView.icone(RegistroView.iconeUsuario, Icons.alternate_email),
+          counterText: '',
+        ),
+        validator: _validateUsuario,
+      ),
       const SizedBox(height: 16),
       TextFormField(
         controller: _codigoController,

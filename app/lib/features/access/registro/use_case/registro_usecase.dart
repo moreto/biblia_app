@@ -11,7 +11,8 @@ import '../repository/registro_repository.dart';
 /// - o cadastro exige e-mail válido, senha com ao menos [senhaMinimo] caracteres e a confirmação igual à senha;
 /// - a senha vai criptografada com a chave compartilhada com a API (a mesma do login);
 /// - a API cria o usuário inativo e envia um código de 6 dígitos ao e-mail; a conta só é ativada ao confirmar
-///   esse código.
+///   esse código, junto com o nome completo (até [nomeMaximo] caracteres) e o nome de usuário ([usuarioMinimo] a
+///   [usuarioMaximo] letras sem acento, números, `.`, `-` ou `_`), gravados no detalhe do usuário.
 class RegistroUseCase {
   RegistroUseCase({required this.registroRepository, required this.configuracaoAppUseCase}) {
     Log.print(super.runtimeType);
@@ -26,6 +27,14 @@ class RegistroUseCase {
   /// Tamanho mínimo da senha no cadastro.
   static const senhaMinimo = 6;
 
+  /// Tamanho máximo do nome completo (`udet_nome`).
+  static const nomeMaximo = 70;
+
+  /// Tamanho mínimo e máximo do nome de usuário (`udet_usuario`).
+  static const usuarioMinimo = 3;
+  static const usuarioMaximo = 30;
+
+  static final _usuarioRegex = RegExp('^[A-Za-z0-9._-]{$usuarioMinimo,$usuarioMaximo}\$');
   static final _emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
   static final _codigoRegex = RegExp(r'^\d{6}$');
 
@@ -52,6 +61,20 @@ class RegistroUseCase {
 
   String? validateCodigo(String? codigo) {
     if (!_codigoRegex.hasMatch(codigo?.trim() ?? kVazio)) return 'informeCodigo6Digitos';
+    return null;
+  }
+
+  String? validateNome(String? nome) {
+    final value = nome?.trim() ?? kVazio;
+    if (value.isEmpty) return 'informeNomeCompleto';
+    if (value.length > nomeMaximo) return 'nomeCompletoMaximo70';
+    return null;
+  }
+
+  String? validateUsuario(String? usuario) {
+    final value = usuario?.trim() ?? kVazio;
+    if (value.isEmpty) return 'informeNomeUsuario';
+    if (!_usuarioRegex.hasMatch(value)) return 'nomeUsuarioInvalido';
     return null;
   }
 
@@ -91,11 +114,21 @@ class RegistroUseCase {
     return registroRepository.registrar(email: email.trim(), senha: senhaCriptografada);
   }
 
-  /// Confirma o código de ativação enviado ao e-mail e ativa a conta.
-  Future<Result<void>> ativar({required String email, required String codigo}) async {
-    final invalid = validateEmail(email) ?? validateCodigo(codigo);
+  /// Confirma o código de ativação enviado ao e-mail, grava o nome completo e o nome de usuário e ativa a conta.
+  Future<Result<void>> ativar({
+    required String email,
+    required String codigo,
+    required String nome,
+    required String usuario,
+  }) async {
+    final invalid = validateEmail(email) ?? validateCodigo(codigo) ?? validateNome(nome) ?? validateUsuario(usuario);
     if (invalid != null) return Result.error(HandledException(message: invalid));
 
-    return registroRepository.ativar(email: email.trim(), codigo: codigo.trim());
+    return registroRepository.ativar(
+      email: email.trim(),
+      codigo: codigo.trim(),
+      nome: nome.trim(),
+      usuario: usuario.trim(),
+    );
   }
 }

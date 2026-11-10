@@ -7,6 +7,12 @@ abstract class RegistroRepository {
   /// [senha] já deve chegar criptografada (AES-256-GCM).
   Future<Result<RegistroModel>> registrar({required String email, required String senha});
 
-  /// `POST /v1/usuario-ativacao/confirmar`. Ativa o usuário do [email] se o [codigo] bater com o enviado.
-  Future<Result<void>> ativar({required String email, required String codigo});
+  /// `POST /v1/usuario-ativacao/confirmar`. Ativa o usuário do [email] se o [codigo] bater com o enviado e grava o
+  /// [nome] completo e o nome de [usuario] no detalhe do usuário (`usuario_detalhe`).
+  Future<Result<void>> ativar({
+    required String email,
+    required String codigo,
+    required String nome,
+    required String usuario,
+  });
 }

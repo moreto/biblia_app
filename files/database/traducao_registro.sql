@@ -16,6 +16,13 @@ FROM (VALUES
   ('codigoAtivacaoInvalido', 'Código de ativação inválido', 'Código de activación inválido', 'Invalid activation code'),
   ('usuarioAtivado', 'Conta ativada', 'Cuenta activada', 'Account activated'),
   ('contaAtivadaFacaLogin', 'Conta ativada! Faça o login', '¡Cuenta activada! Inicia sesión', 'Account activated! Please sign in'),
-  ('corrigirDados', 'Corrigir dados', 'Corregir datos', 'Edit details')
+  ('corrigirDados', 'Corrigir dados', 'Corregir datos', 'Edit details'),
+  ('nomeCompleto', 'Nome completo', 'Nombre completo', 'Full name'),
+  ('informeNomeCompleto', 'Informe o nome completo', 'Ingresa el nombre completo', 'Enter your full name'),
+  ('nomeCompletoMaximo70', 'O nome deve ter até 70 caracteres', 'El nombre debe tener hasta 70 caracteres', 'Name must have up to 70 characters'),
+  ('nomeUsuario', 'Nome de usuário', 'Nombre de usuario', 'Username'),
+  ('informeNomeUsuario', 'Informe o nome de usuário', 'Ingresa el nombre de usuario', 'Enter a username'),
+  ('nomeUsuarioInvalido', 'Use de 3 a 30 letras sem acento, números, ponto, hífen ou sublinhado', 'Usa de 3 a 30 letras sin acento, números, punto, guion o guion bajo', 'Use 3 to 30 unaccented letters, numbers, dot, hyphen or underscore'),
+  ('nomeUsuarioDuplicado', 'Este nome de usuário já está em uso', 'Este nombre de usuario ya está en uso', 'This username is already taken')
 ) AS v (trad_chave, trad_pt_br, trad_es_es, trad_en_us)
 WHERE NOT EXISTS (SELECT 1 FROM public.traducao t WHERE t.trad_chave = v.trad_chave);

@@ -26,10 +26,17 @@ class RegistroRepositoryImpl implements RegistroRepository {
   }
 
   @override
-  Future<Result<void>> ativar({required String email, required String codigo}) async {
+  Future<Result<void>> ativar({
+    required String email,
+    required String codigo,
+    required String nome,
+    required String usuario,
+  }) async {
     try {
-      final response = await DioProvider.of(ApiCore.usuarioAtivacaoConfirmar)
-          .request(verb: Verb.post, body: {'email': email, 'key': codigo});
+      final response = await DioProvider.of(ApiCore.usuarioAtivacaoConfirmar).request(
+        verb: Verb.post,
+        body: {'email': email, 'key': codigo, 'nome': nome, 'usuario': usuario},
+      );
       switch (response) {
         case Ok():
           return const Result.ok(null);
