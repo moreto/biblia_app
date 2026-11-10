@@ -1,10 +1,12 @@
-construir a view de renomado, vai listar todos os registros
+construir a view de comunidade, sendo que será listada as comunidades do usuário na primeira aba, 
+depois serão adicionadas mais abas
 internacionalizar os textos, verificar se existem na API /v1/traducao
-adicionar essa feature na pasta biblia
+adicionar essa feature em uma nova pasta features/comunidade/
 
+API:
+/v1/comunidade
 
 gerar um script de insert no banco de dados das traduções faltantes, segue o modelo de dados abaixo:
-/v1/renomado
 
 manter as regras de negocio nas use_case, chamar e notificar nas view_models
 seguir o padrão mvvm do projeto

@@ -71,6 +71,11 @@ class IconsMap {
     'account-search-outline': MdiIcons.accountSearchOutline,
     // Renomados (RenomadoView.iconeRenomado); também serve de menu_icone da tela. 'refresh' já mapeado acima.
     'account-star-outline': MdiIcons.accountStarOutline,
+    // Comunidades (ComunidadeView.iconeComunidade e ComunidadeAba.minhas.icone); 'account-group-outline' também
+    // serve de menu_icone da tela. 'refresh' já mapeado acima.
+    'church': MdiIcons.church,
+    'account-group-outline': MdiIcons.accountGroupOutline,
+    'account-group': MdiIcons.accountGroup,
     // ...
   };
 }

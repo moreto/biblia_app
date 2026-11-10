@@ -30,6 +30,12 @@ Para cada tela: rota, feature, use case e endpoints. Os caminhos de feature são
 | `/renomado` | [biblia/renomado](../../app/lib/features/biblia/renomado) | `RenomadoUseCase` | `/v1/renomado` | Lista de renomados (nome e texto de apresentação), por sequência e nome. Tocar num renomado abre os versículos dele. |
 | `/versiculo-renomado/:renoId` | [biblia/versiculo_renomado](../../app/lib/features/biblia/versiculo_renomado) | `VersiculoRenomadoUseCase`, `BibliaLeituraUseCase` (versões e preferência) | `/v1/versao`, `/v1/versiculo-renomado/:renoId/:versaId` | Só os versículos do renomado gravados na versão escolhida pelo usuário (a mesma da leitura; trocar aqui também salva). Cada versículo mostra a referência e o texto; tocar abre `/biblia-leitura` naquele versículo e versão. O `RenomadoModel` vai no `extra` para o título e o texto de apresentação. |
 
+## Comunidade (`ComunidadeRouter`)
+
+| Rota | Feature | Use case | Endpoints | Comportamento |
+|---|---|---|---|---|
+| `/comunidade` | [comunidade](../../app/lib/features/comunidade) | `ComunidadeUseCase` | `/v1/comunidade/usuario/:usuaId`, `/v1/comunidade-tipo`, `/v1/comunidade-denominacao` | Tela em abas (`ComunidadeAba`). Primeira aba, "Minhas comunidades": comunidades cadastradas pelo usuário logado, por nome, com tipo e denominação (falha nesses dois não impede a lista). Atualizar recarrega a aba aberta; erro numa atualização vira SnackBar. Novas abas: valor em `ComunidadeAba`, comando no viewmodel, widget em `ui/widgets/` e casos em `ComunidadeView`. |
+
 ## Administração
 
 | Rota | Feature | Use case | Endpoints | Comportamento |

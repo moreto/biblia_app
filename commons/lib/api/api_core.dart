@@ -15,6 +15,7 @@ enum HeaderType { minimal, basicInfo, loggedUser, loggedArea }
 // const String kPrdHost = 'http://192.168.1.45:3000/api';
 
 const String kDesHost = 'http://192.168.1.45:3000/api';
+// const String kDesHost = 'http://192.168.1.97:3000/api';
 // prod ou externo para desenvolvimento
 // const String kDesHost = 'http://179.252.135.186:3000/api';
 const String kPrdHost = 'http://179.252.135.186:3000/api';
@@ -36,6 +37,9 @@ enum ApiCore {
   // Area Logada (requere autenticação)
   bibliaCapitulo('/v1/biblia/capitulo', kDesHost, kPrdHost, HeaderType.loggedArea),
   bibliaIndice('/v1/biblia/indice', kDesHost, kPrdHost, HeaderType.loggedArea),
+  comunidadeDenominacao('/v1/comunidade-denominacao', kDesHost, kPrdHost, HeaderType.loggedArea),
+  comunidadeTipo('/v1/comunidade-tipo', kDesHost, kPrdHost, HeaderType.loggedArea),
+  comunidadeUsuario('/v1/comunidade/usuario', kDesHost, kPrdHost, HeaderType.loggedArea),
   configuracao('/v1/configuracao', kDesHost, kPrdHost, HeaderType.loggedArea),
   configuracaoItem('/v1/configuracao-item', kDesHost, kPrdHost, HeaderType.loggedArea),
   livro('/v1/livro', kDesHost, kPrdHost, HeaderType.loggedArea),
