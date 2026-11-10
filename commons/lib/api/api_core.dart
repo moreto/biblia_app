@@ -21,39 +21,39 @@ const String kPrdHost = 'http://179.252.135.186:3000/api';
 
 enum ApiCore {
   // Pública (fora da área logada)
-  healt('', kDesHost, kPrdHost, HeaderType.minimal),
   configuracaoApp('/v1/configuracao-app', kDesHost, kPrdHost, HeaderType.minimal),
   funcionalidade('/v1/funcionalidade', kDesHost, kPrdHost, HeaderType.minimal),
+  healt('', kDesHost, kPrdHost, HeaderType.minimal),
 
   // Pública (fora da área logada): a API valida só o x-access-token.
-  registro('/v1/acesso/registro', kDesHost, kPrdHost, HeaderType.basicInfo),
-  traducao('/v1/traducao', kDesHost, kPrdHost, HeaderType.basicInfo),
   login('/v1/acesso/login', kDesHost, kPrdHost, HeaderType.basicInfo),
   otpSend('/v1/otp/send', kDesHost, kPrdHost, HeaderType.basicInfo),
   otpVerify('/v1/otp/verify', kDesHost, kPrdHost, HeaderType.basicInfo),
+  registro('/v1/acesso/registro', kDesHost, kPrdHost, HeaderType.basicInfo),
+  traducao('/v1/traducao', kDesHost, kPrdHost, HeaderType.basicInfo),
   usuarioAtivacaoConfirmar('/v1/usuario-ativacao/confirmar', kDesHost, kPrdHost, HeaderType.basicInfo),
 
   // Area Logada (requere autenticação)
-  menu('/v1/menu', kDesHost, kPrdHost, HeaderType.loggedArea),
-  log('/v1/log', kDesHost, kPrdHost, HeaderType.loggedArea),
-  notificacao('/v1/notificacao', kDesHost, kPrdHost, HeaderType.loggedArea),
+  bibliaCapitulo('/v1/biblia/capitulo', kDesHost, kPrdHost, HeaderType.loggedArea),
+  bibliaIndice('/v1/biblia/indice', kDesHost, kPrdHost, HeaderType.loggedArea),
   configuracao('/v1/configuracao', kDesHost, kPrdHost, HeaderType.loggedArea),
   configuracaoItem('/v1/configuracao-item', kDesHost, kPrdHost, HeaderType.loggedArea),
-  oracaoAleatoria('/v1/oracao/aleatoria', kDesHost, kPrdHost, HeaderType.loggedArea),
+  livro('/v1/livro', kDesHost, kPrdHost, HeaderType.loggedArea),
+  log('/v1/log', kDesHost, kPrdHost, HeaderType.loggedArea),
+  menu('/v1/menu', kDesHost, kPrdHost, HeaderType.loggedArea),
   musicaAleatoria('/v1/musica/aleatoria', kDesHost, kPrdHost, HeaderType.loggedArea),
+  notificacao('/v1/notificacao', kDesHost, kPrdHost, HeaderType.loggedArea),
+  oracaoAleatoria('/v1/oracao/aleatoria', kDesHost, kPrdHost, HeaderType.loggedArea),
+  testamento('/v1/testamento', kDesHost, kPrdHost, HeaderType.loggedArea),
+  usuarioBusca('/v1/usuario/busca', kDesHost, kPrdHost, HeaderType.loggedArea),
+  versao('/v1/versao', kDesHost, kPrdHost, HeaderType.loggedArea),
   versiculoAleatorio('/v1/versiculo/aleatorio', kDesHost, kPrdHost, HeaderType.loggedArea),
-  versiculoReacao('/v1/versiculo-reacao', kDesHost, kPrdHost, HeaderType.loggedArea),
-  versiculoReacaoLidos('/v1/versiculo-reacao/lidos', kDesHost, kPrdHost, HeaderType.loggedArea),
-  versiculoReacaoCapitulo('/v1/versiculo-reacao/capitulo', kDesHost, kPrdHost, HeaderType.loggedArea),
   versiculoIndicacao('/v1/versiculo-indicacao', kDesHost, kPrdHost, HeaderType.loggedArea),
   versiculoIndicacaoCapitulo('/v1/versiculo-indicacao/capitulo', kDesHost, kPrdHost, HeaderType.loggedArea),
   versiculoIndicacaoUsuario('/v1/versiculo-indicacao-usuario', kDesHost, kPrdHost, HeaderType.loggedArea),
-  usuarioBusca('/v1/usuario/busca', kDesHost, kPrdHost, HeaderType.loggedArea),
-  versao('/v1/versao', kDesHost, kPrdHost, HeaderType.loggedArea),
-  testamento('/v1/testamento', kDesHost, kPrdHost, HeaderType.loggedArea),
-  livro('/v1/livro', kDesHost, kPrdHost, HeaderType.loggedArea),
-  bibliaIndice('/v1/biblia/indice', kDesHost, kPrdHost, HeaderType.loggedArea),
-  bibliaCapitulo('/v1/biblia/capitulo', kDesHost, kPrdHost, HeaderType.loggedArea);
+  versiculoReacao('/v1/versiculo-reacao', kDesHost, kPrdHost, HeaderType.loggedArea),
+  versiculoReacaoCapitulo('/v1/versiculo-reacao/capitulo', kDesHost, kPrdHost, HeaderType.loggedArea),
+  versiculoReacaoLidos('/v1/versiculo-reacao/lidos', kDesHost, kPrdHost, HeaderType.loggedArea);
 
   const ApiCore(this.endpoint, this.des, this.prd, this.headerType);
   final String endpoint;
