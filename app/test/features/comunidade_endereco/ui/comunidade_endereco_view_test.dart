@@ -191,6 +191,20 @@ void main() {
       expect((snake.cendId, snake.cendBairro, snake.estaSigla), (4, 'Centro', null));
     });
 
+    test('ComunidadeEnderecoModel.fromJson aceita cendNumero numérico (coluna integer no banco)', () {
+      final endereco = ComunidadeEnderecoModel.fromJson({
+        'cendId': 1,
+        'comuId': 1,
+        'cendCep': '73252200',
+        'cendLogradouro': 'Rk',
+        'cendNumero': 6,
+        'cendComplemento': null,
+        'muniId': 5300108,
+      });
+      expect((endereco.cendNumero, endereco.cendComplemento), ('6', null));
+      expect(() => ComunidadeEnderecoModel.fromJson({...endereco.toJson(), 'cendNumero': true}), throwsFormatException);
+    });
+
     test('ComunidadeEnderecoModel.fromJson sem logradouro lança FormatException', () {
       expect(() => ComunidadeEnderecoModel.fromJson({'comuId': 1, 'cendCep': '1', 'muniId': 1}), throwsFormatException);
     });
@@ -266,6 +280,27 @@ void main() {
       expect(useCase.validar(endereco(cep: '0100100')), 'cepInvalido');
       expect(useCase.validar(endereco(logradouro: '  ')), 'logradouroObrigatorio');
       expect(useCase.validar(endereco(muniId: 0)), 'municipioObrigatorio');
+    });
+
+    test('validar: número só com dígitos (até 9) e tamanhos das colunas', () {
+      final useCase = criarUseCase();
+      ComunidadeEnderecoModel endereco({String? numero, String logradouro = 'Rua', String? bairro}) =>
+          ComunidadeEnderecoModel(
+            comuId: 1,
+            cendCep: '01001000',
+            cendLogradouro: logradouro,
+            cendNumero: numero,
+            cendBairro: bairro,
+            muniId: 1,
+          );
+
+      expect(useCase.validar(endereco(numero: ' 10 ')), isNull);
+      expect(useCase.validar(endereco(numero: '  ')), isNull);
+      expect(useCase.validar(endereco(numero: 'S/N')), 'numeroInvalido');
+      expect(useCase.validar(endereco(numero: '1234567890')), 'numeroInvalido');
+      expect(useCase.validar(endereco(logradouro: 'a' * 257)), 'dadosInvalidos');
+      expect(useCase.validar(endereco(bairro: 'b' * 61)), 'dadosInvalidos');
+      expect(useCase.validar(endereco(bairro: 'b' * 60)), isNull);
     });
 
     test(

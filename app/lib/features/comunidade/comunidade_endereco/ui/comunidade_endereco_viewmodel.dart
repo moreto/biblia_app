@@ -70,6 +70,9 @@ class ComunidadeEnderecoViewmodel extends ChangeNotifier {
 
   String? validar(ComunidadeEnderecoModel endereco) => comunidadeEnderecoUseCase.validar(endereco);
 
+  /// Tamanhos máximos dos campos do formulário.
+  EnderecoLimites get limites => ComunidadeEnderecoUseCase.limites;
+
   Future<Result<List<EstadoModel>>> estados() => comunidadeEnderecoUseCase.estados();
 
   Future<Result<List<MunicipioModel>>> municipios(int estaId) => comunidadeEnderecoUseCase.municipios(estaId);

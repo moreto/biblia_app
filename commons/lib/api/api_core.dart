@@ -14,7 +14,8 @@ enum HeaderType { minimal, basicInfo, loggedUser, loggedArea }
 // const String kDesHost = 'http://192.168.1.45:3000/api';
 // const String kPrdHost = 'http://192.168.1.45:3000/api';
 
-const String kDesHost = 'http://192.168.1.45:3000/api';
+// const String kDesHost = 'http://127.20.10.2:3000/api';
+const String kDesHost = 'http://localhost:3000/api';
 // const String kDesHost = 'http://192.168.1.97:3000/api';
 // prod ou externo para desenvolvimento
 // const String kDesHost = 'http://179.252.135.186:3000/api';
@@ -44,7 +45,7 @@ enum ApiCore {
   comunidadeUsuario('/v1/comunidade/usuario', kDesHost, kPrdHost, HeaderType.loggedArea),
   estado('/v1/estado', kDesHost, kPrdHost, HeaderType.loggedArea),
   municipio('/v1/municipio', kDesHost, kPrdHost, HeaderType.loggedArea),
-  configuracao('/v1/configuracao',kDesHost, kPrdHost, HeaderType.loggedArea),
+  configuracao('/v1/configuracao', kDesHost, kPrdHost, HeaderType.loggedArea),
   configuracaoItem('/v1/configuracao-item', kDesHost, kPrdHost, HeaderType.loggedArea),
   livro('/v1/livro', kDesHost, kPrdHost, HeaderType.loggedArea),
   log('/v1/log', kDesHost, kPrdHost, HeaderType.loggedArea),

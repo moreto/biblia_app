@@ -243,6 +243,7 @@ class _ComunidadeViewState extends State<ComunidadeView> with SingleTickerProvid
       estados: _enderecoVm.estados,
       municipios: _enderecoVm.municipios,
       validar: _enderecoVm.validar,
+      limites: _enderecoVm.limites,
       endereco: endereco,
     );
     if (result != null) _enderecoVm.salvarCommand.execute(result);

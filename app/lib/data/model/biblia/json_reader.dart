@@ -18,8 +18,14 @@ abstract final class JsonReader {
   static String texto(Map<String, dynamic> json, String camel, String snake) =>
       textoOpcional(json, camel, snake) ?? (throw FormatException('campoInvalido', camel));
 
+  /// Texto opcional; número (ex.: coluna inteira no banco) vira texto. Outro tipo lança [FormatException].
   static String? textoOpcional(Map<String, dynamic> json, String camel, String snake) =>
-      _valor(json, camel, snake) as String?;
+      switch (_valor(json, camel, snake)) {
+        null => null,
+        final String valor => valor,
+        final num valor => valor.toString(),
+        _ => throw FormatException('campoInvalido', camel),
+      };
 
   static DateTime? data(Map<String, dynamic> json, String camel, String snake) {
     final valor = _valor(json, camel, snake);

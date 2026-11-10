@@ -19,6 +19,7 @@ FROM (VALUES
   ('comunidadeObrigatoria', 'Selecione a comunidade', 'Seleccione la comunidad', 'Select the community'),
   ('cepInvalido', 'Informe o CEP com 8 dígitos', 'Informe el código postal con 8 dígitos', 'Enter the 8-digit ZIP code'),
   ('logradouroObrigatorio', 'Informe o logradouro', 'Informe la calle', 'Enter the street'),
+  ('numeroInvalido', 'O número deve conter apenas dígitos', 'El número debe contener solo dígitos', 'The number must contain only digits'),
   ('municipioObrigatorio', 'Selecione o estado e o município', 'Seleccione el estado y el municipio', 'Select the state and city')
 ) AS v (trad_chave, trad_pt_br, trad_es_es, trad_en_us)
 WHERE NOT EXISTS (SELECT 1 FROM public.traducao t WHERE t.trad_chave = v.trad_chave);

@@ -13,16 +13,23 @@ import '../repository/comunidade_endereco_repository.dart';
 /// - os endereços da comunidade vêm de `/v1/comunidade-endereco/:comuId`, na ordem da API; 404
 ///   `registroNaoEncontrado` vira lista vazia;
 /// - gravação ([salvar]): comunidade, CEP com 8 dígitos (gravado só com os dígitos), logradouro e município
-///   obrigatórios ([validar]); textos sem espaços nas pontas e opcionais em branco viram nulos; sem `cendId` inclui,
-///   com `cendId` altera; exclusão ([excluir]) pelo `cendId`;
+///   obrigatórios ([validar]); número opcional, só com dígitos (`cend_numero` é inteiro no banco); tamanhos máximos
+///   em [limites] (colunas de `biblia.comunidade_endereco`); textos sem espaços nas pontas e opcionais em branco
+///   viram nulos; sem `cendId` inclui, com `cendId` altera; exclusão ([excluir]) pelo `cendId`;
 /// - estados e municípios do formulário ficam em cache (municípios por estado);
 /// - textos do card: [linhaPrincipal], [linhaLocal] e [cepFormatado].
+/// Tamanhos máximos dos campos do endereço.
+typedef EnderecoLimites = ({int cep, int logradouro, int numero, int complemento, int bairro});
+
 class ComunidadeEnderecoUseCase {
   ComunidadeEnderecoUseCase({required this.comunidadeEnderecoRepository, required this.comunidadeUseCase}) {
     Log.print(super.runtimeType);
   }
 
   final ComunidadeEnderecoRepository comunidadeEnderecoRepository;
+
+  /// Limites das colunas de `biblia.comunidade_endereco`; o número (`integer`) vai até 9 dígitos.
+  static const EnderecoLimites limites = (cep: 8, logradouro: 256, numero: 9, complemento: 256, bairro: 60);
 
   /// Comunidades do usuário logado (mesmas regras da aba "Minhas comunidades").
   final ComunidadeUseCase comunidadeUseCase;
@@ -74,7 +81,14 @@ class ComunidadeEnderecoUseCase {
     if (endereco.comuId < 1) return 'comunidadeObrigatoria';
     if (_digitos(endereco.cendCep).length != 8) return 'cepInvalido';
     if (endereco.cendLogradouro.trim().isEmpty) return 'logradouroObrigatorio';
+    final numero = endereco.cendNumero?.trim() ?? '';
+    if (numero.isNotEmpty && (numero.length > limites.numero || _digitos(numero) != numero)) return 'numeroInvalido';
     if (endereco.muniId < 1) return 'municipioObrigatorio';
+    if (endereco.cendLogradouro.trim().length > limites.logradouro ||
+        (endereco.cendComplemento?.trim().length ?? 0) > limites.complemento ||
+        (endereco.cendBairro?.trim().length ?? 0) > limites.bairro) {
+      return 'dadosInvalidos';
+    }
     return null;
   }
 

@@ -7,10 +7,11 @@ import '../../../../../data/model/comunidade/comunidade_endereco_model.dart';
 import '../../../../../data/model/localidade/estado_model.dart';
 import '../../../../../data/model/localidade/municipio_model.dart';
 import '../../../../admin/configuracao/ui/widgets/configuracao_dialog_layout.dart';
+import '../../use_case/comunidade_endereco_usecase.dart' show EnderecoLimites;
 import '../comunidade_endereco_view.dart';
 
 /// Formulário de inclusão/alteração do endereço da comunidade [comuId] ([comunidadeNome] aparece no topo):
-/// CEP, logradouro, número, complemento, bairro, estado e município.
+/// CEP, logradouro, número (só dígitos), complemento, bairro, estado e município, com os tamanhos de [limites].
 ///
 /// Estados e municípios vêm de [estados] e [municipios] (do viewmodel, com cache no use case); os municípios são
 /// carregados ao escolher o estado. Ao salvar, [validar] (regra do use case) devolve a chave do problema, mostrada
@@ -23,6 +24,7 @@ class ComunidadeEnderecoFormDialog extends StatefulWidget {
     required this.estados,
     required this.municipios,
     required this.validar,
+    required this.limites,
     this.endereco,
   });
 
@@ -31,6 +33,9 @@ class ComunidadeEnderecoFormDialog extends StatefulWidget {
   final Future<Result<List<EstadoModel>>> Function() estados;
   final Future<Result<List<MunicipioModel>>> Function(int estaId) municipios;
   final String? Function(ComunidadeEnderecoModel) validar;
+
+  /// Tamanhos máximos dos campos (regra do use case).
+  final EnderecoLimites limites;
 
   /// Endereço em alteração; nulo na inclusão.
   final ComunidadeEnderecoModel? endereco;
@@ -42,6 +47,7 @@ class ComunidadeEnderecoFormDialog extends StatefulWidget {
     required Future<Result<List<EstadoModel>>> Function() estados,
     required Future<Result<List<MunicipioModel>>> Function(int estaId) municipios,
     required String? Function(ComunidadeEnderecoModel) validar,
+    required EnderecoLimites limites,
     ComunidadeEnderecoModel? endereco,
   }) => showDialog<ComunidadeEnderecoModel>(
     context: context,
@@ -51,6 +57,7 @@ class ComunidadeEnderecoFormDialog extends StatefulWidget {
       estados: estados,
       municipios: municipios,
       validar: validar,
+      limites: limites,
       endereco: endereco,
     ),
   );
@@ -186,19 +193,28 @@ class _ComunidadeEnderecoFormDialogState extends State<ComunidadeEnderecoFormDia
           'cep',
           teclado: TextInputType.number,
           formatadores: [FilteringTextInputFormatter.digitsOnly],
-          maxLength: 8,
+          maxLength: widget.limites.cep,
           autofocus: novo,
           prefixo: ComunidadeEnderecoView.icone(ComunidadeEnderecoView.iconeEndereco, Icons.place_outlined),
         ),
-        _campo(_logradouro, 'logradouro'),
+        _campo(_logradouro, 'logradouro', maxLength: widget.limites.logradouro),
         Row(
           children: [
-            SizedBox(width: 110, child: _campo(_numero, 'numero')),
+            SizedBox(
+              width: 110,
+              child: _campo(
+                _numero,
+                'numero',
+                teclado: TextInputType.number,
+                formatadores: [FilteringTextInputFormatter.digitsOnly],
+                maxLength: widget.limites.numero,
+              ),
+            ),
             const SizedBox(width: 12),
-            Expanded(child: _campo(_complemento, 'complemento')),
+            Expanded(child: _campo(_complemento, 'complemento', maxLength: widget.limites.complemento)),
           ],
         ),
-        _campo(_bairro, 'bairro'),
+        _campo(_bairro, 'bairro', maxLength: widget.limites.bairro),
         DropdownButtonFormField<int>(
           key: ValueKey('estado-${estados?.length}'),
           initialValue: _estaId,
