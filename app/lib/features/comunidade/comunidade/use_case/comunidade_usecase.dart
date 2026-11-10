@@ -1,16 +1,17 @@
 import 'package:commons/commons.dart';
 import 'package:service/service.dart';
 
-import '../../../data/model/comunidade/comunidade_denominacao_model.dart';
-import '../../../data/model/comunidade/comunidade_model.dart';
-import '../../../data/model/comunidade/comunidade_tipo_model.dart';
+import '../../../../data/model/comunidade/comunidade_denominacao_model.dart';
+import '../../../../data/model/comunidade/comunidade_model.dart';
+import '../../../../data/model/comunidade/comunidade_tipo_model.dart';
 import '../repository/comunidade_repository.dart';
 
 /// Abas da tela de comunidades, na ordem de exibição. [rotulo] é a chave de tradução e [icone], a chave em
 /// `IconsMap.mdiIcons`. Novas abas entram aqui e em [ComunidadeUseCase.abas].
 enum ComunidadeAba {
   minhas(rotulo: 'minhasComunidades', icone: 'account-group-outline'),
-  enderecos(rotulo: 'enderecos', icone: 'map-marker-outline');
+  enderecos(rotulo: 'enderecos', icone: 'map-marker-outline'),
+  contatos(rotulo: 'contatos', icone: 'card-account-phone-outline');
 
   const ComunidadeAba({required this.rotulo, required this.icone});
 

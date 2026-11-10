@@ -83,6 +83,19 @@ class IconsMap {
     'pencil-outline': MdiIcons.pencilOutline,
     // Aba e cards de endereços das comunidades (ComunidadeAba.enderecos / ComunidadeEnderecoView.iconeEndereco).
     'map-marker-outline': MdiIcons.mapMarkerOutline,
+    // Aba e cards de contatos das comunidades (ComunidadeAba.contatos / ComunidadeContatoView.iconeContato) e
+    // campos de contato (ContatoCampo.icone); 'email-outline' e 'thumb-up-outline' já mapeados acima. Os ícones de
+    // marca do MDI estão deprecados, então as redes usam ícones genéricos: WhatsApp 'chat-outline', Facebook
+    // 'thumb-up-outline', Instagram 'camera-outline', YouTube 'play-box-outline' e Telegram 'send'.
+    'card-account-phone-outline': MdiIcons.cardAccountPhoneOutline,
+    'phone-outline': MdiIcons.phoneOutline,
+    'phone-classic': MdiIcons.phoneClassic,
+    'cellphone': MdiIcons.cellphone,
+    'chat-outline': MdiIcons.chatOutline,
+    'web': MdiIcons.web,
+    'camera-outline': MdiIcons.cameraOutline,
+    'play-box-outline': MdiIcons.playBoxOutline,
+    'send': MdiIcons.send,
     // ...
   };
 }

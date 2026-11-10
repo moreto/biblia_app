@@ -4,7 +4,7 @@ import 'package:components/components.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../data/model/comunidade/comunidade_endereco_model.dart';
-import '../../ui/comunidade_view.dart';
+import '../../comunidade/ui/comunidade_view.dart';
 import 'comunidade_endereco_viewmodel.dart';
 
 /// Ações do menu de cada endereço.

@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import '../../../../data/model/comunidade/comunidade_endereco_model.dart';
 import '../../../../data/model/localidade/estado_model.dart';
 import '../../../../data/model/localidade/municipio_model.dart';
-import '../../use_case/comunidade_usecase.dart';
+import '../../comunidade/use_case/comunidade_usecase.dart';
 import '../use_case/comunidade_endereco_usecase.dart';
 
 /// Estado da aba "Endereços": endereços da comunidade selecionada.

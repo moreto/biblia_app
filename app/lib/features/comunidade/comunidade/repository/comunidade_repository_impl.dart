@@ -1,9 +1,9 @@
 import 'package:commons/commons.dart';
 import 'package:service/service.dart';
 
-import '../../../data/model/comunidade/comunidade_denominacao_model.dart';
-import '../../../data/model/comunidade/comunidade_model.dart';
-import '../../../data/model/comunidade/comunidade_tipo_model.dart';
+import '../../../../data/model/comunidade/comunidade_denominacao_model.dart';
+import '../../../../data/model/comunidade/comunidade_model.dart';
+import '../../../../data/model/comunidade/comunidade_tipo_model.dart';
 import 'comunidade_repository.dart';
 
 class ComunidadeRepositoryImpl implements ComunidadeRepository {

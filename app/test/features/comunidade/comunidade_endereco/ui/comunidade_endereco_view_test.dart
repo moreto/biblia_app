@@ -8,8 +8,8 @@ import 'package:app/features/comunidade/comunidade_endereco/repository/comunidad
 import 'package:app/features/comunidade/comunidade_endereco/ui/comunidade_endereco_view.dart';
 import 'package:app/features/comunidade/comunidade_endereco/ui/comunidade_endereco_viewmodel.dart';
 import 'package:app/features/comunidade/comunidade_endereco/use_case/comunidade_endereco_usecase.dart';
-import 'package:app/features/comunidade/repository/comunidade_repository.dart';
-import 'package:app/features/comunidade/use_case/comunidade_usecase.dart';
+import 'package:app/features/comunidade/comunidade/repository/comunidade_repository.dart';
+import 'package:app/features/comunidade/comunidade/use_case/comunidade_usecase.dart';
 import 'package:app/l10n/app_localizations.dart';
 import 'package:commons/commons.dart';
 import 'package:flutter/foundation.dart';

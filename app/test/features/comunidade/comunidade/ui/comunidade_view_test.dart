@@ -1,16 +1,20 @@
+import 'package:app/data/model/comunidade/comunidade_contato_model.dart';
 import 'package:app/data/model/comunidade/comunidade_denominacao_model.dart';
 import 'package:app/data/model/comunidade/comunidade_model.dart';
 import 'package:app/data/model/comunidade/comunidade_tipo_model.dart';
 import 'package:app/data/model/localidade/estado_model.dart';
 import 'package:app/data/model/localidade/municipio_model.dart';
 import 'package:app/data/model/comunidade/comunidade_endereco_model.dart';
+import 'package:app/features/comunidade/comunidade_contato/repository/comunidade_contato_repository.dart';
+import 'package:app/features/comunidade/comunidade_contato/ui/comunidade_contato_viewmodel.dart';
+import 'package:app/features/comunidade/comunidade_contato/use_case/comunidade_contato_usecase.dart';
 import 'package:app/features/comunidade/comunidade_endereco/repository/comunidade_endereco_repository.dart';
 import 'package:app/features/comunidade/comunidade_endereco/ui/comunidade_endereco_viewmodel.dart';
 import 'package:app/features/comunidade/comunidade_endereco/use_case/comunidade_endereco_usecase.dart';
-import 'package:app/features/comunidade/repository/comunidade_repository.dart';
-import 'package:app/features/comunidade/ui/comunidade_view.dart';
-import 'package:app/features/comunidade/ui/comunidade_viewmodel.dart';
-import 'package:app/features/comunidade/use_case/comunidade_usecase.dart';
+import 'package:app/features/comunidade/comunidade/repository/comunidade_repository.dart';
+import 'package:app/features/comunidade/comunidade/ui/comunidade_view.dart';
+import 'package:app/features/comunidade/comunidade/ui/comunidade_viewmodel.dart';
+import 'package:app/features/comunidade/comunidade/use_case/comunidade_usecase.dart';
 import 'package:app/l10n/app_localizations.dart';
 import 'package:commons/commons.dart';
 import 'package:flutter/foundation.dart';
@@ -156,6 +160,49 @@ class _FakeComunidadeEnderecoRepository implements ComunidadeEnderecoRepository 
   }
 }
 
+/// Contatos por comunidade em memória (comunidade 1 já tem um).
+class _FakeComunidadeContatoRepository implements ComunidadeContatoRepository {
+  final consultas = <int>[];
+  final gravados = <ComunidadeContatoModel>[];
+  final excluidos = <int>[];
+  final porComunidade = <int, List<ComunidadeContatoModel>>{
+    1: [const ComunidadeContatoModel(cconId: 1, comuId: 1, cconEmail: 'secretaria@matriz.org')],
+  };
+
+  @override
+  Future<Result<List<ComunidadeContatoModel>>> contatos(int comuId) async {
+    consultas.add(comuId);
+    return Result.ok(List.of(porComunidade[comuId] ?? const []));
+  }
+
+  @override
+  Future<Result<ComunidadeContatoModel>> incluir(ComunidadeContatoModel contato) async {
+    gravados.add(contato);
+    final gravado = ComunidadeContatoModel.comCampos(
+      cconId: 60,
+      comuId: contato.comuId,
+      campos: {for (final chave in ComunidadeContatoModel.chaves) chave: contato.campo(chave)},
+    );
+    (porComunidade[contato.comuId] ??= []).add(gravado);
+    return Result.ok(gravado);
+  }
+
+  @override
+  Future<Result<ComunidadeContatoModel>> alterar(ComunidadeContatoModel contato) async {
+    gravados.add(contato);
+    return Result.ok(contato);
+  }
+
+  @override
+  Future<Result<void>> excluir(int cconId) async {
+    excluidos.add(cconId);
+    for (final lista in porComunidade.values) {
+      lista.removeWhere((c) => c.cconId == cconId);
+    }
+    return const Result.ok(null);
+  }
+}
+
 class _TestLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _TestLocalizationsDelegate();
 
@@ -181,7 +228,15 @@ void main() {
     WidgetTester tester,
     ComunidadeViewmodel viewModel, {
     _FakeComunidadeEnderecoRepository? enderecos,
+    _FakeComunidadeContatoRepository? contatos,
   }) async {
+    final contatoViewModel = ComunidadeContatoViewmodel(
+      comunidadeContatoUseCase: ComunidadeContatoUseCase(
+        comunidadeContatoRepository: contatos ?? _FakeComunidadeContatoRepository(),
+        comunidadeUseCase: viewModel.comunidadeUseCase,
+        abrirUrl: (_) async => true,
+      ),
+    );
     final enderecoViewModel = ComunidadeEnderecoViewmodel(
       comunidadeEnderecoUseCase: ComunidadeEnderecoUseCase(
         comunidadeEnderecoRepository: enderecos ?? _FakeComunidadeEnderecoRepository(),
@@ -195,9 +250,22 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         localizationsDelegates: const [_TestLocalizationsDelegate(), DefaultMaterialLocalizations.delegate],
-        home: ComunidadeView(viewModel: viewModel, enderecoViewModel: enderecoViewModel),
+        home: ComunidadeView(
+          viewModel: viewModel,
+          enderecoViewModel: enderecoViewModel,
+          contatoViewModel: contatoViewModel,
+        ),
       ),
     );
+    await tester.pumpAndSettle();
+  }
+
+  /// Abre a aba [rotulo]; a TabBar rola, então a aba pode estar fora da tela (celular).
+  Future<void> abrirAba(WidgetTester tester, String rotulo) async {
+    final aba = find.widgetWithText(Tab, rotulo);
+    await tester.ensureVisible(aba);
+    await tester.pumpAndSettle();
+    await tester.tap(aba);
     await tester.pumpAndSettle();
   }
 
@@ -368,8 +436,7 @@ void main() {
       await montar(tester, criar(_FakeComunidadeRepository([_matriz, _grupo])), enderecos: enderecos);
       expect(enderecos.consultas, isEmpty);
 
-      await tester.tap(find.widgetWithText(Tab, 'enderecos'));
-      await tester.pumpAndSettle();
+      await abrirAba(tester, 'enderecos');
 
       expect(enderecos.consultas, [_grupo.comuId], reason: '"Grupo de Oração" vem primeiro, por nome');
       expect(find.text('nenhumEnderecoCadastrado'), findsOneWidget);
@@ -394,8 +461,7 @@ void main() {
     testWidgets('"Novo endereço" inclui na comunidade selecionada', (tester) async {
       final enderecos = _FakeComunidadeEnderecoRepository();
       await montar(tester, criar(_FakeComunidadeRepository([_matriz])), enderecos: enderecos);
-      await tester.tap(find.widgetWithText(Tab, 'enderecos'));
-      await tester.pumpAndSettle();
+      await abrirAba(tester, 'enderecos');
 
       await tester.tap(find.text('novoEndereco'));
       await tester.pumpAndSettle();
@@ -425,8 +491,7 @@ void main() {
     testWidgets('excluir endereço pelo menu do card pede confirmação e remove', (tester) async {
       final enderecos = _FakeComunidadeEnderecoRepository();
       await montar(tester, criar(_FakeComunidadeRepository([_matriz])), enderecos: enderecos);
-      await tester.tap(find.widgetWithText(Tab, 'enderecos'));
-      await tester.pumpAndSettle();
+      await abrirAba(tester, 'enderecos');
 
       await tester.tap(find.byTooltip('acoes'));
       await tester.pumpAndSettle();
@@ -445,21 +510,87 @@ void main() {
       final viewModel = criar(_FakeComunidadeRepository([_matriz]));
       await montar(tester, viewModel, enderecos: enderecos);
 
-      await tester.tap(find.widgetWithText(Tab, 'enderecos'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(Tab, 'minhasComunidades'));
-      await tester.pumpAndSettle();
+      await abrirAba(tester, 'enderecos');
+      await abrirAba(tester, 'minhasComunidades');
       expect(enderecos.consultas, hasLength(1));
 
       await viewModel.salvarCommand.execute(const ComunidadeModel(comuNome: 'Nova', ctipId: 1, cdenId: 2));
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(Tab, 'enderecos'));
-      await tester.pumpAndSettle();
+      await abrirAba(tester, 'enderecos');
 
       expect(enderecos.consultas, hasLength(2));
       await tester.tap(find.text('Paróquia Matriz'));
       await tester.pumpAndSettle();
       expect(find.text('Nova'), findsWidgets, reason: 'a nova comunidade aparece na seleção');
+    });
+
+    testWidgets('a aba "Contatos" carrega só ao ser aberta, com "Novo contato"', (tester) async {
+      final contatos = _FakeComunidadeContatoRepository();
+      await montar(tester, criar(_FakeComunidadeRepository([_matriz, _grupo])), contatos: contatos);
+      expect(contatos.consultas, isEmpty);
+
+      await abrirAba(tester, 'contatos');
+
+      expect(contatos.consultas, [_grupo.comuId], reason: '"Grupo de Oração" vem primeiro, por nome');
+      expect(find.text('nenhumContatoCadastrado'), findsOneWidget);
+      expect(find.text('novoContato'), findsOneWidget);
+    });
+
+    testWidgets('"Contatos" no menu da comunidade abre a aba com ela selecionada', (tester) async {
+      final contatos = _FakeComunidadeContatoRepository();
+      await montar(tester, criar(_FakeComunidadeRepository([_matriz, _grupo])), contatos: contatos);
+
+      await tester.tap(find.byTooltip('acoes').last); // "Paróquia Matriz" é o segundo card
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('contatos').last);
+      await tester.pumpAndSettle();
+
+      expect(contatos.consultas, [_matriz.comuId]);
+      expect(find.text('secretaria@matriz.org'), findsOneWidget);
+    });
+
+    testWidgets('"Novo contato" valida os campos e inclui na comunidade selecionada', (tester) async {
+      final contatos = _FakeComunidadeContatoRepository();
+      await montar(tester, criar(_FakeComunidadeRepository([_matriz])), contatos: contatos);
+      await abrirAba(tester, 'contatos');
+
+      await tester.tap(find.text('novoContato'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('salvar'));
+      await tester.pumpAndSettle();
+      expect(find.text('contatoObrigatorio'), findsOneWidget, reason: 'nenhum campo preenchido');
+
+      await tester.enterText(find.widgetWithText(TextField, 'whatsapp'), '61 9999');
+      await tester.tap(find.text('salvar'));
+      await tester.pumpAndSettle();
+      expect(find.text('telefoneInvalido'), findsOneWidget, reason: 'erro no próprio campo');
+      expect(contatos.gravados, isEmpty);
+
+      await tester.enterText(find.widgetWithText(TextField, 'whatsapp'), '(61) 99999-4444');
+      await tester.tap(find.text('salvar'));
+      await tester.pumpAndSettle();
+
+      expect(contatos.gravados.single.comuId, _matriz.comuId);
+      expect(contatos.gravados.single.cconWhatsapp, '61999994444');
+      expect(find.text('(61) 99999-4444'), findsOneWidget);
+      expect(find.widgetWithText(SnackBar, 'registroSalvo'), findsOneWidget);
+    });
+
+    testWidgets('excluir contato pelo menu do card pede confirmação e remove', (tester) async {
+      final contatos = _FakeComunidadeContatoRepository();
+      await montar(tester, criar(_FakeComunidadeRepository([_matriz])), contatos: contatos);
+      await abrirAba(tester, 'contatos');
+
+      await tester.tap(find.byTooltip('acoes'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('excluir'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('EXCLUIR'));
+      await tester.pumpAndSettle();
+
+      expect(contatos.excluidos, [1]);
+      expect(find.text('nenhumContatoCadastrado'), findsOneWidget);
+      expect(find.widgetWithText(SnackBar, 'registroExcluido'), findsOneWidget);
     });
 
     testWidgets('lista vazia mostra nenhumaComunidadeCadastrada', (tester) async {

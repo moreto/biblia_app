@@ -2,9 +2,9 @@ import 'package:app/config/command.dart';
 import 'package:commons/commons.dart';
 import 'package:flutter/material.dart';
 
-import '../../../data/model/comunidade/comunidade_denominacao_model.dart';
-import '../../../data/model/comunidade/comunidade_model.dart';
-import '../../../data/model/comunidade/comunidade_tipo_model.dart';
+import '../../../../data/model/comunidade/comunidade_denominacao_model.dart';
+import '../../../../data/model/comunidade/comunidade_model.dart';
+import '../../../../data/model/comunidade/comunidade_tipo_model.dart';
 import '../use_case/comunidade_usecase.dart';
 
 /// Estado da tela de comunidades.

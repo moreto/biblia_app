@@ -1,8 +1,8 @@
 import 'package:commons/commons.dart';
 
-import '../../../data/model/comunidade/comunidade_denominacao_model.dart';
-import '../../../data/model/comunidade/comunidade_model.dart';
-import '../../../data/model/comunidade/comunidade_tipo_model.dart';
+import '../../../../data/model/comunidade/comunidade_denominacao_model.dart';
+import '../../../../data/model/comunidade/comunidade_model.dart';
+import '../../../../data/model/comunidade/comunidade_tipo_model.dart';
 
 abstract class ComunidadeRepository {
   /// Comunidades cadastradas pelo usuário (`GET /v1/comunidade/usuario/:usuaId`).

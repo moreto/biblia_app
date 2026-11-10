@@ -4,7 +4,7 @@ import 'package:service/service.dart';
 import '../../../../data/model/comunidade/comunidade_endereco_model.dart';
 import '../../../../data/model/localidade/estado_model.dart';
 import '../../../../data/model/localidade/municipio_model.dart';
-import '../../use_case/comunidade_usecase.dart';
+import '../../comunidade/use_case/comunidade_usecase.dart';
 import '../repository/comunidade_endereco_repository.dart';
 
 /// Regras da aba "Endereços" (endereços da comunidade selecionada):

@@ -1,10 +1,10 @@
 import 'package:app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
-import '../../../../data/model/comunidade/comunidade_denominacao_model.dart';
-import '../../../../data/model/comunidade/comunidade_model.dart';
-import '../../../../data/model/comunidade/comunidade_tipo_model.dart';
-import '../../../admin/configuracao/ui/widgets/configuracao_dialog_layout.dart';
+import '../../../../../data/model/comunidade/comunidade_denominacao_model.dart';
+import '../../../../../data/model/comunidade/comunidade_model.dart';
+import '../../../../../data/model/comunidade/comunidade_tipo_model.dart';
+import '../../../../admin/configuracao/ui/widgets/configuracao_dialog_layout.dart';
 import '../comunidade_view.dart';
 
 /// Formulário de inclusão/alteração de comunidade: nome, tipo e denominação.

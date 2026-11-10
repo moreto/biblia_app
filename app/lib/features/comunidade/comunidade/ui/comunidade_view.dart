@@ -8,11 +8,15 @@ import 'package:components/components.dart';
 import 'package:flutter/material.dart';
 import 'package:service/service.dart';
 
-import '../../../data/model/comunidade/comunidade_model.dart';
-import '../comunidade_endereco/ui/comunidade_endereco_view.dart';
-import '../../../data/model/comunidade/comunidade_endereco_model.dart';
-import '../comunidade_endereco/ui/comunidade_endereco_viewmodel.dart';
-import '../comunidade_endereco/ui/widgets/comunidade_endereco_form_dialog.dart';
+import '../../../../data/model/comunidade/comunidade_contato_model.dart';
+import '../../../../data/model/comunidade/comunidade_endereco_model.dart';
+import '../../../../data/model/comunidade/comunidade_model.dart';
+import '../../comunidade_contato/ui/comunidade_contato_view.dart';
+import '../../comunidade_contato/ui/comunidade_contato_viewmodel.dart';
+import '../../comunidade_contato/ui/widgets/comunidade_contato_form_dialog.dart';
+import '../../comunidade_endereco/ui/comunidade_endereco_view.dart';
+import '../../comunidade_endereco/ui/comunidade_endereco_viewmodel.dart';
+import '../../comunidade_endereco/ui/widgets/comunidade_endereco_form_dialog.dart';
 import '../use_case/comunidade_usecase.dart';
 import 'comunidade_viewmodel.dart';
 import 'widgets/comunidade_form_dialog.dart';
@@ -25,6 +29,10 @@ import 'widgets/minhas_comunidades_tab.dart';
 /// - "Endereços" ([ComunidadeEnderecoView]): endereços da comunidade selecionada no topo da aba
 ///   (`/v1/comunidade-endereco`), carregados na primeira vez que a aba é aberta e de novo depois que as comunidades
 ///   mudam. "Endereços" no menu de uma comunidade abre a aba com ela selecionada.
+/// - "Contatos" ([ComunidadeContatoView]): contatos da comunidade selecionada no topo da aba
+///   (`/v1/comunidade-contato`), com as mesmas regras de carregamento e seleção da aba "Endereços"; "Contatos" no
+///   menu de uma comunidade abre a aba com ela selecionada. Tocar num campo do contato abre o discador, o WhatsApp,
+///   o e-mail ou o navegador (erro em SnackBar).
 ///
 /// AppBar: tema, orientação e atualizar (recarrega a aba aberta). Erro numa atualização aparece em SnackBar e
 /// mantém a lista; o do primeiro carregamento fica na aba.
@@ -33,7 +41,8 @@ import 'widgets/minhas_comunidades_tab.dart';
 /// "Minhas comunidades"), abre o [ComunidadeFormDialog]; tocar no card ou "Editar" no menu dele abre o mesmo
 /// formulário preenchido; "Excluir" pede confirmação. Sucesso mostra SnackBar e recarrega a lista; erro abre o
 /// aviso de erro. Na aba "Endereços", o botão inferior vira "Novo endereço" (endereço da comunidade selecionada,
-/// [ComunidadeEnderecoFormDialog]) e editar/excluir funcionam do mesmo jeito (`/v1/comunidade-endereco`).
+/// [ComunidadeEnderecoFormDialog]) e editar/excluir funcionam do mesmo jeito (`/v1/comunidade-endereco`); na aba
+/// "Contatos", vira "Novo contato" ([ComunidadeContatoFormDialog], `/v1/comunidade-contato`).
 ///
 /// Para uma nova aba: valor em [ComunidadeAba], comando no viewmodel, widget em `widgets/` e casos em
 /// [_conteudo] e [_comandoDa].
@@ -41,12 +50,20 @@ import 'widgets/minhas_comunidades_tab.dart';
 /// Ícones (em [IconsMap.mdiIcons]): [iconeComunidade], [iconeAtualizar], [iconeAdicionar], [iconeAcoes],
 /// [iconeEditar], [iconeExcluir] e o [ComunidadeAba.icone] de cada aba.
 class ComunidadeView extends StatefulWidget {
-  const ComunidadeView({super.key, required this.viewModel, required this.enderecoViewModel});
+  const ComunidadeView({
+    super.key,
+    required this.viewModel,
+    required this.enderecoViewModel,
+    required this.contatoViewModel,
+  });
 
   final ComunidadeViewmodel viewModel;
 
   /// Aba "Endereços".
   final ComunidadeEnderecoViewmodel enderecoViewModel;
+
+  /// Aba "Contatos".
+  final ComunidadeContatoViewmodel contatoViewModel;
 
   /// Ícone de cada comunidade e da lista vazia.
   static const iconeComunidade = 'church';
@@ -76,6 +93,7 @@ class ComunidadeView extends StatefulWidget {
 class _ComunidadeViewState extends State<ComunidadeView> with SingleTickerProviderStateMixin {
   ComunidadeViewmodel get _vm => widget.viewModel;
   ComunidadeEnderecoViewmodel get _enderecoVm => widget.enderecoViewModel;
+  ComunidadeContatoViewmodel get _contatoVm => widget.contatoViewModel;
 
   late final TabController _tabs = TabController(length: _vm.abas.length, vsync: this);
 
@@ -88,6 +106,11 @@ class _ComunidadeViewState extends State<ComunidadeView> with SingleTickerProvid
     view.enderecoViewModel.selecionarCommand,
     view.enderecoViewModel.salvarCommand,
     view.enderecoViewModel.excluirCommand,
+    view.contatoViewModel.carregarCommand,
+    view.contatoViewModel.selecionarCommand,
+    view.contatoViewModel.salvarCommand,
+    view.contatoViewModel.excluirCommand,
+    view.contatoViewModel.acessarCommand,
   ];
 
   @override
@@ -124,7 +147,14 @@ class _ComunidadeViewState extends State<ComunidadeView> with SingleTickerProvid
 
   /// Abas com carregamento sob demanda carregam ao serem abertas.
   void _onAba() {
-    if (_vm.abas[_tabs.index] == ComunidadeAba.enderecos) _enderecoVm.abrir();
+    switch (_vm.abas[_tabs.index]) {
+      case ComunidadeAba.minhas:
+        break;
+      case ComunidadeAba.enderecos:
+        _enderecoVm.abrir();
+      case ComunidadeAba.contatos:
+        _contatoVm.abrir();
+    }
   }
 
   void _onResult() {
@@ -138,22 +168,39 @@ class _ComunidadeViewState extends State<ComunidadeView> with SingleTickerProvid
       _mostrarMensagem(mensagem);
     }
 
-    // Atualização dos endereços e troca de comunidade: mesma regra.
-    for (final command in [_enderecoVm.carregarCommand, _enderecoVm.selecionarCommand]) {
-      if (command.error && _enderecoVm.comunidades != null) {
+    // Atualização dos endereços/contatos e troca de comunidade: mesma regra.
+    for (final (command, carregado) in [
+      (_enderecoVm.carregarCommand, _enderecoVm.comunidades != null),
+      (_enderecoVm.selecionarCommand, _enderecoVm.comunidades != null),
+      (_contatoVm.carregarCommand, _contatoVm.comunidades != null),
+      (_contatoVm.selecionarCommand, _contatoVm.comunidades != null),
+    ]) {
+      if (command.error && carregado) {
         final mensagem = ComunidadeView.mensagemErro(command.result);
         command.clearResult();
         _mostrarMensagem(mensagem);
       }
     }
 
-    // Gravação e exclusão (comunidades e endereços): sucesso em SnackBar, erro no aviso de erro. Mudança nas
-    // comunidades faz a aba "Endereços" recarregar na próxima abertura.
+    // Abrir contato fora do app: só o erro, em SnackBar.
+    final acessar = _contatoVm.acessarCommand;
+    if (acessar.error) {
+      final mensagem = ComunidadeView.mensagemErro(acessar.result);
+      acessar.clearResult();
+      _mostrarMensagem(mensagem);
+    } else if (acessar.completed) {
+      acessar.clearResult();
+    }
+
+    // Gravação e exclusão (comunidades, endereços e contatos): sucesso em SnackBar, erro no aviso de erro. Mudança
+    // nas comunidades faz as abas "Endereços" e "Contatos" recarregarem na próxima abertura.
     for (final (command, sucesso, comunidade) in [
       (_vm.salvarCommand, 'registroSalvo', true),
       (_vm.excluirCommand, 'registroExcluido', true),
       (_enderecoVm.salvarCommand, 'registroSalvo', false),
       (_enderecoVm.excluirCommand, 'registroExcluido', false),
+      (_contatoVm.salvarCommand, 'registroSalvo', false),
+      (_contatoVm.excluirCommand, 'registroExcluido', false),
     ]) {
       if (command.error) {
         final mensagem = ComunidadeView.mensagemErro(command.result);
@@ -161,7 +208,10 @@ class _ComunidadeViewState extends State<ComunidadeView> with SingleTickerProvid
         _mostrarErro(mensagem);
       } else if (command.completed) {
         command.clearResult();
-        if (comunidade) _enderecoVm.invalidar();
+        if (comunidade) {
+          _enderecoVm.invalidar();
+          _contatoVm.invalidar();
+        }
         _mostrarMensagem(sucesso);
       }
     }
@@ -231,6 +281,14 @@ class _ComunidadeViewState extends State<ComunidadeView> with SingleTickerProvid
     _tabs.animateTo(_vm.abas.indexOf(ComunidadeAba.enderecos));
   }
 
+  /// Abre a aba "Contatos" com a [comunidade] selecionada.
+  void _verContatos(ComunidadeModel comunidade) {
+    final comuId = comunidade.comuId;
+    if (comuId == null) return;
+    _contatoVm.selecionar(comuId);
+    _tabs.animateTo(_vm.abas.indexOf(ComunidadeAba.contatos));
+  }
+
   /// Inclui (sem [endereco]) ou altera endereço da comunidade selecionada na aba "Endereços".
   Future<void> _editarEndereco([ComunidadeEnderecoModel? endereco]) async {
     final comunidade = _enderecoVm.selecionada?.comunidade;
@@ -268,9 +326,47 @@ class _ComunidadeViewState extends State<ComunidadeView> with SingleTickerProvid
     ).showModal(context);
   }
 
+  /// Inclui (sem [contato]) ou altera contato da comunidade selecionada na aba "Contatos".
+  Future<void> _editarContato([ComunidadeContatoModel? contato]) async {
+    final comunidade = _contatoVm.selecionada?.comunidade;
+    final comuId = contato?.comuId ?? comunidade?.comuId;
+    if (comuId == null) return;
+    final result = await ComunidadeContatoFormDialog.show(
+      context,
+      comuId: comuId,
+      comunidadeNome: comunidade?.comuNome ?? '',
+      validar: _contatoVm.validar,
+      validarCampo: _contatoVm.validarCampo,
+      contato: contato,
+    );
+    if (result != null) _contatoVm.salvarCommand.execute(result);
+  }
+
+  void _excluirContato(ComunidadeContatoModel contato) {
+    final strings = AppLocalizations.of(context);
+    final resumo = [
+      for (final (campo, valor) in _contatoVm.preenchidos(contato).take(2)) _contatoVm.exibicao(campo, valor),
+    ].join('\n');
+    DialogBottomSheetWarning(
+      dialogWarning: DialogWarning(
+        title: strings.translate('confirmarExclusao'),
+        description: '$resumo\n\n${strings.translate('confirmarExclusaoContato')}',
+        titleButtonPrimary: strings.translate('excluir'),
+        titleButtonSecondary: strings.translate('cancelar'),
+        typeButtonsDialog: DialogBottomSheetTypeButtons.horizontalButtons,
+        statusDialog: DialogBottomSheetStatus.statusCritical,
+        onPressedPrimary: () {
+          Navigator.of(context).pop();
+          _contatoVm.excluirCommand.execute(contato);
+        },
+        onPressedSecondary: () => Navigator.of(context).pop(),
+      ),
+    ).showModal(context);
+  }
+
   // layout
 
-  /// Botão inferior da aba aberta: "Nova comunidade" ou "Novo endereço".
+  /// Botão inferior da aba aberta: "Nova comunidade", "Novo endereço" ou "Novo contato".
   ViewBottomAction _botaoAdicionar(ComunidadeAba aba, AppLocalizations strings) {
     final icone = IconsMap.mdiIcons[ComunidadeView.iconeAdicionar] ?? Icons.add;
     return switch (aba) {
@@ -286,12 +382,19 @@ class _ComunidadeViewState extends State<ComunidadeView> with SingleTickerProvid
         isEnabled: _enderecoVm.selecionada != null && !_enderecoVm.ocupado,
         onPressed: () => _editarEndereco(),
       ),
+      ComunidadeAba.contatos => ViewBottomAction(
+        text: strings.translate('novoContato'),
+        icon: icone,
+        isEnabled: _contatoVm.selecionada != null && !_contatoVm.ocupado,
+        onPressed: () => _editarContato(),
+      ),
     };
   }
 
   Command0 _comandoDa(ComunidadeAba aba) => switch (aba) {
     ComunidadeAba.minhas => _vm.minhasCommand,
     ComunidadeAba.enderecos => _enderecoVm.carregarCommand,
+    ComunidadeAba.contatos => _contatoVm.carregarCommand,
   };
 
   Widget _conteudo(ComunidadeAba aba) => switch (aba) {
@@ -300,11 +403,17 @@ class _ComunidadeViewState extends State<ComunidadeView> with SingleTickerProvid
       onEditar: _editar,
       onExcluir: _excluir,
       onEnderecos: _verEnderecos,
+      onContatos: _verContatos,
     ),
     ComunidadeAba.enderecos => ComunidadeEnderecoView(
       viewModel: _enderecoVm,
       onEditar: _editarEndereco,
       onExcluir: _excluirEndereco,
+    ),
+    ComunidadeAba.contatos => ComunidadeContatoView(
+      viewModel: _contatoVm,
+      onEditar: _editarContato,
+      onExcluir: _excluirContato,
     ),
   };
 
@@ -351,7 +460,7 @@ class _ComunidadeViewState extends State<ComunidadeView> with SingleTickerProvid
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: Listenable.merge([_vm, _enderecoVm, _tabs]),
+      listenable: Listenable.merge([_vm, _enderecoVm, _contatoVm, _tabs]),
       builder: (context, child) => _screen(),
     );
   }
