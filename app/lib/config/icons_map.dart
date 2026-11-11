@@ -141,6 +141,7 @@ class IconsMap {
     'account-supervisor': MdiIcons.accountSupervisor,
     'toolbox-outline': MdiIcons.toolboxOutline,
     'book-heart-outline': MdiIcons.bookHeartOutline,
+    'message-text-outline': MdiIcons.messageTextOutline,
     // ...
   };
 }
