@@ -1,11 +1,16 @@
-construir a view de comunidade_contato, sendo que será listada nas comunidades do usuário na terceira aba, 
-depois serão adicionadas mais abas
-internacionalizar os textos, verificar se existem na API /v1/traducao
-adicionar essa feature em uma nova pasta features/comunidade/
+construir a view de comunidade_usuario, sendo que será listada nas comunidades do usuário na terceira aba, 
 copiar o q foi feito em comnunidade_endereco
 
+construir a view de comunidade_usuario
+essa primeira vai listar todos os usuarios da comunidade
+adicionar o botão de adicionar usuario ao lado de voltar
+criar o crud para adicionar novos usuarios a comunidade
+
+internacionalizar os textos, verificar se existem na API /v1/traducao
+adicionar essa feature em uma nova pasta features/comunidade/
+
 API:
-/v1/comunidade-contato
+/v1/comunidade-usuario
 
 gerar um script de insert no banco de dados das traduções faltantes, segue o modelo de dados abaixo:
 

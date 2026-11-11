@@ -8,14 +8,15 @@ import '../comunidade_view.dart';
 import '../comunidade_viewmodel.dart';
 
 /// Ações do menu de cada comunidade.
-enum _Acao { editar, enderecos, contatos, excluir }
+enum _Acao { editar, enderecos, contatos, usuarios, excluir }
 
 /// Aba "Minhas comunidades": comunidades cadastradas pelo usuário, com tipo e denominação.
 ///
 /// - Primeiro carregamento: progresso; se falhar, mensagem com "Tentar novamente". Depois disso a lista é mantida e
 ///   a atualização (AppBar ou puxar para baixo), a gravação e a exclusão mostram uma barra de progresso.
 /// - Tocar no card edita ([onEditar]); o menu do card tem editar, endereços ([onEnderecos], abre a aba "Endereços"
-///   com a comunidade selecionada), contatos ([onContatos], idem na aba "Contatos") e excluir ([onExcluir]).
+///   com a comunidade selecionada), contatos ([onContatos], idem na aba "Contatos"),
+///   usuários ([onUsuarios], abre a tela de usuários da comunidade) e excluir ([onExcluir]).
 class MinhasComunidadesTab extends StatelessWidget {
   const MinhasComunidadesTab({
     super.key,
@@ -24,6 +25,7 @@ class MinhasComunidadesTab extends StatelessWidget {
     required this.onExcluir,
     required this.onEnderecos,
     required this.onContatos,
+    required this.onUsuarios,
   });
 
   final ComunidadeViewmodel viewModel;
@@ -31,6 +33,7 @@ class MinhasComunidadesTab extends StatelessWidget {
   final ValueChanged<ComunidadeModel> onExcluir;
   final ValueChanged<ComunidadeModel> onEnderecos;
   final ValueChanged<ComunidadeModel> onContatos;
+  final ValueChanged<ComunidadeModel> onUsuarios;
 
   @override
   Widget build(BuildContext context) {
@@ -152,6 +155,7 @@ class MinhasComunidadesTab extends StatelessWidget {
                   _Acao.editar => onEditar(comunidade),
                   _Acao.enderecos => onEnderecos(comunidade),
                   _Acao.contatos => onContatos(comunidade),
+                  _Acao.usuarios => onUsuarios(comunidade),
                   _Acao.excluir => onExcluir(comunidade),
                 },
                 itemBuilder: (context) => [
@@ -177,6 +181,14 @@ class MinhasComunidadesTab extends StatelessWidget {
                       contentPadding: EdgeInsets.zero,
                       leading: ComunidadeView.icone(ComunidadeAba.contatos.icone, Icons.contact_phone_outlined),
                       title: Text(strings.translate('contatos')),
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: _Acao.usuarios,
+                    child: ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: ComunidadeView.icone(ComunidadeView.iconeUsuarios, Icons.people_outline),
+                      title: Text(strings.translate('usuarios')),
                     ),
                   ),
                   PopupMenuItem(

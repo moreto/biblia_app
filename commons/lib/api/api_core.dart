@@ -44,6 +44,7 @@ enum ApiCore {
   comunidadeEndereco('/v1/comunidade-endereco', kDesHost, kPrdHost, HeaderType.loggedArea),
   comunidadeTipo('/v1/comunidade-tipo', kDesHost, kPrdHost, HeaderType.loggedArea),
   comunidadeUsuario('/v1/comunidade/usuario', kDesHost, kPrdHost, HeaderType.loggedArea),
+  comunidadeUsuarioVinculo('/v1/comunidade-usuario', kDesHost, kPrdHost, HeaderType.loggedArea),
   estado('/v1/estado', kDesHost, kPrdHost, HeaderType.loggedArea),
   municipio('/v1/municipio', kDesHost, kPrdHost, HeaderType.loggedArea),
   configuracao('/v1/configuracao', kDesHost, kPrdHost, HeaderType.loggedArea),

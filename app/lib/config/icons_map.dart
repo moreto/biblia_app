@@ -96,6 +96,13 @@ class IconsMap {
     'camera-outline': MdiIcons.cameraOutline,
     'play-box-outline': MdiIcons.playBoxOutline,
     'send': MdiIcons.send,
+    // Aba "Usuários" das comunidades (ComunidadeAba.usuarios / ComunidadeUsuarioView): lista vazia, ativar,
+    // desativar e remover; busca e adicionar usam 'account-search-outline' e 'account-plus-outline' (já mapeados).
+    'account-multiple-outline': MdiIcons.accountMultipleOutline,
+    'account-check-outline': MdiIcons.accountCheckOutline,
+    'account-cancel-outline': MdiIcons.accountCancelOutline,
+    'account-remove-outline': MdiIcons.accountRemoveOutline,
+    'account-supervisor': MdiIcons.accountSupervisor,
     // ...
   };
 }

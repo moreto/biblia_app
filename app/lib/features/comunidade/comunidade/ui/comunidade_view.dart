@@ -6,11 +6,13 @@ import 'package:app/l10n/app_localizations.dart';
 import 'package:commons/commons.dart';
 import 'package:components/components.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:service/service.dart';
 
 import '../../../../data/model/comunidade/comunidade_contato_model.dart';
 import '../../../../data/model/comunidade/comunidade_endereco_model.dart';
 import '../../../../data/model/comunidade/comunidade_model.dart';
+import '../../../../routing/routes.dart';
 import '../../comunidade_contato/ui/comunidade_contato_view.dart';
 import '../../comunidade_contato/ui/comunidade_contato_viewmodel.dart';
 import '../../comunidade_contato/ui/widgets/comunidade_contato_form_dialog.dart';
@@ -33,6 +35,9 @@ import 'widgets/minhas_comunidades_tab.dart';
 ///   (`/v1/comunidade-contato`), com as mesmas regras de carregamento e seleção da aba "Endereços"; "Contatos" no
 ///   menu de uma comunidade abre a aba com ela selecionada. Tocar num campo do contato abre o discador, o WhatsApp,
 ///   o e-mail ou o navegador (erro em SnackBar).
+///
+/// "Usuários" no menu de uma comunidade abre a tela de usuários da comunidade (`Routes.comunidadeUsuario`, com
+/// `?comuId=`).
 ///
 /// AppBar: tema, orientação e atualizar (recarrega a aba aberta). Erro numa atualização aparece em SnackBar e
 /// mantém a lista; o do primeiro carregamento fica na aba.
@@ -72,6 +77,9 @@ class ComunidadeView extends StatefulWidget {
   static const iconeAcoes = 'dots-vertical';
   static const iconeEditar = 'pencil-outline';
   static const iconeExcluir = 'delete-outline';
+
+  /// "Usuários" no menu da comunidade (abre `Routes.comunidadeUsuario`).
+  static const iconeUsuarios = 'account-multiple-outline';
 
   /// Ícone de [IconsMap.mdiIcons] pela chave; usa [fallback] se a chave não estiver mapeada.
   static Widget icone(String chave, IconData fallback, {Color? color, double? size}) =>
@@ -289,6 +297,13 @@ class _ComunidadeViewState extends State<ComunidadeView> with SingleTickerProvid
     _tabs.animateTo(_vm.abas.indexOf(ComunidadeAba.contatos));
   }
 
+  /// Abre a tela de usuários da [comunidade].
+  void _verUsuarios(ComunidadeModel comunidade) {
+    final comuId = comunidade.comuId;
+    if (comuId == null) return;
+    context.push(Uri(path: Routes.comunidadeUsuario, queryParameters: {'comuId': '$comuId'}).toString());
+  }
+
   /// Inclui (sem [endereco]) ou altera endereço da comunidade selecionada na aba "Endereços".
   Future<void> _editarEndereco([ComunidadeEnderecoModel? endereco]) async {
     final comunidade = _enderecoVm.selecionada?.comunidade;
@@ -404,6 +419,7 @@ class _ComunidadeViewState extends State<ComunidadeView> with SingleTickerProvid
       onExcluir: _excluir,
       onEnderecos: _verEnderecos,
       onContatos: _verContatos,
+      onUsuarios: _verUsuarios,
     ),
     ComunidadeAba.enderecos => ComunidadeEnderecoView(
       viewModel: _enderecoVm,

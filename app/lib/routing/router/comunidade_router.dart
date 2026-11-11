@@ -8,6 +8,10 @@ import '../../features/comunidade/comunidade/use_case/comunidade_usecase.dart';
 import '../../features/comunidade/comunidade_contato/repository/comunidade_contato_repository.dart';
 import '../../features/comunidade/comunidade_contato/ui/comunidade_contato_viewmodel.dart';
 import '../../features/comunidade/comunidade_contato/use_case/comunidade_contato_usecase.dart';
+import '../../features/comunidade/comunidade_usuario/repository/comunidade_usuario_repository.dart';
+import '../../features/comunidade/comunidade_usuario/ui/comunidade_usuario_view.dart';
+import '../../features/comunidade/comunidade_usuario/ui/comunidade_usuario_viewmodel.dart';
+import '../../features/comunidade/comunidade_usuario/use_case/comunidade_usuario_usecase.dart';
 import '../../features/comunidade/comunidade_endereco/repository/comunidade_endereco_repository.dart';
 import '../../features/comunidade/comunidade_endereco/ui/comunidade_endereco_viewmodel.dart';
 import '../../features/comunidade/comunidade_endereco/use_case/comunidade_endereco_usecase.dart';
@@ -36,6 +40,21 @@ class ComunidadeRouter {
           viewModel: viewModel,
           enderecoViewModel: enderecoViewModel,
           contatoViewModel: contatoViewModel,
+        );
+      },
+    ),
+    GoRoute(
+      path: Routes.comunidadeUsuario,
+      builder: (context, state) {
+        final viewModel = ComunidadeUsuarioViewmodel(
+          comunidadeUsuarioUseCase: ComunidadeUsuarioUseCase(
+            comunidadeUsuarioRepository: locator<ComunidadeUsuarioRepository>(),
+            comunidadeUseCase: ComunidadeUseCase(comunidadeRepository: locator<ComunidadeRepository>()),
+          ),
+        );
+        return ComunidadeUsuarioView(
+          viewModel: viewModel,
+          comuId: int.tryParse(state.uri.queryParameters['comuId'] ?? ''),
         );
       },
     ),

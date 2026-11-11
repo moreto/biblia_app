@@ -593,6 +593,13 @@ void main() {
       expect(find.widgetWithText(SnackBar, 'registroExcluido'), findsOneWidget);
     });
 
+    testWidgets('o menu da comunidade tem "Usuários" (abre a tela de usuários)', (tester) async {
+      await montar(tester, criar(_FakeComunidadeRepository([_matriz])));
+      await tester.tap(find.byTooltip('acoes'));
+      await tester.pumpAndSettle();
+      expect(find.text('usuarios'), findsOneWidget);
+    });
+
     testWidgets('lista vazia mostra nenhumaComunidadeCadastrada', (tester) async {
       await montar(tester, criar(_FakeComunidadeRepository()));
       expect(find.text('nenhumaComunidadeCadastrada'), findsOneWidget);
