@@ -1,3 +1,4 @@
+import 'package:app/config/dialog_sheet.dart';
 import 'package:app/config/icons_map.dart';
 import 'package:app/l10n/app_localizations.dart';
 import 'package:app/routing/routes.dart';
@@ -121,49 +122,28 @@ class _DashboardViewState extends State<DashboardView> {
   }
 
   void _showSubmenu(Menu parent, List<Menu> children) {
-    showModalBottomSheet<void>(
-      context: context,
-      builder: (sheetContext) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  parent.menuNome,
-                  style: Theme.of(context).textTheme.titleMedium,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                height: 120,
-                child: ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  scrollDirection: Axis.horizontal,
-                  itemCount: children.length,
-                  separatorBuilder: (_, _) => const SizedBox(width: 12),
-                  itemBuilder: (context, index) {
-                    final child = children[index];
-                    return QuickCard(
-                      title: child.menuNome,
-                      icon: _iconFor(child),
-                      onTap: () {
-                        Navigator.pop(sheetContext);
-                        _navigateTo(child);
-                      },
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
-        );
-      },
+    DialogSheet.show<void>(
+      context,
+      titulo: parent.menuNome,
+      conteudo: SizedBox(
+        height: 120,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          itemCount: children.length,
+          separatorBuilder: (_, _) => const SizedBox(width: 12),
+          itemBuilder: (sheetContext, index) {
+            final child = children[index];
+            return QuickCard(
+              title: child.menuNome,
+              icon: _iconFor(child),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _navigateTo(child);
+              },
+            );
+          },
+        ),
+      ),
     );
   }
 

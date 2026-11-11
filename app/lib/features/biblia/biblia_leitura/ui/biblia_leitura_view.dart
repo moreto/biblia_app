@@ -203,23 +203,12 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
   }
 
   void _abrirHistorico() {
-    showModalBottomSheet<void>(
-      context: context,
-      useSafeArea: true,
-      isScrollControlled: true,
-      builder: (_) => HistoricoLeituraSheet(viewModel: _vm),
-    );
+    HistoricoLeituraSheet.show(context, viewModel: _vm);
   }
 
   void _abrirVersiculo(VersiculoTextoModel versiculo) {
     _vm.indicacoesCommand.execute(versiculo);
-    showModalBottomSheet<void>(
-      context: context,
-      useSafeArea: true,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (_) => VersiculoIndicacaoSheet(viewModel: _vm),
-    );
+    VersiculoIndicacaoSheet.show(context, viewModel: _vm, titulo: versiculo.referencia);
   }
 
   String _tituloCapitulo(CapituloRef ref) {

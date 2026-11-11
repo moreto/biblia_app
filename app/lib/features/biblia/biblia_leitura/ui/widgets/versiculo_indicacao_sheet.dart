@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app/config/command.dart';
+import 'package:app/config/dialog_sheet.dart';
 import 'package:app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
@@ -11,17 +12,20 @@ import '../biblia_leitura_viewmodel.dart';
 /// Indicações do versículo selecionado (`/v1/versiculo-indicacao`): total de indicações, a do usuário com o
 /// comentário e as ações de indicar, atualizar o comentário e remover a indicação. Depois de indicar, a seção
 /// "Indicar para" lista os usuários que recebem a indicação (`/v1/versiculo-indicacao-usuario`) e busca outros
-/// (`/v1/usuario/busca`) para adicionar. Erros aparecem na própria folha.
+/// (`/v1/usuario/busca`) para adicionar. Erros aparecem na própria folha. Aberta no `DialogBottomSheet` ([show]),
+/// com a referência do versículo no topo.
 class VersiculoIndicacaoSheet extends StatefulWidget {
   const VersiculoIndicacaoSheet({super.key, required this.viewModel});
 
   final BibliaLeituraViewmodel viewModel;
 
-  /// Fração da altura da tela ocupada ao abrir; o usuário pode arrastar até quase a tela toda.
-  static const alturaInicial = 0.75;
-
-  /// Fração máxima da altura; a folha vai até ela ao focar a busca de usuários, para caber o resultado.
-  static const alturaMaxima = 0.95;
+  /// Abre a folha com [titulo] (a referência do versículo) no topo.
+  static Future<void> show(BuildContext context, {required BibliaLeituraViewmodel viewModel, required String titulo}) =>
+      DialogSheet.show<void>(
+        context,
+        titulo: titulo,
+        conteudo: VersiculoIndicacaoSheet(viewModel: viewModel),
+      );
 
   /// Duração da animação que leva a busca de usuários para o topo da folha.
   static const duracaoRevelarBusca = Duration(milliseconds: 250);
@@ -42,7 +46,6 @@ class _VersiculoIndicacaoSheetState extends State<VersiculoIndicacaoSheet> {
   final _busca = TextEditingController();
   final _buscaFocus = FocusNode();
   final _buscaKey = GlobalKey();
-  final _folha = DraggableScrollableController();
   Timer? _esperaBusca;
 
   /// Último resultado de busca já revelado; muda quando chega outro resultado.
@@ -65,7 +68,6 @@ class _VersiculoIndicacaoSheetState extends State<VersiculoIndicacaoSheet> {
     _vm.removeListener(_onViewModelAlterado);
     _esperaBusca?.cancel();
     _buscaFocus.dispose();
-    _folha.dispose();
     _busca.dispose();
     _comentario.dispose();
     super.dispose();
@@ -104,14 +106,9 @@ class _VersiculoIndicacaoSheetState extends State<VersiculoIndicacaoSheet> {
     if (_buscaFocus.hasFocus) _revelarBusca();
   }
 
-  /// Abre a folha até o máximo e leva o campo de busca para o topo, deixando o resultado (que fica abaixo dele)
-  /// visível acima do teclado.
-  Future<void> _revelarBusca() async {
+  /// Rola a folha até o campo de busca, deixando o resultado (que fica abaixo dele) visível acima do teclado.
+  void _revelarBusca() {
     const duracao = VersiculoIndicacaoSheet.duracaoRevelarBusca;
-    if (_folha.isAttached && _folha.size < VersiculoIndicacaoSheet.alturaMaxima) {
-      await _folha.animateTo(VersiculoIndicacaoSheet.alturaMaxima, duration: duracao, curve: Curves.easeOut);
-    }
-    if (!mounted) return;
     // Depois do frame: o resultado novo já entrou no layout e a rolagem alcança o fim da lista.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final contexto = _buscaKey.currentContext;
@@ -154,73 +151,61 @@ class _VersiculoIndicacaoSheetState extends State<VersiculoIndicacaoSheet> {
         final gravando = _vm.indicarCommand.running || _vm.removerIndicacaoCommand.running;
         final erro = _erro();
 
-        // Folha alta e rolável: versículo longo, comentário extenso ou teclado aberto não cortam o conteúdo.
-        return Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-          child: DraggableScrollableSheet(
-            controller: _folha,
-            expand: false,
-            initialChildSize: VersiculoIndicacaoSheet.alturaInicial,
-            minChildSize: 0.4,
-            maxChildSize: VersiculoIndicacaoSheet.alturaMaxima,
-            builder: (context, scrollController) => ListView(
-              controller: scrollController,
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              children: [
-                Text(versiculo.referencia, style: textTheme.titleLarge),
-                const SizedBox(height: 8),
-                Text(versiculo.versTexto, style: textTheme.bodyLarge?.copyWith(height: 1.5)),
-                const SizedBox(height: 16),
-                if (indicacoes == null && _vm.indicacoesCommand.running)
-                  const Center(child: CircularProgressIndicator())
-                else if (indicacoes != null) ...[
-                  _total(indicacoes, strings),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _comentario,
-                    enabled: !gravando,
-                    maxLength: VersiculoIndicacaoUseCase.comentarioMaximo,
-                    minLines: 4,
-                    maxLines: 10,
-                    keyboardType: TextInputType.multiline,
-                    decoration: InputDecoration(
-                      labelText: strings.translate('comentarioOpcional'),
-                      alignLabelWithHint: true,
-                      border: const OutlineInputBorder(),
-                    ),
+        // O DialogBottomSheet já rola o conteúdo e sobe com o teclado; a referência do versículo é o título.
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(versiculo.versTexto, style: textTheme.bodyLarge?.copyWith(height: 1.5)),
+            const SizedBox(height: 16),
+            if (indicacoes == null && _vm.indicacoesCommand.running)
+              const Center(child: CircularProgressIndicator())
+            else if (indicacoes != null) ...[
+              _total(indicacoes, strings),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _comentario,
+                enabled: !gravando,
+                maxLength: VersiculoIndicacaoUseCase.comentarioMaximo,
+                minLines: 4,
+                maxLines: 10,
+                keyboardType: TextInputType.multiline,
+                decoration: InputDecoration(
+                  labelText: strings.translate('comentarioOpcional'),
+                  alignLabelWithHint: true,
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 8),
+              // OverflowBar empilha os botões quando não cabem lado a lado.
+              OverflowBar(
+                alignment: MainAxisAlignment.spaceBetween,
+                overflowAlignment: OverflowBarAlignment.end,
+                overflowSpacing: 8,
+                children: [
+                  if (minha != null)
+                    TextButton.icon(
+                      onPressed: gravando ? null : _vm.removerIndicacaoCommand.execute,
+                      icon: BibliaLeituraView.icone(BibliaLeituraView.iconeRemover, Icons.delete_outline),
+                      label: Text(strings.translate('removerIndicacao')),
+                    )
+                  else
+                    const SizedBox.shrink(),
+                  FilledButton.icon(
+                    onPressed: gravando ? null : () => _vm.indicarCommand.execute(_comentario.text),
+                    icon: BibliaLeituraView.icone(BibliaLeituraView.iconeIndicar, Icons.thumb_up_outlined),
+                    label: Text(strings.translate(minha == null ? 'indicarVersiculo' : 'atualizarIndicacao')),
                   ),
-                  const SizedBox(height: 8),
-                  // OverflowBar empilha os botões quando não cabem lado a lado.
-                  OverflowBar(
-                    alignment: MainAxisAlignment.spaceBetween,
-                    overflowAlignment: OverflowBarAlignment.end,
-                    overflowSpacing: 8,
-                    children: [
-                      if (minha != null)
-                        TextButton.icon(
-                          onPressed: gravando ? null : _vm.removerIndicacaoCommand.execute,
-                          icon: BibliaLeituraView.icone(BibliaLeituraView.iconeRemover, Icons.delete_outline),
-                          label: Text(strings.translate('removerIndicacao')),
-                        )
-                      else
-                        const SizedBox.shrink(),
-                      FilledButton.icon(
-                        onPressed: gravando ? null : () => _vm.indicarCommand.execute(_comentario.text),
-                        icon: BibliaLeituraView.icone(BibliaLeituraView.iconeIndicar, Icons.thumb_up_outlined),
-                        label: Text(strings.translate(minha == null ? 'indicarVersiculo' : 'atualizarIndicacao')),
-                      ),
-                    ],
-                  ),
-                  const Divider(height: 32),
-                  ..._indicarPara(minha != null, gravando, strings),
                 ],
-                if (erro != null) ...[
-                  const SizedBox(height: 8),
-                  Text(strings.translate(erro), style: TextStyle(color: Theme.of(context).colorScheme.error)),
-                ],
-              ],
-            ),
-          ),
+              ),
+              const Divider(height: 32),
+              ..._indicarPara(minha != null, gravando, strings),
+            ],
+            if (erro != null) ...[
+              const SizedBox(height: 8),
+              Text(strings.translate(erro), style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            ],
+          ],
         );
       },
     );

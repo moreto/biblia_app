@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../config/app_config.dart';
+import '../../../../../config/dialog_sheet.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../routing/routes.dart';
 import '../widgets/funcionalidade/ui/funcionalidade_view.dart';
@@ -94,20 +95,13 @@ class _HomeViewState extends State<HomeView> {
       _ => strings.translate('idioma'),
     };
 
-    showModalBottomSheet<void>(
-      context: context,
-      useSafeArea: true,
-      builder: (context) => Padding(
-        padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(title, style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 16),
-            if (index == 0) _themeControl(context),
-            if (index == 1) _localeControl(context),
-          ],
+    DialogSheet.show<void>(
+      context,
+      titulo: title,
+      conteudo: Builder(
+        builder: (context) => Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: index == 0 ? _themeControl(context) : _localeControl(context),
         ),
       ),
     );
