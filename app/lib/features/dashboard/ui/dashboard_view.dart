@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:service/service.dart';
 
 import '../../../data/model/menu/menu_model.dart';
+import '../use_case/dashboard_usecase.dart';
 import '../widgets/musica/ui/musica_view.dart';
 import '../widgets/musica/ui/musica_viewmodel.dart';
 import '../widgets/oracao/ui/oracao_view.dart';
@@ -15,6 +16,7 @@ import '../widgets/oracao/ui/oracao_viewmodel.dart';
 import '../widgets/versiculo/ui/versiculo_view.dart';
 import '../widgets/versiculo/ui/versiculo_viewmodel.dart';
 import 'dashboard_viewmodel.dart';
+import 'widgets/nao_lidas_badge.dart';
 
 import 'package:app/config/orientation_button.dart';
 import 'package:app/config/theme_mode_button.dart';
@@ -46,10 +48,14 @@ class DashboardView extends StatefulWidget {
 class _DashboardViewState extends State<DashboardView> {
   int _currentIndex = 0;
 
+  /// Recarrega as mensagens não lidas quando o app volta ao primeiro plano.
+  late final AppLifecycleListener _lifecycle;
+
   @override
   void initState() {
     super.initState();
     widget.viewModel.menuCommand.addListener(_onResult);
+    _lifecycle = AppLifecycleListener(onResume: _atualizarNaoLidas);
   }
 
   @override
@@ -61,9 +67,12 @@ class _DashboardViewState extends State<DashboardView> {
 
   @override
   void dispose() {
+    _lifecycle.dispose();
     widget.viewModel.menuCommand.removeListener(_onResult);
     super.dispose();
   }
+
+  void _atualizarNaoLidas() => widget.viewModel.naoLidasCommand.execute();
 
   void _onResult() {
     final command = widget.viewModel.menuCommand;
@@ -158,7 +167,8 @@ class _DashboardViewState extends State<DashboardView> {
     );
   }
 
-  void _navigateTo(Menu menu) {
+  /// Abre a rota do menu e, ao voltar, recarrega as não lidas (a tela aberta pode ter lido ou arquivado mensagens).
+  Future<void> _navigateTo(Menu menu) async {
     final route = menu.menuRota;
     if (route == null || route.isEmpty) {
       final strings = AppLocalizations.of(context);
@@ -166,15 +176,16 @@ class _DashboardViewState extends State<DashboardView> {
           .showSnackBar(SnackBar(content: Text('${strings.translate('rotaNaoDefinida')}: ${menu.menuNome}')));
       return;
     }
-    context.push(route);
+    await context.push(route);
+    if (mounted) _atualizarNaoLidas();
   }
 
-  Icon _iconFor(Menu menu) {
+  /// Ícone do menu; o menu que leva às mensagens (ele ou um filho) ganha o badge de não lidas.
+  Widget _iconFor(Menu menu) {
     final icon = IconsMap.mdiIcons[menu.menuIcone];
-    if (icon == null) {
-      return const Icon(Icons.error_outline);
-    }
-    return Icon(icon);
+    final widgetIcone = icon == null ? const Icon(Icons.error_outline) : Icon(icon);
+    if (!DashboardUseCase.contemMensagens(menu)) return widgetIcone;
+    return NaoLidasBadge(rotulo: widget.viewModel.rotuloBadge, child: widgetIcone);
   }
 
   Widget _buildMenu(MenuModel menuModel) {

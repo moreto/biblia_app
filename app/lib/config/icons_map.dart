@@ -137,6 +137,7 @@ class IconsMap {
     'message-reply-text-outline': MdiIcons.messageReplyTextOutline,
     'account-supervisor': MdiIcons.accountSupervisor,
     'toolbox-outline': MdiIcons.toolboxOutline,
+    'book-heart-outline': MdiIcons.bookHeartOutline,
     // ...
   };
 }

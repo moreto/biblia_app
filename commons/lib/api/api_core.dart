@@ -54,6 +54,7 @@ enum ApiCore {
   log('/v1/log', kDesHost, kPrdHost, HeaderType.loggedArea),
   menu('/v1/menu', kDesHost, kPrdHost, HeaderType.loggedArea),
   mensagemRecebidas('/v1/mensagem-usuario/recebidas', kDesHost, kPrdHost, HeaderType.loggedArea),
+  mensagemNaoLidas('/v1/mensagem-usuario/nao-lidas', kDesHost, kPrdHost, HeaderType.loggedArea),
   mensagemUsuario('/v1/mensagem-usuario', kDesHost, kPrdHost, HeaderType.loggedArea),
   musicaAleatoria('/v1/musica/aleatoria', kDesHost, kPrdHost, HeaderType.loggedArea),
   notificacao('/v1/notificacao', kDesHost, kPrdHost, HeaderType.loggedArea),

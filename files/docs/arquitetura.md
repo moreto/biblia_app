@@ -60,7 +60,7 @@ O `redirect` do `GoRouter` chama `authRedirect` ([`routing/auth_guard.dart`](../
 
 ## Menu e ícones
 
-A dashboard monta a `NavigationBar` com os menus de `GET /v1/menu`. Menus com filhos abrem um bottom sheet com `QuickCard`s. O ícone vem de `menu_icone`, uma chave do Material Design Icons (ex.: `book-open-variant`), resolvida em [`config/icons_map.dart`](../../app/lib/config/icons_map.dart). Os cards também usam o `IconsMap`, com um ícone do Material como reserva caso a chave não esteja mapeada.
+A dashboard monta a `NavigationBar` com os menus de `GET /v1/menu`. Menus com filhos abrem um bottom sheet com `QuickCard`s. O ícone vem de `menu_icone`, uma chave do Material Design Icons (ex.: `book-open-variant`), resolvida em [`config/icons_map.dart`](../../app/lib/config/icons_map.dart). Os cards também usam o `IconsMap`, com um ícone do Material como reserva caso a chave não esteja mapeada. O menu de mensagens (rota `/mensagem-lista`, ou o pai dele) leva um badge com a quantidade de mensagens não lidas (`GET /v1/mensagem-usuario/nao-lidas`); veja a dashboard em [mapa.md](./mapa.md).
 
 ## Convenções
 
