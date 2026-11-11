@@ -49,9 +49,10 @@ class ComunidadeEnderecoFormDialog extends StatefulWidget {
     required String? Function(ComunidadeEnderecoModel) validar,
     required EnderecoLimites limites,
     ComunidadeEnderecoModel? endereco,
-  }) => showDialog<ComunidadeEnderecoModel>(
-    context: context,
-    builder: (context) => ComunidadeEnderecoFormDialog(
+  }) => ConfiguracaoDialogLayout.show<ComunidadeEnderecoModel>(
+    context,
+    titulo: AppLocalizations.of(context).translate(endereco?.cendId == null ? 'novoEndereco' : 'editarEndereco'),
+    form: ComunidadeEnderecoFormDialog(
       comuId: comuId,
       comunidadeNome: comunidadeNome,
       estados: estados,
@@ -184,7 +185,6 @@ class _ComunidadeEnderecoFormDialogState extends State<ComunidadeEnderecoFormDia
     final erro = _erro;
 
     return ConfiguracaoDialogLayout(
-      title: strings.translate(novo ? 'novoEndereco' : 'editarEndereco'),
       onSave: _confirmar,
       fields: [
         Text(widget.comunidadeNome, style: Theme.of(context).textTheme.titleSmall),

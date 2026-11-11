@@ -1,3 +1,4 @@
+import 'package:app/config/dialog_sheet.dart';
 import 'package:app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
@@ -8,7 +9,7 @@ import '../../../../../data/model/comunidade/comunidade_local_model.dart';
 import '../../../comunidade/ui/comunidade_view.dart';
 import '../comunidade_lista_viewmodel.dart';
 
-/// Detalhe de uma comunidade da tela "Encontrar comunidades", aberto ao tocar no card.
+/// Detalhe de uma comunidade da tela "Encontrar comunidades", aberto ao tocar no card (no `DialogBottomSheet`, [show]).
 ///
 /// - Topo (já conhecido pela lista): ícone do tipo, nome, tipo e denominação.
 /// - Seções carregadas ao abrir (`detalheCommand`, em paralelo): membros ativos (só a quantidade), endereços (todos,
@@ -34,9 +35,10 @@ class ComunidadeDetalheDialog extends StatefulWidget {
     BuildContext context, {
     required ComunidadeListaViewmodel viewModel,
     required ComunidadeLocalModel comunidade,
-  }) => showDialog<void>(
-    context: context,
-    builder: (context) => ComunidadeDetalheDialog(viewModel: viewModel, comunidade: comunidade),
+  }) => DialogSheet.show<void>(
+    context,
+    cabecalho: _Cabecalho(viewModel: viewModel, comunidade: comunidade),
+    conteudo: ComunidadeDetalheDialog(viewModel: viewModel, comunidade: comunidade),
   );
 
   @override
@@ -82,87 +84,58 @@ class _ComunidadeDetalheDialogState extends State<ComunidadeDetalheDialog> {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
-    final scheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
     final comunidade = widget.comunidade;
-    final descricao = _vm.descricao(comunidade);
 
-    return AlertDialog(
-      titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-      title: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CircleAvatar(
-            backgroundColor: scheme.primaryContainer,
-            child: ComunidadeView.iconeDaComunidade(comunidade.ctipIcone, color: scheme.onPrimaryContainer),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(comunidade.comuNome, style: textTheme.titleLarge),
-                if (descricao != null)
-                  Text(descricao, style: textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant)),
-              ],
+    return ListenableBuilder(
+      listenable: _vm,
+      builder: (context, _) {
+        final detalhe = _vm.detalheDe == comunidade.comuId ? _vm.detalhe : null;
+        if (detalhe == null) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 32),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _membros(context, strings, detalhe.membrosAtivos),
+            _secao(
+              context,
+              strings,
+              titulo: 'enderecos',
+              icone: ComunidadeDetalheDialog.iconeEndereco,
+              fallback: Icons.place_outlined,
+              itens: detalhe.enderecos,
+              vazio: 'nenhumEnderecoCadastrado',
+              item: (e) => _endereco(context, e as ComunidadeEnderecoModel),
             ),
-          ),
-        ],
-      ),
-      content: SizedBox(
-        width: 480,
-        child: ListenableBuilder(
-          listenable: _vm,
-          builder: (context, _) {
-            final detalhe = _vm.detalheDe == comunidade.comuId ? _vm.detalhe : null;
-            if (detalhe == null) {
-              return const Padding(
-                padding: EdgeInsets.symmetric(vertical: 32),
-                child: Center(child: CircularProgressIndicator()),
-              );
-            }
-            return SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _membros(context, strings, detalhe.membrosAtivos),
-                  _secao(
-                    context,
-                    strings,
-                    titulo: 'enderecos',
-                    icone: ComunidadeDetalheDialog.iconeEndereco,
-                    fallback: Icons.place_outlined,
-                    itens: detalhe.enderecos,
-                    vazio: 'nenhumEnderecoCadastrado',
-                    item: (e) => _endereco(context, e as ComunidadeEnderecoModel),
-                  ),
-                  _secao(
-                    context,
-                    strings,
-                    titulo: 'contatos',
-                    icone: ComunidadeDetalheDialog.iconeContato,
-                    fallback: Icons.contact_phone_outlined,
-                    itens: detalhe.contatos,
-                    vazio: 'nenhumContatoCadastrado',
-                    item: (c) => _contato(context, strings, c as ComunidadeContatoModel),
-                  ),
-                  _secao(
-                    context,
-                    strings,
-                    titulo: 'lideranca',
-                    icone: ComunidadeDetalheDialog.iconeLideranca,
-                    fallback: Icons.account_tree_outlined,
-                    itens: detalhe.lideranca,
-                    vazio: 'nenhumaLiderancaCadastrada',
-                    item: (p) => _pessoa(context, p as ComunidadeHumanogramaModel),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-      ),
-      actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(strings.translate('fechar')))],
+            _secao(
+              context,
+              strings,
+              titulo: 'contatos',
+              icone: ComunidadeDetalheDialog.iconeContato,
+              fallback: Icons.contact_phone_outlined,
+              itens: detalhe.contatos,
+              vazio: 'nenhumContatoCadastrado',
+              item: (c) => _contato(context, strings, c as ComunidadeContatoModel),
+            ),
+            _secao(
+              context,
+              strings,
+              titulo: 'lideranca',
+              icone: ComunidadeDetalheDialog.iconeLideranca,
+              fallback: Icons.account_tree_outlined,
+              itens: detalhe.lideranca,
+              vazio: 'nenhumaLiderancaCadastrada',
+              item: (p) => _pessoa(context, p as ComunidadeHumanogramaModel),
+            ),
+            DialogSheet.acoes([
+              TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(strings.translate('fechar'))),
+            ]),
+          ],
+        );
+      },
     );
   }
 
@@ -287,6 +260,41 @@ class _ComunidadeDetalheDialogState extends State<ComunidadeDetalheDialog> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Topo do detalhe (título do sheet): ícone do tipo, nome, tipo e denominação.
+class _Cabecalho extends StatelessWidget {
+  const _Cabecalho({required this.viewModel, required this.comunidade});
+
+  final ComunidadeListaViewmodel viewModel;
+  final ComunidadeLocalModel comunidade;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final descricao = viewModel.descricao(comunidade);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        CircleAvatar(
+          backgroundColor: scheme.primaryContainer,
+          child: ComunidadeView.iconeDaComunidade(comunidade.ctipIcone, color: scheme.onPrimaryContainer),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(comunidade.comuNome, style: textTheme.titleLarge),
+              if (descricao != null)
+                Text(descricao, style: textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant)),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

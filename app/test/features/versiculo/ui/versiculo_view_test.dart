@@ -9,6 +9,7 @@ import 'package:app/features/dashboard/widgets/versiculo_reacao/repository/versi
 import 'package:app/features/dashboard/widgets/versiculo_reacao/use_case/versiculo_reacao_usecase.dart';
 import 'package:app/l10n/app_localizations.dart';
 import 'package:commons/commons.dart';
+import 'package:components/components.dart' show DialogBottomSheetMainBody;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -330,13 +331,13 @@ void main() {
 
       await tester.tap(find.byTooltip('marcarComoLido'));
       await tester.pumpAndSettle();
-      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(find.byType(DialogBottomSheetMainBody), findsOneWidget);
 
       await tester.enterText(find.byType(TextField), 'Versículo que me marcou');
       await tester.tap(find.text('salvar'));
       await tester.pumpAndSettle();
 
-      expect(find.byType(AlertDialog), findsNothing);
+      expect(find.byType(DialogBottomSheetMainBody), findsNothing);
       expect(find.byTooltip('desmarcarComoLido'), findsOneWidget);
       expect(find.text('Versículo que me marcou'), findsOneWidget);
       expect(reacoes.registros.single.vreaComentario, 'Versículo que me marcou');

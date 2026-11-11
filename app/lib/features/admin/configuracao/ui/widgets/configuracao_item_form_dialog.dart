@@ -20,9 +20,11 @@ class ConfiguracaoItemFormDialog extends StatefulWidget {
     required List<ConfiguracaoModel> configuracoes,
     required int confId,
     ConfiguracaoItemModel? item,
-  }) => showDialog<ConfiguracaoItemModel>(
-    context: context,
-    builder: (context) => ConfiguracaoItemFormDialog(configuracoes: configuracoes, confId: confId, item: item),
+  }) => ConfiguracaoDialogLayout.show<ConfiguracaoItemModel>(
+    context,
+    titulo: AppLocalizations.of(context)
+        .translate(item?.citeId == null ? 'novoItemConfiguracao' : 'editarItemConfiguracao'),
+    form: ConfiguracaoItemFormDialog(configuracoes: configuracoes, confId: confId, item: item),
   );
 
   @override
@@ -70,7 +72,6 @@ class _ConfiguracaoItemFormDialogState extends State<ConfiguracaoItemFormDialog>
     final isNovo = widget.item?.citeId == null;
 
     return ConfiguracaoDialogLayout(
-      title: strings.translate(isNovo ? 'novoItemConfiguracao' : 'editarItemConfiguracao'),
       onSave: _confirmar,
       fields: [
         if (!isNovo) Text('${strings.translate('codigo')}: ${widget.item!.citeId}'),

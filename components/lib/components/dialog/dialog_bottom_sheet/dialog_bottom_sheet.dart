@@ -28,8 +28,9 @@ class DialogBottomSheet {
 
   DialogBottomSheet(this.dropDown);
 
-  void showModal(BuildContext context) {
-    showModalBottomSheet(
+  /// Abre o sheet; completa com o valor passado ao `Navigator.pop` (ou `null` ao fechar pelo X/arrastar).
+  Future<T?> showModal<T>(BuildContext context) {
+    return showModalBottomSheet<T>(
       backgroundColor: const Color(0xffFEFEFE),
       isScrollControlled: true,
       enableDrag: dropDown.isDismissible,

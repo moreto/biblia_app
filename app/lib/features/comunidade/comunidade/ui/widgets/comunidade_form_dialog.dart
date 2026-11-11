@@ -36,9 +36,10 @@ class ComunidadeFormDialog extends StatefulWidget {
     required String? Function(ComunidadeModel) validar,
     required int nomeMax,
     ComunidadeModel? comunidade,
-  }) => showDialog<ComunidadeModel>(
-    context: context,
-    builder: (context) => ComunidadeFormDialog(
+  }) => ConfiguracaoDialogLayout.show<ComunidadeModel>(
+    context,
+    titulo: AppLocalizations.of(context).translate(comunidade?.comuId == null ? 'novaComunidade' : 'editarComunidade'),
+    form: ComunidadeFormDialog(
       tipos: tipos,
       denominacoes: denominacoes,
       validar: validar,
@@ -89,7 +90,6 @@ class _ComunidadeFormDialogState extends State<ComunidadeFormDialog> {
     final erro = _erro;
 
     return ConfiguracaoDialogLayout(
-      title: strings.translate(novo ? 'novaComunidade' : 'editarComunidade'),
       onSave: _confirmar,
       fields: [
         if (!novo) Text('${strings.translate('codigo')}: ${widget.comunidade!.comuId}'),

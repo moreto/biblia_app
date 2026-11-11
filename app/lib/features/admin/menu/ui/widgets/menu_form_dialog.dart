@@ -23,9 +23,10 @@ class MenuFormDialog extends StatefulWidget {
     required List<MenuItemModel> opcoesPai,
     MenuItemModel? menu,
     int? menuParentId,
-  }) => showDialog<MenuItemModel>(
-    context: context,
-    builder: (context) => MenuFormDialog(opcoesPai: opcoesPai, menu: menu, menuParentId: menuParentId),
+  }) => ConfiguracaoDialogLayout.show<MenuItemModel>(
+    context,
+    titulo: AppLocalizations.of(context).translate(menu?.menuId == null ? 'novoMenu' : 'editarMenu'),
+    form: MenuFormDialog(opcoesPai: opcoesPai, menu: menu, menuParentId: menuParentId),
   );
 
   @override
@@ -97,7 +98,6 @@ class _MenuFormDialogState extends State<MenuFormDialog> {
     ];
 
     return ConfiguracaoDialogLayout(
-      title: strings.translate(isNovo ? 'novoMenu' : 'editarMenu'),
       onSave: _confirmar,
       fields: [
         if (!isNovo) Text('${strings.translate('codigo')}: ${widget.menu!.menuId}'),

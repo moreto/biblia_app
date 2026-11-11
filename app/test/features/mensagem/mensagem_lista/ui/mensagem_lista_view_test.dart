@@ -7,6 +7,7 @@ import 'package:app/features/mensagem/mensagem_lista/ui/mensagem_lista_viewmodel
 import 'package:app/features/mensagem/mensagem_lista/use_case/mensagem_lista_usecase.dart';
 import 'package:app/l10n/app_localizations.dart';
 import 'package:commons/commons.dart';
+import 'package:components/components.dart' show DialogBottomSheetMainBody;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -262,10 +263,10 @@ void main() {
       await tester.tap(find.text('moreto indicou Efésios 3:20 para você'));
       await tester.pumpAndSettle();
 
-      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(find.byType(DialogBottomSheetMainBody), findsOneWidget);
       expect(find.text('de: sistema'), findsOneWidget);
       expect(
-        find.descendant(of: find.byType(AlertDialog), matching: find.textContaining('O que foi indicado:')),
+        find.descendant(of: find.byType(DialogBottomSheetMainBody), matching: find.textContaining('O que foi indicado:')),
         findsOneWidget,
       );
       expect(find.text('lidaEm: 11/11/2026 ${_hora('2026-11-11T15:00:00.000Z')}'), findsOneWidget);
@@ -274,7 +275,7 @@ void main() {
 
       await tester.tap(find.text('arquivar'));
       await tester.pumpAndSettle();
-      expect(find.byType(AlertDialog), findsNothing);
+      expect(find.byType(DialogBottomSheetMainBody), findsNothing);
       expect(repository.atualizacoes.last, (1, null, true));
       expect(find.text('moreto indicou Efésios 3:20 para você'), findsNothing, reason: 'saiu da entrada');
     });

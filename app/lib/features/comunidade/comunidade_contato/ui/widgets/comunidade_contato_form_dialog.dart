@@ -38,9 +38,10 @@ class ComunidadeContatoFormDialog extends StatefulWidget {
     required String? Function(ComunidadeContatoModel) validar,
     required String? Function(ContatoCampo campo, String? valor) validarCampo,
     ComunidadeContatoModel? contato,
-  }) => showDialog<ComunidadeContatoModel>(
-    context: context,
-    builder: (context) => ComunidadeContatoFormDialog(
+  }) => ConfiguracaoDialogLayout.show<ComunidadeContatoModel>(
+    context,
+    titulo: AppLocalizations.of(context).translate(contato?.cconId == null ? 'novoContato' : 'editarContato'),
+    form: ComunidadeContatoFormDialog(
       comuId: comuId,
       comunidadeNome: comunidadeNome,
       validar: validar,
@@ -116,11 +117,9 @@ class _ComunidadeContatoFormDialogState extends State<ComunidadeContatoFormDialo
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
-    final novo = widget.contato?.cconId == null;
     final erro = _erro;
 
     return ConfiguracaoDialogLayout(
-      title: strings.translate(novo ? 'novoContato' : 'editarContato'),
       onSave: _confirmar,
       fields: [
         Text(widget.comunidadeNome, style: Theme.of(context).textTheme.titleSmall),

@@ -13,9 +13,11 @@ class ConfiguracaoFormDialog extends StatefulWidget {
   final ConfiguracaoModel? configuracao;
 
   static Future<ConfiguracaoModel?> show(BuildContext context, {ConfiguracaoModel? configuracao}) =>
-      showDialog<ConfiguracaoModel>(
-        context: context,
-        builder: (context) => ConfiguracaoFormDialog(configuracao: configuracao),
+      ConfiguracaoDialogLayout.show<ConfiguracaoModel>(
+        context,
+        titulo: AppLocalizations.of(context)
+            .translate(configuracao?.confId == null ? 'novaConfiguracao' : 'editarConfiguracao'),
+        form: ConfiguracaoFormDialog(configuracao: configuracao),
       );
 
   @override
@@ -55,7 +57,6 @@ class _ConfiguracaoFormDialogState extends State<ConfiguracaoFormDialog> {
     final isNovo = widget.configuracao?.confId == null;
 
     return ConfiguracaoDialogLayout(
-      title: strings.translate(isNovo ? 'novaConfiguracao' : 'editarConfiguracao'),
       onSave: _confirmar,
       fields: [
         if (!isNovo) Text('${strings.translate('codigo')}: ${widget.configuracao!.confId}'),

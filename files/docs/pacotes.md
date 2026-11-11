@@ -31,7 +31,7 @@
 | [theme/app_typography.dart](../../components/lib/theme/app_typography.dart) | `AppTypography.textTheme` e fontes de leitura. |
 | [theme/app_spacing.dart](../../components/lib/theme/app_spacing.dart) | `AppSpacing` (xs 4, sm 8, md 16, lg 24, xl 32) e `AppRadius`. |
 | [theme/reading_colors.dart](../../components/lib/theme/reading_colors.dart) | `ReadingColors`: cores da tela de leitura, como `ThemeExtension`. |
-| [components/dialog](../../components/lib/components/dialog) | `DialogBottomSheet` e `DialogBottomSheetWarning` (status, tipo e layout dos botões), usados nos erros e nas confirmações. |
+| [components/dialog](../../components/lib/components/dialog) | `DialogBottomSheet` e `DialogBottomSheetWarning` (status, tipo e layout dos botões), usados nos erros e nas confirmações. Formulários e detalhes abrem no `DialogBottomSheet` pelo helper `DialogSheet.show` ([app/lib/config/dialog_sheet.dart](../../app/lib/config/dialog_sheet.dart)); não usar `showDialog`/`AlertDialog`. |
 | [components/loading](../../components/lib/components/loading) | `Loading` de tela cheia. |
 | [components/view_bottom_actions](../../components/lib/components/view_bottom_actions) | Barra de ações no rodapé. |
 | [components/button](../../components/lib/components/button) | Widget `Button`, configurado por `ButtonDls` (`ButtonSize`, `ButtonStatus`, `ButtonType`). Não é exportado por `components.dart`; importe o arquivo direto. |

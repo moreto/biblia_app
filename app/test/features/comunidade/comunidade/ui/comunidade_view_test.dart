@@ -18,6 +18,7 @@ import 'package:app/features/comunidade/comunidade/ui/comunidade_viewmodel.dart'
 import 'package:app/features/comunidade/comunidade/use_case/comunidade_usecase.dart';
 import 'package:app/l10n/app_localizations.dart';
 import 'package:commons/commons.dart';
+import 'package:components/components.dart' show DialogBottomSheetMainBody;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -586,17 +587,22 @@ void main() {
 
       await tester.tap(find.text('novoContato'));
       await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('salvar')); // o formulário rola no sheet
       await tester.tap(find.text('salvar'));
       await tester.pumpAndSettle();
       expect(find.text('contatoObrigatorio'), findsOneWidget, reason: 'nenhum campo preenchido');
 
+      await tester.ensureVisible(find.widgetWithText(TextField, 'whatsapp'));
       await tester.enterText(find.widgetWithText(TextField, 'whatsapp'), '61 9999');
+      await tester.ensureVisible(find.text('salvar')); // o formulário rola no sheet
       await tester.tap(find.text('salvar'));
       await tester.pumpAndSettle();
       expect(find.text('telefoneInvalido'), findsOneWidget, reason: 'erro no próprio campo');
       expect(contatos.gravados, isEmpty);
 
+      await tester.ensureVisible(find.widgetWithText(TextField, 'whatsapp'));
       await tester.enterText(find.widgetWithText(TextField, 'whatsapp'), '(61) 99999-4444');
+      await tester.ensureVisible(find.text('salvar')); // o formulário rola no sheet
       await tester.tap(find.text('salvar'));
       await tester.pumpAndSettle();
 
@@ -664,7 +670,7 @@ void main() {
 
       await tester.tap(find.text('novaComunidade'));
       await tester.pumpAndSettle();
-      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(find.byType(DialogBottomSheetMainBody), findsOneWidget);
 
       // sem tipo e denominação o formulário mostra o problema e não fecha
       await tester.enterText(find.widgetWithText(TextField, 'nome'), 'Comunidade Nova');
@@ -677,7 +683,7 @@ void main() {
       await tester.tap(find.text('salvar'));
       await tester.pumpAndSettle();
 
-      expect(find.byType(AlertDialog), findsNothing);
+      expect(find.byType(DialogBottomSheetMainBody), findsNothing);
       expect(repository.gravados.single.$1, 'incluir');
       expect(find.text('Comunidade Nova'), findsOneWidget);
       expect(find.widgetWithText(SnackBar, 'registroSalvo'), findsOneWidget);

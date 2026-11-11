@@ -1,47 +1,37 @@
-import 'dart:math' as math;
-
+import 'package:app/config/dialog_sheet.dart';
 import 'package:app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
-/// Estrutura comum dos diálogos de cadastro: largura responsiva, campos espaçados
-/// (evita que o rótulo flutuante sobreponha o campo anterior) e ações cancelar/salvar.
+/// Estrutura comum dos formulários de cadastro abertos no `DialogBottomSheet` ([show]): campos espaçados (evita
+/// que o rótulo flutuante sobreponha o campo anterior) e ações cancelar/salvar.
 class ConfiguracaoDialogLayout extends StatelessWidget {
-  const ConfiguracaoDialogLayout({super.key, required this.title, required this.fields, required this.onSave});
+  const ConfiguracaoDialogLayout({super.key, required this.fields, required this.onSave});
 
-  static const double _maxWidth = 480;
   static const double _fieldSpacing = 16;
 
-  final String title;
   final List<Widget> fields;
   final VoidCallback onSave;
+
+  /// Abre o formulário [form] (que usa este layout) com o [titulo]; não fecha tocando fora, para não perder o que
+  /// foi digitado. Retorna o valor de `Navigator.pop` (o registro salvo) ou `null` quando cancelado.
+  static Future<T?> show<T>(BuildContext context, {required String titulo, required Widget form}) =>
+      DialogSheet.show<T>(context, titulo: titulo, conteudo: form, isDismissible: false);
 
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
-    final screenWidth = MediaQuery.sizeOf(context).width;
-    final width = math.min(_maxWidth, screenWidth - 32);
 
-    return AlertDialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      title: Text(title, style: Theme.of(context).textTheme.titleLarge),
-      contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-      content: SizedBox(
-        width: width,
-        child: SingleChildScrollView(
-          // espaço no topo para o rótulo flutuante do primeiro campo
-          padding: const EdgeInsets.only(top: 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              for (var i = 0; i < fields.length; i++) ...[if (i > 0) const SizedBox(height: _fieldSpacing), fields[i]],
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(strings.translate('cancelar'))),
-        FilledButton(onPressed: onSave, child: Text(strings.translate('salvar'))),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // espaço no topo para o rótulo flutuante do primeiro campo
+        const SizedBox(height: 8),
+        for (var i = 0; i < fields.length; i++) ...[if (i > 0) const SizedBox(height: _fieldSpacing), fields[i]],
+        DialogSheet.acoes([
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(strings.translate('cancelar'))),
+          FilledButton(onPressed: onSave, child: Text(strings.translate('salvar'))),
+        ]),
       ],
     );
   }

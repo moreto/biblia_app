@@ -15,6 +15,7 @@ import 'package:app/features/comunidade/comunidade_lista/ui/comunidade_lista_vie
 import 'package:app/features/comunidade/comunidade_lista/use_case/comunidade_lista_usecase.dart';
 import 'package:app/l10n/app_localizations.dart';
 import 'package:commons/commons.dart';
+import 'package:components/components.dart' show DialogBottomSheetMainBody;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -380,7 +381,7 @@ void main() {
       await tester.tap(find.text('paróquia Matriz'));
       await tester.pumpAndSettle();
 
-      final dialog = find.byType(AlertDialog);
+      final dialog = find.byType(DialogBottomSheetMainBody);
       expect(find.descendant(of: dialog, matching: find.text('paróquia Matriz')), findsOneWidget);
       expect(find.descendant(of: dialog, matching: find.text('Paróquia · Católica')), findsOneWidget);
       expect(find.text('membrosAtivos: 2'), findsOneWidget);
