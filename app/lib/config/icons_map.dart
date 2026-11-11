@@ -120,6 +120,11 @@ class IconsMap {
     // Detalhe da comunidade (ComunidadeDetalheDialog.iconeLideranca): seção de liderança (humanograma). Membros,
     // endereços e contatos usam 'account-multiple-outline', 'map-marker-outline' e 'card-account-phone-outline'.
     'sitemap-outline': MdiIcons.sitemapOutline,
+    // Tela "Indicações recebidas" (VersiculoIndicadoView): comentário e data. Indicação ('thumb-up-outline', também
+    // menu_icone de /versiculo-indicado), abrir na leitura ('book-open-variant') e quem indicou ('account-outline')
+    // já mapeados acima.
+    'comment-quote-outline': MdiIcons.commentQuoteOutline,
+    'clock-outline': MdiIcons.clockOutline,
     'account-supervisor': MdiIcons.accountSupervisor,
     // ...
   };

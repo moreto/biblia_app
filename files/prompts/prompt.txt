@@ -1,13 +1,13 @@
-construir a view de comunidade_lista, sendo que será listada todas as comunidades filtrada por estado e cidade, 
-não é filtrada por usuário
-não será aba de nada, será uma nova tela, não é TAV
+construir a view de versiculo_indicado, sendo que será listada todas as indicações de leitura q o usuario recebeu, 
+não será aba de nada, será uma nova tela, não é TAB
 
 
 internacionalizar os textos, verificar se existem na API /v1/traducao
 adicionar essa feature em uma nova pasta features/comunidade/
 
 API:
-/v1/comunidade
+/v1/versiculo-indicacao
+/v1/versiculo-indicacao-usuario
 
 gerar um script de insert no banco de dados das traduções faltantes:
 

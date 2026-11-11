@@ -15,6 +15,10 @@ import '../../features/biblia/renomado/repository/renomado_repository.dart';
 import '../../features/biblia/renomado/ui/renomado_view.dart';
 import '../../features/biblia/renomado/ui/renomado_viewmodel.dart';
 import '../../features/biblia/renomado/use_case/renomado_usecase.dart';
+import '../../features/biblia/versiculo_indicado/repository/versiculo_indicado_repository.dart';
+import '../../features/biblia/versiculo_indicado/ui/versiculo_indicado_view.dart';
+import '../../features/biblia/versiculo_indicado/ui/versiculo_indicado_viewmodel.dart';
+import '../../features/biblia/versiculo_indicado/use_case/versiculo_indicado_usecase.dart';
 import '../../features/biblia/versiculo_renomado/repository/versiculo_renomado_repository.dart';
 import '../../features/biblia/versiculo_renomado/ui/versiculo_renomado_view.dart';
 import '../../features/biblia/versiculo_renomado/ui/versiculo_renomado_viewmodel.dart';
@@ -74,6 +78,16 @@ class BibliaRouter {
         );
         return VersiculoRenomadoView(viewModel: viewModel);
       },
+    ),
+    GoRoute(
+      path: Routes.versiculoIndicado,
+      builder: (context, state) => VersiculoIndicadoView(
+        viewModel: VersiculoIndicadoViewmodel(
+          versiculoIndicadoUseCase: VersiculoIndicadoUseCase(
+            versiculoIndicadoRepository: locator<VersiculoIndicadoRepository>(),
+          ),
+        ),
+      ),
     ),
   };
 }

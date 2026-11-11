@@ -26,6 +26,9 @@ abstract final class Routes {
   /// Versículos de um renomado: `/versiculo-renomado/:renoId` (o `RenomadoModel` pode ir no `extra`).
   static const versiculoRenomado = '/versiculo-renomado';
 
+  /// Indicações de versículo que o usuário recebeu (tela própria, não é aba).
+  static const versiculoIndicado = '/versiculo-indicado';
+
   // comunidade
   static const comunidade = '/comunidade';
 

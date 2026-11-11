@@ -26,6 +26,8 @@ import '../features/biblia/biblia_leitura/versiculo_indicacao/repository/versicu
 import '../features/biblia/biblia_leitura/versiculo_indicacao/repository/versiculo_indicacao_usuario_repository_impl.dart';
 import '../features/biblia/renomado/repository/renomado_repository.dart';
 import '../features/biblia/renomado/repository/renomado_repository_impl.dart';
+import '../features/biblia/versiculo_indicado/repository/versiculo_indicado_repository.dart';
+import '../features/biblia/versiculo_indicado/repository/versiculo_indicado_repository_impl.dart';
 import '../features/biblia/versiculo_renomado/repository/versiculo_renomado_repository.dart';
 import '../features/biblia/versiculo_renomado/repository/versiculo_renomado_repository_impl.dart';
 import '../features/comunidade/comunidade/repository/comunidade_repository.dart';
@@ -78,4 +80,5 @@ void configDependencies() {
   locator.registerLazySingleton<ComunidadeContatoRepository>(() => ComunidadeContatoRepositoryImpl());
   locator.registerLazySingleton<ComunidadeUsuarioRepository>(() => ComunidadeUsuarioRepositoryImpl());
   locator.registerLazySingleton<ComunidadeListaRepository>(() => ComunidadeListaRepositoryImpl());
+  locator.registerLazySingleton<VersiculoIndicadoRepository>(() => VersiculoIndicadoRepositoryImpl());
 }
