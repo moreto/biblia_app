@@ -1,7 +1,11 @@
 import 'package:commons/commons.dart';
 import 'package:service/service.dart';
 
+import '../../../../data/model/comunidade/comunidade_contato_model.dart';
+import '../../../../data/model/comunidade/comunidade_endereco_model.dart';
+import '../../../../data/model/comunidade/comunidade_humanograma_model.dart';
 import '../../../../data/model/comunidade/comunidade_local_model.dart';
+import '../../../../data/model/comunidade/comunidade_usuario_model.dart';
 import '../../../../data/model/localidade/estado_model.dart';
 import '../../../../data/model/localidade/municipio_model.dart';
 import 'comunidade_lista_repository.dart';
@@ -20,6 +24,30 @@ class ComunidadeListaRepositoryImpl implements ComunidadeListaRepository {
     DioProvider.of(ApiCore.comunidade)
         .request(verb: Verb.get, queryParam: {'estaId': '$estaId', if (muniId != null) 'muniId': '$muniId'}),
     ComunidadeLocalModel.fromJson,
+  );
+
+  @override
+  Future<Result<List<ComunidadeEnderecoModel>>> enderecos(int comuId) => _lista(
+    DioProvider.of(ApiCore.comunidadeEndereco).request(verb: Verb.get, pathParam: comuId),
+    ComunidadeEnderecoModel.fromJson,
+  );
+
+  @override
+  Future<Result<List<ComunidadeContatoModel>>> contatos(int comuId) => _lista(
+    DioProvider.of(ApiCore.comunidadeContato).request(verb: Verb.get, pathParam: comuId),
+    ComunidadeContatoModel.fromJson,
+  );
+
+  @override
+  Future<Result<List<ComunidadeHumanogramaModel>>> humanograma(int comuId) => _lista(
+    DioProvider.of(ApiCore.comunidadeHumanogramaDto).request(verb: Verb.get, pathParam: comuId),
+    ComunidadeHumanogramaModel.fromJson,
+  );
+
+  @override
+  Future<Result<List<ComunidadeUsuarioModel>>> usuarios(int comuId) => _lista(
+    DioProvider.of(ApiCore.comunidadeUsuarioVinculo).request(verb: Verb.get, pathParam: comuId),
+    ComunidadeUsuarioModel.fromJson,
   );
 
   /// GET que devolve uma lista de objetos, convertidos por [fromJson]. Item fora do formato devolve

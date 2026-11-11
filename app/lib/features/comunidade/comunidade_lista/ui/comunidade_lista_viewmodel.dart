@@ -2,9 +2,12 @@ import 'package:app/config/command.dart';
 import 'package:commons/commons.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../data/model/comunidade/comunidade_contato_model.dart';
+import '../../../../data/model/comunidade/comunidade_endereco_model.dart';
 import '../../../../data/model/comunidade/comunidade_local_model.dart';
 import '../../../../data/model/localidade/estado_model.dart';
 import '../../../../data/model/localidade/municipio_model.dart';
+import '../../comunidade_contato/use_case/comunidade_contato_usecase.dart';
 import '../use_case/comunidade_lista_usecase.dart';
 
 /// Estado da tela "Encontrar comunidades": filtro por estado e cidade e as comunidades encontradas.
@@ -14,6 +17,8 @@ import '../use_case/comunidade_lista_usecase.dart';
 ///   [selecionarCidade] (nula = todas as cidades) busca de novo. Se o filtro mudar durante uma busca, ela é
 ///   refeita com o filtro novo (só o resultado do filtro atual é mostrado).
 /// - [buscarCommand] busca com o filtro atual (atualizar); [comunidades] é nula até a primeira busca.
+/// - Detalhe (dialog ao tocar numa comunidade): [detalheCommand] carrega endereços, contatos, liderança e membros
+///   ativos da comunidade ([detalhe]); [acessarCommand] abre um contato fora do app.
 class ComunidadeListaViewmodel extends ChangeNotifier {
   ComunidadeListaViewmodel({required this.comunidadeListaUseCase}) {
     Log.print(super.runtimeType);
@@ -24,6 +29,17 @@ class ComunidadeListaViewmodel extends ChangeNotifier {
 
   late final Command0<void> estadosCommand = Command0(_carregarEstados);
   late final Command0<void> buscarCommand = Command0(_buscar);
+  late final Command1<ComunidadeDetalhe, int> detalheCommand = Command1(_detalhe);
+  late final Command1<void, (ContatoCampo, String)> acessarCommand = Command1(
+    (item) => comunidadeListaUseCase.abrir(item.$1, item.$2),
+  );
+
+  int? _detalheDe;
+  ComunidadeDetalhe? _detalheCarregado;
+
+  /// Detalhe carregado da comunidade [detalheDe]; nulo enquanto carrega.
+  ComunidadeDetalhe? get detalhe => _detalheCarregado;
+  int? get detalheDe => _detalheDe;
 
   List<EstadoModel>? _estados;
 
@@ -92,6 +108,16 @@ class ComunidadeListaViewmodel extends ChangeNotifier {
 
   String? linhaLocal(ComunidadeLocalModel comunidade) => ComunidadeListaUseCase.linhaLocal(comunidade);
 
+  List<(ContatoCampo, String)> preenchidos(ComunidadeContatoModel contato) =>
+      ComunidadeContatoUseCase.preenchidos(contato);
+
+  String exibicao(ContatoCampo campo, String valor) => ComunidadeContatoUseCase.exibicao(campo, valor);
+
+  bool acessivel(ContatoCampo campo, String valor) => ComunidadeContatoUseCase.uri(campo, valor) != null;
+
+  ({String principal, String? local, String cep}) linhasDoEndereco(ComunidadeEnderecoModel endereco) =>
+      ComunidadeListaUseCase.linhasDoEndereco(endereco);
+
   String mensagemErro(Exception error) => ComunidadeListaUseCase.mensagemErro(error);
 
   Future<Result<void>> _carregarEstados() async {
@@ -126,10 +152,22 @@ class ComunidadeListaViewmodel extends ChangeNotifier {
     return result;
   }
 
+  Future<Result<ComunidadeDetalhe>> _detalhe(int comuId) async {
+    _detalheDe = comuId;
+    _detalheCarregado = null;
+    notifyListeners();
+    final detalhe = await comunidadeListaUseCase.detalhe(comuId);
+    if (_detalheDe == comuId) _detalheCarregado = detalhe;
+    notifyListeners();
+    return Result.ok(detalhe);
+  }
+
   @override
   void dispose() {
     estadosCommand.dispose();
     buscarCommand.dispose();
+    detalheCommand.dispose();
+    acessarCommand.dispose();
     super.dispose();
   }
 }
