@@ -9,6 +9,8 @@ import 'package:flutter/material.dart';
 import 'package:service/service.dart';
 
 import '../../../../data/model/mensagem/mensagem_recebida_model.dart';
+import '../../mensagem_envio/ui/mensagem_envio_view.dart';
+import '../../mensagem_envio/ui/mensagem_envio_viewmodel.dart';
 import '../use_case/mensagem_lista_usecase.dart';
 import 'mensagem_lista_viewmodel.dart';
 import 'widgets/mensagem_detalhe_dialog.dart';
@@ -26,13 +28,18 @@ enum _Acao { lida, arquivar }
 /// - Primeiro carregamento: progresso; se falhar, "Tentar novamente". Depois disso a lista é mantida; erro de
 ///   atualização ou de gravação vira SnackBar.
 /// - Vazio: `nenhumaMensagemRecebida` (entrada), `nenhumaMensagemNaoLida`, `nenhumaMensagemArquivada`.
+/// - Parte inferior: "Nova mensagem" ao lado de "Voltar" abre o envio ([MensagemEnvioView], no `DialogBottomSheet`);
+///   ao concluir, SnackBar com `mensagemEnviada` (ou `mensagemEnviadaParcialmente`).
 ///
 /// Ícones (em [IconsMap.mdiIcons]): [iconeNaoLida], [iconeLida], [iconeSistema], [iconeLer], [iconeArquivar],
 /// [iconeDesarquivar], [iconeAcoes], [iconeAtualizar] e o [MensagemFiltro.icone] de cada filtro.
 class MensagemListaView extends StatefulWidget {
-  const MensagemListaView({super.key, required this.viewModel});
+  const MensagemListaView({super.key, required this.viewModel, required this.envioViewModel});
 
   final MensagemListaViewmodel viewModel;
+
+  /// Envio de nova mensagem.
+  final MensagemEnvioViewmodel envioViewModel;
 
   static const iconeNaoLida = 'email-outline';
   static const iconeLida = 'email-open-outline';
@@ -116,6 +123,19 @@ class _MensagemListaViewState extends State<MensagemListaView> {
     }
   }
 
+  void _novaMensagem() {
+    MensagemEnvioView.show(
+      context,
+      viewModel: widget.envioViewModel,
+      onConcluido: (mensagem) {
+        if (!mounted) return;
+        ScaffoldMessenger.maybeOf(context)
+          ?..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).translate(mensagem))));
+      },
+    );
+  }
+
   void _abrir(MensagemRecebidaModel mensagem) {
     _vm.abrirCommand.execute(mensagem);
     MensagemDetalheDialog.show(context, viewModel: _vm, musuId: mensagem.musuId);
@@ -181,6 +201,11 @@ class _MensagemListaViewState extends State<MensagemListaView> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: body,
       bottomNavigationBar: ViewBottomActions(
+        optionButton2: ViewBottomAction(
+          text: strings.translate('novaMensagem'),
+          icon: IconsMap.mdiIcons[MensagemEnvioView.iconeNova] ?? Icons.edit_outlined,
+          onPressed: _novaMensagem,
+        ),
         backLabel: strings.translate('voltar'),
         hideActionsTooltip: strings.translate('ocultarAcoes'),
         showActionsTooltip: strings.translate('exibirAcoes'),

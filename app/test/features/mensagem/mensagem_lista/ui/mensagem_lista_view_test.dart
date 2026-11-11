@@ -1,4 +1,6 @@
 import 'package:app/data/model/mensagem/mensagem_recebida_model.dart';
+import 'package:app/features/mensagem/mensagem_envio/ui/mensagem_envio_viewmodel.dart';
+import 'package:app/features/mensagem/mensagem_envio/use_case/mensagem_envio_usecase.dart';
 import 'package:app/features/mensagem/mensagem_lista/repository/mensagem_lista_repository.dart';
 import 'package:app/features/mensagem/mensagem_lista/ui/mensagem_lista_view.dart';
 import 'package:app/features/mensagem/mensagem_lista/ui/mensagem_lista_viewmodel.dart';
@@ -9,6 +11,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:service/service.dart';
+
+import '../../mensagem_envio/ui/mensagem_envio_view_test.dart' show FakeMensagemEnvioRepository;
 
 final _aviso = MensagemRecebidaModel(
   musuId: 1,
@@ -112,7 +116,12 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         localizationsDelegates: const [_TestLocalizationsDelegate(), DefaultMaterialLocalizations.delegate],
-        home: MensagemListaView(viewModel: viewModel),
+        home: MensagemListaView(
+          viewModel: viewModel,
+          envioViewModel: MensagemEnvioViewmodel(
+            mensagemEnvioUseCase: MensagemEnvioUseCase(mensagemEnvioRepository: FakeMensagemEnvioRepository()),
+          ),
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -304,6 +313,14 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.widgetWithText(SnackBar, 'registroNaoEncontrado'), findsOneWidget);
       expect(find.text('moreto indicou Efésios 3:20 para você'), findsOneWidget, reason: 'continua na entrada');
+    });
+
+    testWidgets('"Nova mensagem" ao lado de voltar abre o envio', (tester) async {
+      await montar(tester, criar());
+      expect(find.text('voltar'), findsOneWidget);
+      await tester.tap(find.text('novaMensagem'));
+      await tester.pumpAndSettle();
+      expect(find.widgetWithText(TextField, 'titulo'), findsOneWidget);
     });
 
     testWidgets('vazios por filtro', (tester) async {

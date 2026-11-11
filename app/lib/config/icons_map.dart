@@ -135,6 +135,9 @@ class IconsMap {
     'archive-outline': MdiIcons.archiveOutline,
     'archive-arrow-up-outline': MdiIcons.archiveArrowUpOutline,
     'message-reply-text-outline': MdiIcons.messageReplyTextOutline,
+    // Envio de mensagem (MensagemEnvioView): botão "Nova mensagem" e título do sheet. Enviar ('send'), buscar
+    // ('account-search-outline') e adicionar destinatário ('account-plus-outline') já mapeados acima.
+    'email-plus-outline': MdiIcons.emailPlusOutline,
     'account-supervisor': MdiIcons.accountSupervisor,
     'toolbox-outline': MdiIcons.toolboxOutline,
     'book-heart-outline': MdiIcons.bookHeartOutline,
