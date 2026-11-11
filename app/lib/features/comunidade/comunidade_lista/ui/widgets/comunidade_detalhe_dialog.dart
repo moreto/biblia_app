@@ -50,7 +50,10 @@ class _ComunidadeDetalheDialogState extends State<ComunidadeDetalheDialog> {
   void initState() {
     super.initState();
     _vm.acessarCommand.addListener(_onAcessar);
-    _vm.detalheCommand.execute(widget.comunidade.comuId);
+    // Depois do primeiro frame: o comando notifica a tela da lista, que está em build quando o dialog abre.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _vm.detalheCommand.execute(widget.comunidade.comuId);
+    });
   }
 
   @override
@@ -192,10 +195,12 @@ class _ComunidadeDetalheDialogState extends State<ComunidadeDetalheDialog> {
         children: [
           _icone(ComunidadeDetalheDialog.iconeMembros, Icons.people_outline, size: 20),
           const SizedBox(width: 8),
-          Text(
-            ativos == null
-                ? '${strings.translate('membrosAtivos')}: ${strings.translate('naoFoiPossivelCarregar')}'
-                : '${strings.translate('membrosAtivos')}: $ativos',
+          Expanded(
+            child: Text(
+              ativos == null
+                  ? '${strings.translate('membrosAtivos')}: ${strings.translate('naoFoiPossivelCarregar')}'
+                  : '${strings.translate('membrosAtivos')}: $ativos',
+            ),
           ),
         ],
       ),
