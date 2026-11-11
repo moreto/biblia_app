@@ -1,9 +1,14 @@
 import 'dart:async';
 
 import 'package:app/config/icons_map.dart';
+import 'package:app/data/model/comunidade/comunidade_contato_model.dart';
+import 'package:app/data/model/comunidade/comunidade_endereco_model.dart';
+import 'package:app/data/model/comunidade/comunidade_humanograma_model.dart';
 import 'package:app/data/model/comunidade/comunidade_local_model.dart';
+import 'package:app/data/model/comunidade/comunidade_usuario_model.dart';
 import 'package:app/data/model/localidade/estado_model.dart';
 import 'package:app/data/model/localidade/municipio_model.dart';
+import 'package:app/features/comunidade/comunidade_contato/use_case/comunidade_contato_usecase.dart';
 import 'package:app/features/comunidade/comunidade_lista/repository/comunidade_lista_repository.dart';
 import 'package:app/features/comunidade/comunidade_lista/ui/comunidade_lista_view.dart';
 import 'package:app/features/comunidade/comunidade_lista/ui/comunidade_lista_viewmodel.dart';
@@ -50,6 +55,51 @@ class _FakeComunidadeListaRepository implements ComunidadeListaRepository {
   final chamadasMunicipios = <int>[];
   Exception? erroBusca;
   Completer<void>? espera;
+
+  // detalhe (comunidade 1 tem tudo; as outras, nada)
+  Exception? erroContatos;
+  @override
+  Future<Result<List<ComunidadeEnderecoModel>>> enderecos(int comuId) async => Result.ok([
+    if (comuId == 1)
+      const ComunidadeEnderecoModel(
+        cendId: 1,
+        comuId: 1,
+        cendCep: '73252200',
+        cendLogradouro: 'Quadra 10',
+        cendNumero: '6',
+        cendBairro: 'Sobradinho',
+        muniId: 5300108,
+        muniNome: 'Brasília',
+        estaSigla: 'DF',
+      ),
+  ]);
+
+  @override
+  Future<Result<List<ComunidadeContatoModel>>> contatos(int comuId) async {
+    final erro = erroContatos;
+    if (erro != null) return Result.error(erro);
+    return Result.ok([
+      if (comuId == 1) const ComunidadeContatoModel(cconId: 1, comuId: 1, cconWhatsapp: '61999994444'),
+      if (comuId == 1) const ComunidadeContatoModel(cconId: 2, comuId: 1, cconSite: ' '),
+    ]);
+  }
+
+  @override
+  Future<Result<List<ComunidadeHumanogramaModel>>> humanograma(int comuId) async {
+    if (comuId != 1) return Result.error(HttpServiceException(message: 'registroNaoEncontrado'));
+    return const Result.ok([
+      ComunidadeHumanogramaModel(chumId: 2, comuId: 1, chumNome: 'Zeca', chcaCargo: 'Tesoureiro'),
+      ComunidadeHumanogramaModel(chumId: 3, comuId: 1, chumNome: 'Ana'),
+      ComunidadeHumanogramaModel(chumId: 1, comuId: 1, chumNome: 'Padre João', chcaCargo: 'Pároco'),
+    ]);
+  }
+
+  @override
+  Future<Result<List<ComunidadeUsuarioModel>>> usuarios(int comuId) async => Result.ok([
+    if (comuId == 1) const ComunidadeUsuarioModel(cusuId: 1, comuId: 1, usuaId: 3),
+    if (comuId == 1) const ComunidadeUsuarioModel(cusuId: 2, comuId: 1, usuaId: 4, cusuAtivo: false),
+    if (comuId == 1) const ComunidadeUsuarioModel(cusuId: 3, comuId: 1, usuaId: 5),
+  ]);
 
   @override
   Future<Result<List<EstadoModel>>> estados() async {
@@ -105,7 +155,16 @@ void main() {
 
   setUp(() => repository = _FakeComunidadeListaRepository());
 
-  ComunidadeListaUseCase criarUseCase() => ComunidadeListaUseCase(comunidadeListaRepository: repository);
+  late List<Uri> abertos;
+  setUp(() => abertos = []);
+
+  ComunidadeListaUseCase criarUseCase() => ComunidadeListaUseCase(
+    comunidadeListaRepository: repository,
+    abrirUrl: (url) async {
+      abertos.add(url);
+      return true;
+    },
+  );
 
   ComunidadeListaViewmodel criar() => ComunidadeListaViewmodel(comunidadeListaUseCase: criarUseCase());
 
@@ -193,6 +252,26 @@ void main() {
       await useCase.municipios(53);
       expect(repository.chamadasEstados, 1);
       expect(repository.chamadasMunicipios, [53]);
+    });
+
+    test('detalhe: membros ativos, contatos com campo, liderança por cargo; falha e 404 por seção', () async {
+      final useCase = criarUseCase();
+      final detalhe = await useCase.detalhe(1);
+      expect(detalhe.membrosAtivos, 2);
+      expect(detalhe.enderecos, hasLength(1));
+      expect(detalhe.contatos?.single.cconId, 1, reason: 'contato sem campo preenchido sai');
+      expect(detalhe.lideranca?.map((p) => p.chumNome), ['Padre João', 'Zeca', 'Ana'], reason: 'sem cargo por último');
+
+      repository.erroContatos = HttpServiceException(message: 'erroGeralApi', code: 500);
+      final outra = await useCase.detalhe(2);
+      expect(outra.contatos, isNull, reason: 'falhou');
+      expect(outra.lideranca, isEmpty, reason: '404 vira vazio');
+      expect(outra.membrosAtivos, 0);
+    });
+
+    test('abrir contato usa o link do campo', () async {
+      await criarUseCase().abrir(ContatoCampo.whatsapp, '61999994444');
+      expect(abertos.single.toString(), 'https://wa.me/5561999994444');
     });
 
     test('textos do card', () {
@@ -293,6 +372,43 @@ void main() {
       await tester.tap(find.text('tentarNovamente'));
       await tester.pumpAndSettle();
       expect(find.text('Capela'), findsOneWidget);
+    });
+
+    testWidgets('tocar na comunidade abre o detalhe com membros, endereços, contatos e liderança', (tester) async {
+      await montar(tester, criar());
+      await escolher(tester, 'estado', 'DF · Distrito Federal');
+      await tester.tap(find.text('paróquia Matriz'));
+      await tester.pumpAndSettle();
+
+      final dialog = find.byType(AlertDialog);
+      expect(find.descendant(of: dialog, matching: find.text('paróquia Matriz')), findsOneWidget);
+      expect(find.descendant(of: dialog, matching: find.text('Paróquia · Católica')), findsOneWidget);
+      expect(find.text('membrosAtivos: 2'), findsOneWidget);
+      expect(find.text('Quadra 10, 6'), findsOneWidget);
+      expect(find.text('CEP 73252-200'.replaceFirst('CEP', 'cep')), findsOneWidget);
+      expect(find.text('(61) 99999-4444'), findsOneWidget);
+      expect(find.text('Pároco: Padre João'), findsOneWidget);
+
+      await tester.tap(find.text('(61) 99999-4444'));
+      await tester.pumpAndSettle();
+      expect(abertos.single.toString(), 'https://wa.me/5561999994444');
+
+      await tester.tap(find.text('fechar'));
+      await tester.pumpAndSettle();
+      expect(dialog, findsNothing);
+    });
+
+    testWidgets('detalhe: seção vazia e seção que falhou têm mensagem própria', (tester) async {
+      repository.erroContatos = HttpServiceException(message: 'erroGeralApi', code: 500);
+      await montar(tester, criar());
+      await escolher(tester, 'estado', 'DF · Distrito Federal');
+      await tester.tap(find.text('Capela'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('nenhumEnderecoCadastrado'), findsOneWidget);
+      expect(find.text('naoFoiPossivelCarregar'), findsOneWidget, reason: 'contatos falharam');
+      expect(find.text('nenhumaLiderancaCadastrada'), findsOneWidget);
+      expect(find.text('membrosAtivos: 0'), findsOneWidget);
     });
 
     testWidgets('erro numa atualização mantém a lista e mostra SnackBar', (tester) async {
