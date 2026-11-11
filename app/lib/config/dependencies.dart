@@ -41,6 +41,8 @@ import '../features/comunidade/comunidade_usuario/repository/comunidade_usuario_
 import '../features/comunidade/comunidade_usuario/repository/comunidade_usuario_repository_impl.dart';
 import '../features/comunidade/comunidade_endereco/repository/comunidade_endereco_repository_impl.dart';
 import '../features/dashboard/repository/dashboard_repository.dart';
+import '../features/mensagem/mensagem_lista/repository/mensagem_lista_repository.dart';
+import '../features/mensagem/mensagem_lista/repository/mensagem_lista_repository_impl.dart';
 import '../features/dashboard/repository/dashboard_repository_impl.dart';
 import '../features/dashboard/widgets/musica/repository/musica_repository.dart';
 import '../features/dashboard/widgets/musica/repository/musica_repository_impl.dart';
@@ -81,4 +83,5 @@ void configDependencies() {
   locator.registerLazySingleton<ComunidadeUsuarioRepository>(() => ComunidadeUsuarioRepositoryImpl());
   locator.registerLazySingleton<ComunidadeListaRepository>(() => ComunidadeListaRepositoryImpl());
   locator.registerLazySingleton<VersiculoIndicadoRepository>(() => VersiculoIndicadoRepositoryImpl());
+  locator.registerLazySingleton<MensagemListaRepository>(() => MensagemListaRepositoryImpl());
 }

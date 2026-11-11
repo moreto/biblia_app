@@ -125,7 +125,18 @@ class IconsMap {
     // já mapeados acima.
     'comment-quote-outline': MdiIcons.commentQuoteOutline,
     'clock-outline': MdiIcons.clockOutline,
+    // Tela "Mensagens" (MensagemListaView / MensagemFiltro / MensagemDetalheDialog). 'email-outline' (não lida;
+    // também menu_icone de /mensagem-lista), 'dots-vertical' e 'refresh' já mapeados acima.
+    'email-open-outline': MdiIcons.emailOpenOutline,
+    'email-check-outline': MdiIcons.emailCheckOutline,
+    'email-mark-as-unread': MdiIcons.emailMarkAsUnread,
+    'bell-outline': MdiIcons.bellOutline,
+    'inbox-outline': MdiIcons.inboxOutline,
+    'archive-outline': MdiIcons.archiveOutline,
+    'archive-arrow-up-outline': MdiIcons.archiveArrowUpOutline,
+    'message-reply-text-outline': MdiIcons.messageReplyTextOutline,
     'account-supervisor': MdiIcons.accountSupervisor,
+    'toolbox-outline': MdiIcons.toolboxOutline,
     // ...
   };
 }

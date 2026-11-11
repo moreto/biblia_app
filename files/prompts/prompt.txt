@@ -1,13 +1,13 @@
-construir a view de versiculo_indicado, sendo que será listada todas as indicações de leitura q o usuario recebeu, 
+construir a view de mensagem_lista, sendo que será listada todas as mensagens q o usuario recebeu, 
 não será aba de nada, será uma nova tela, não é TAB
 
 
 internacionalizar os textos, verificar se existem na API /v1/traducao
-adicionar essa feature em uma nova pasta features/comunidade/
+adicionar essa feature em uma nova pasta features/mensagem/
 
 API:
-/v1/versiculo-indicacao
-/v1/versiculo-indicacao-usuario
+/v1/mensagem
+
 
 gerar um script de insert no banco de dados das traduções faltantes:
 
@@ -17,7 +17,7 @@ seguir modelo de desenvolvimento do mason
 gerar script para inserir as traduções implementadas
 mapeie os icones necessários
 mantenha o mesmo projeto visual
-crie as rotas
+crie as rotas: mensagem-lista
 
 
 crie view CRUD para menu

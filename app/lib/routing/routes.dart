@@ -29,6 +29,10 @@ abstract final class Routes {
   /// Indicações de versículo que o usuário recebeu (tela própria, não é aba).
   static const versiculoIndicado = '/versiculo-indicado';
 
+  // mensagem
+  /// Mensagens recebidas pelo usuário (tela própria, não é aba).
+  static const mensagemLista = '/mensagem-lista';
+
   // comunidade
   static const comunidade = '/comunidade';
 
