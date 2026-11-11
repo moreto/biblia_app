@@ -1,7 +1,8 @@
-import 'package:app/features/loggof/ui/loggof_view.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/dependencies.dart';
+import '../../features/access/loggof/ui/loggof_view.dart';
+import '../../features/access/loggof/ui/loggof_viewmodel.dart';
 import '../../features/dashboard/repository/dashboard_repository.dart';
 import '../../features/dashboard/ui/dashboard_view.dart';
 import '../../features/dashboard/ui/dashboard_viewmodel.dart';
@@ -17,7 +18,6 @@ import '../../features/dashboard/widgets/versiculo/ui/versiculo_viewmodel.dart';
 import '../../features/dashboard/widgets/versiculo/use_case/versiculo_usecase.dart';
 import '../../features/dashboard/widgets/versiculo_reacao/repository/versiculo_reacao_repository.dart';
 import '../../features/dashboard/widgets/versiculo_reacao/use_case/versiculo_reacao_usecase.dart';
-import '../../features/loggof/ui/loggof_viewmodel.dart';
 import '../routes.dart';
 
 abstract final class CommonRouter {

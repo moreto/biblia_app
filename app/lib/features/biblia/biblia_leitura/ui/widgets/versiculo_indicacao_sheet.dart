@@ -20,6 +20,12 @@ class VersiculoIndicacaoSheet extends StatefulWidget {
   /// Fração da altura da tela ocupada ao abrir; o usuário pode arrastar até quase a tela toda.
   static const alturaInicial = 0.75;
 
+  /// Fração máxima da altura; a folha vai até ela ao focar a busca de usuários, para caber o resultado.
+  static const alturaMaxima = 0.95;
+
+  /// Duração da animação que leva a busca de usuários para o topo da folha.
+  static const duracaoRevelarBusca = Duration(milliseconds: 250);
+
   /// Espera depois da última tecla antes de buscar usuários.
   static const esperaBusca = Duration(milliseconds: 400);
 
@@ -34,7 +40,13 @@ class VersiculoIndicacaoSheet extends StatefulWidget {
 class _VersiculoIndicacaoSheetState extends State<VersiculoIndicacaoSheet> {
   final _comentario = TextEditingController();
   final _busca = TextEditingController();
+  final _buscaFocus = FocusNode();
+  final _buscaKey = GlobalKey();
+  final _folha = DraggableScrollableController();
   Timer? _esperaBusca;
+
+  /// Último resultado de busca já revelado; muda quando chega outro resultado.
+  Object? _encontradosRevelados;
 
   /// `vindId` cujo comentário já foi copiado para o campo; evita sobrescrever o que o usuário digita.
   int? _comentarioDe;
@@ -42,8 +54,18 @@ class _VersiculoIndicacaoSheetState extends State<VersiculoIndicacaoSheet> {
   BibliaLeituraViewmodel get _vm => widget.viewModel;
 
   @override
+  void initState() {
+    super.initState();
+    _buscaFocus.addListener(_onBuscaFoco);
+    _vm.addListener(_onViewModelAlterado);
+  }
+
+  @override
   void dispose() {
+    _vm.removeListener(_onViewModelAlterado);
     _esperaBusca?.cancel();
+    _buscaFocus.dispose();
+    _folha.dispose();
     _busca.dispose();
     _comentario.dispose();
     super.dispose();
@@ -68,6 +90,34 @@ class _VersiculoIndicacaoSheetState extends State<VersiculoIndicacaoSheet> {
       if (command.error) return BibliaLeituraView.mensagemErro(command.result);
     }
     return _vm.erroBuscaUsuarios;
+  }
+
+  void _onBuscaFoco() {
+    if (_buscaFocus.hasFocus) _revelarBusca();
+  }
+
+  /// Chegou outro resultado de busca: rola de novo, pois a lista cresceu abaixo do campo.
+  void _onViewModelAlterado() {
+    final encontrados = _vm.usuariosEncontrados;
+    if (identical(encontrados, _encontradosRevelados)) return;
+    _encontradosRevelados = encontrados;
+    if (_buscaFocus.hasFocus) _revelarBusca();
+  }
+
+  /// Abre a folha até o máximo e leva o campo de busca para o topo, deixando o resultado (que fica abaixo dele)
+  /// visível acima do teclado.
+  Future<void> _revelarBusca() async {
+    const duracao = VersiculoIndicacaoSheet.duracaoRevelarBusca;
+    if (_folha.isAttached && _folha.size < VersiculoIndicacaoSheet.alturaMaxima) {
+      await _folha.animateTo(VersiculoIndicacaoSheet.alturaMaxima, duration: duracao, curve: Curves.easeOut);
+    }
+    if (!mounted) return;
+    // Depois do frame: o resultado novo já entrou no layout e a rolagem alcança o fim da lista.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final contexto = _buscaKey.currentContext;
+      if (contexto == null || !contexto.mounted) return;
+      Scrollable.ensureVisible(contexto, duration: duracao, curve: Curves.easeOut);
+    });
   }
 
   /// Busca usuários depois de uma pausa na digitação; texto curto só limpa o resultado.
@@ -108,10 +158,11 @@ class _VersiculoIndicacaoSheetState extends State<VersiculoIndicacaoSheet> {
         return Padding(
           padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
           child: DraggableScrollableSheet(
+            controller: _folha,
             expand: false,
             initialChildSize: VersiculoIndicacaoSheet.alturaInicial,
             minChildSize: 0.4,
-            maxChildSize: 0.95,
+            maxChildSize: VersiculoIndicacaoSheet.alturaMaxima,
             builder: (context, scrollController) => ListView(
               controller: scrollController,
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
@@ -216,7 +267,11 @@ class _VersiculoIndicacaoSheetState extends State<VersiculoIndicacaoSheet> {
         ),
       const SizedBox(height: 12),
       TextField(
+        key: _buscaKey,
         controller: _busca,
+        focusNode: _buscaFocus,
+        // Sobra abaixo do campo ao rolar até ele, para o resultado não ficar atrás do teclado.
+        scrollPadding: const EdgeInsets.only(top: 20, bottom: 240),
         enabled: !ocupado,
         autocorrect: false,
         textInputAction: TextInputAction.search,

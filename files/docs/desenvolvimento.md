@@ -44,7 +44,7 @@ FROM (VALUES
 WHERE NOT EXISTS (SELECT 1 FROM public.traducao t WHERE t.trad_chave = v.trad_chave);
 ```
 
-Scripts existentes: `traducao_biblia_leitura`, `traducao_comunidade`, `traducao_comunidade_cadastro`, `traducao_comunidade_contato`, `traducao_comunidade_lista`, `traducao_comunidade_usuario`, `traducao_comunidade_endereco`, `traducao_comunidade_endereco_cadastro`, `traducao_configuracao`, `traducao_configuracao_app`, `traducao_funcionalidade`, `traducao_loggof`, `traducao_mensagem_envio`, `traducao_mensagem_lista`, `traducao_menu`, `traducao_musica`, `traducao_oracao`, `traducao_orientacao`, `traducao_registro`, `traducao_renomado`, `traducao_service`, `traducao_versiculo`, `traducao_versiculo_indicado`, `traducao_versiculo_reacao` e `traducao_versiculo_renomado`. O `funcionalidade.sql` cria os dados da tabela de funcionalidades.
+Scripts existentes: `traducao_biblia_leitura`, `traducao_comunidade`, `traducao_comunidade_cadastro`, `traducao_comunidade_contato`, `traducao_comunidade_lista`, `traducao_comunidade_usuario`, `traducao_comunidade_endereco`, `traducao_comunidade_endereco_cadastro`, `traducao_configuracao`, `traducao_configuracao_app`, `traducao_funcionalidade`, `traducao_loggof`, `traducao_mensagem_envio`, `traducao_mensagem_lista`, `traducao_menu`, `traducao_musica`, `traducao_oracao`, `traducao_orientacao`, `traducao_registro`, `traducao_renomado`, `traducao_service`, `traducao_versiculo`, `traducao_versiculo_indicado`, `traducao_versiculo_reacao` e `traducao_versiculo_renomado`. O `funcionalidade.sql` cria e atualiza os dados da tabela de funcionalidades (idempotente, pela chave `func_nome`); ao criar uma tela nova, acrescente-a a ele.
 
 ## Ícones
 
