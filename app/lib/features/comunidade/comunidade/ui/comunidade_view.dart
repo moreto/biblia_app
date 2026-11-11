@@ -85,6 +85,14 @@ class ComunidadeView extends StatefulWidget {
   static Widget icone(String chave, IconData fallback, {Color? color, double? size}) =>
       Icon(IconsMap.mdiIcons[chave] ?? fallback, color: color, size: size);
 
+  /// Ícone da comunidade: o do tipo ([chave], vindo da API em `ctip_icone`), se estiver em [IconsMap.mdiIcons];
+  /// senão o padrão [iconeComunidade].
+  static Widget iconeDaComunidade(String? chave, {Color? color, double? size}) => Icon(
+    IconsMap.mdiIcons[chave] ?? IconsMap.mdiIcons[iconeComunidade] ?? Icons.groups_outlined,
+    color: color,
+    size: size,
+  );
+
   /// Mensagem (chave de tradução) do erro do comando.
   static String mensagemErro(Result? result) {
     if (result case Error(error: final exception)) {

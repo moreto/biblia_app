@@ -1,3 +1,4 @@
+import 'package:app/config/icons_map.dart';
 import 'package:app/data/model/comunidade/comunidade_contato_model.dart';
 import 'package:app/data/model/comunidade/comunidade_denominacao_model.dart';
 import 'package:app/data/model/comunidade/comunidade_model.dart';
@@ -54,8 +55,8 @@ class _FakeComunidadeRepository implements ComunidadeRepository {
   Future<Result<List<ComunidadeTipoModel>>> tipos() async => erroTipos != null
       ? Result.error(erroTipos!)
       : const Result.ok([
-          ComunidadeTipoModel(ctipId: 1, ctipNome: 'Paróquia'),
-          ComunidadeTipoModel(ctipId: 2, ctipNome: 'Capela'),
+          ComunidadeTipoModel(ctipId: 1, ctipNome: 'Paróquia', ctipIcone: 'home-group'),
+          ComunidadeTipoModel(ctipId: 2, ctipNome: 'Capela', ctipIcone: 'cathedral'),
         ]);
 
   @override
@@ -306,6 +307,20 @@ void main() {
       expect(ComunidadeUseCase.descricao(lista[0]), isNull, reason: 'tipo 9 não existe');
       expect(minhas.tipos, hasLength(2));
       expect(minhas.denominacoes, hasLength(1));
+      expect(lista[2].icone, 'home-group', reason: 'ícone do tipo (ctip_icone)');
+      expect(lista[0].icone, isNull, reason: 'sem tipo, sem ícone');
+    });
+
+    test('ComunidadeTipoModel lê o ícone (camelCase ou snake_case; opcional)', () {
+      expect(
+        ComunidadeTipoModel.fromJson({'ctipId': 4, 'ctipNome': 'Igreja', 'ctipIcone': 'church'}).ctipIcone,
+        'church',
+      );
+      expect(
+        ComunidadeTipoModel.fromJson({'ctip_id': 4, 'ctip_nome': 'Igreja', 'ctip_icone': 'cross'}).ctipIcone,
+        'cross',
+      );
+      expect(ComunidadeTipoModel.fromJson({'ctipId': 1, 'ctipNome': 'X', 'ctipIcone': null}).ctipIcone, isNull);
     });
 
     test('falha em tipos ou denominações não impede a lista', () async {
@@ -419,6 +434,21 @@ void main() {
   });
 
   group('ComunidadeView', () {
+    testWidgets('o card usa o ícone do tipo da API; sem ícone ou ícone não mapeado, o padrão', (tester) async {
+      final capela = ComunidadeModel(comuId: 4, comuNome: 'Capela Velha', ctipId: 2, usuaId: _usuario);
+      await montar(tester, criar(_FakeComunidadeRepository([_matriz, _grupo, capela])));
+
+      Icon iconeDoCard(String nome) => tester.widget<Icon>(
+        find.descendant(
+          of: find.ancestor(of: find.text(nome), matching: find.byType(Card)),
+          matching: find.descendant(of: find.byType(CircleAvatar), matching: find.byType(Icon)),
+        ),
+      );
+      expect(iconeDoCard('Paróquia Matriz').icon, IconsMap.mdiIcons['home-group']);
+      expect(iconeDoCard('Grupo de Oração').icon, IconsMap.mdiIcons['church'], reason: 'sem tipo');
+      expect(iconeDoCard('Capela Velha').icon, IconsMap.mdiIcons['church'], reason: "'cathedral' não está no mapa");
+    });
+
     testWidgets('mostra a aba "Minhas comunidades" com as comunidades e o botão de adicionar', (tester) async {
       await montar(tester, criar(_FakeComunidadeRepository([_matriz, _capela])));
 

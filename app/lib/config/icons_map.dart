@@ -102,6 +102,21 @@ class IconsMap {
     'account-check-outline': MdiIcons.accountCheckOutline,
     'account-cancel-outline': MdiIcons.accountCancelOutline,
     'account-remove-outline': MdiIcons.accountRemoveOutline,
+    // Ícones dos tipos de comunidade (biblia.comunidade_tipo.ctip_icone), usados nos cards de "Minhas comunidades"
+    // (ComunidadeView.iconeDaComunidade). 'church', 'account-group', 'account-group-outline' e 'hands-pray' já
+    // mapeados acima; 'cathedral' não existe no MDI (cai no ícone padrão 'church').
+    'temple-hindu': MdiIcons.templeHindu,
+    'church-outline': MdiIcons.churchOutline,
+    'cross': MdiIcons.cross,
+    'home-group': MdiIcons.homeGroup,
+    'home-heart': MdiIcons.homeHeart,
+    'castle': MdiIcons.castle,
+    'home-city-outline': MdiIcons.homeCityOutline,
+    'home-city': MdiIcons.homeCity,
+    'home-outline': MdiIcons.homeOutline,
+    // Tela "Encontrar comunidades" (ComunidadeListaView.iconeEncontrar; também serve de menu_icone da rota
+    // /comunidade-lista). Endereço usa 'map-marker-outline' (já mapeado).
+    'map-search-outline': MdiIcons.mapSearchOutline,
     'account-supervisor': MdiIcons.accountSupervisor,
     // ...
   };

@@ -33,6 +33,8 @@ import '../features/comunidade/comunidade/repository/comunidade_repository_impl.
 import '../features/comunidade/comunidade_contato/repository/comunidade_contato_repository.dart';
 import '../features/comunidade/comunidade_contato/repository/comunidade_contato_repository_impl.dart';
 import '../features/comunidade/comunidade_endereco/repository/comunidade_endereco_repository.dart';
+import '../features/comunidade/comunidade_lista/repository/comunidade_lista_repository.dart';
+import '../features/comunidade/comunidade_lista/repository/comunidade_lista_repository_impl.dart';
 import '../features/comunidade/comunidade_usuario/repository/comunidade_usuario_repository.dart';
 import '../features/comunidade/comunidade_usuario/repository/comunidade_usuario_repository_impl.dart';
 import '../features/comunidade/comunidade_endereco/repository/comunidade_endereco_repository_impl.dart';
@@ -75,4 +77,5 @@ void configDependencies() {
   locator.registerLazySingleton<ComunidadeEnderecoRepository>(() => ComunidadeEnderecoRepositoryImpl());
   locator.registerLazySingleton<ComunidadeContatoRepository>(() => ComunidadeContatoRepositoryImpl());
   locator.registerLazySingleton<ComunidadeUsuarioRepository>(() => ComunidadeUsuarioRepositoryImpl());
+  locator.registerLazySingleton<ComunidadeListaRepository>(() => ComunidadeListaRepositoryImpl());
 }

@@ -128,11 +128,7 @@ class MinhasComunidadesTab extends StatelessWidget {
             children: [
               CircleAvatar(
                 backgroundColor: scheme.primaryContainer,
-                child: ComunidadeView.icone(
-                  ComunidadeView.iconeComunidade,
-                  Icons.groups_outlined,
-                  color: scheme.onPrimaryContainer,
-                ),
+                child: ComunidadeView.iconeDaComunidade(resumo.icone, color: scheme.onPrimaryContainer),
               ),
               const SizedBox(width: 16),
               Expanded(

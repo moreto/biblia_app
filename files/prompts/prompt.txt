@@ -1,18 +1,15 @@
-construir a view de comunidade_usuario, sendo que será listada nas comunidades do usuário na terceira aba, 
-copiar o q foi feito em comnunidade_endereco
+construir a view de comunidade_lista, sendo que será listada todas as comunidades filtrada por estado e cidade, 
+não é filtrada por usuário
+não será aba de nada, será uma nova tela, não é TAV
 
-construir a view de comunidade_usuario
-essa primeira vai listar todos os usuarios da comunidade
-adicionar o botão de adicionar usuario ao lado de voltar
-criar o crud para adicionar novos usuarios a comunidade
 
 internacionalizar os textos, verificar se existem na API /v1/traducao
 adicionar essa feature em uma nova pasta features/comunidade/
 
 API:
-/v1/comunidade-usuario
+/v1/comunidade
 
-gerar um script de insert no banco de dados das traduções faltantes, segue o modelo de dados abaixo:
+gerar um script de insert no banco de dados das traduções faltantes:
 
 manter as regras de negocio nas use_case, chamar e notificar nas view_models
 seguir o padrão mvvm do projeto

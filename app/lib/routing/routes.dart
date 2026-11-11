@@ -31,4 +31,7 @@ abstract final class Routes {
 
   /// Usuários de uma comunidade: `/comunidade-usuario?comuId=` (sem `comuId`, a primeira comunidade do usuário).
   static const comunidadeUsuario = '/comunidade-usuario';
+
+  /// Todas as comunidades, filtradas por estado e cidade (tela "Encontrar comunidades").
+  static const comunidadeLista = '/comunidade-lista';
 }

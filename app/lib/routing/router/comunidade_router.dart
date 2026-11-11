@@ -8,6 +8,10 @@ import '../../features/comunidade/comunidade/use_case/comunidade_usecase.dart';
 import '../../features/comunidade/comunidade_contato/repository/comunidade_contato_repository.dart';
 import '../../features/comunidade/comunidade_contato/ui/comunidade_contato_viewmodel.dart';
 import '../../features/comunidade/comunidade_contato/use_case/comunidade_contato_usecase.dart';
+import '../../features/comunidade/comunidade_lista/repository/comunidade_lista_repository.dart';
+import '../../features/comunidade/comunidade_lista/ui/comunidade_lista_view.dart';
+import '../../features/comunidade/comunidade_lista/ui/comunidade_lista_viewmodel.dart';
+import '../../features/comunidade/comunidade_lista/use_case/comunidade_lista_usecase.dart';
 import '../../features/comunidade/comunidade_usuario/repository/comunidade_usuario_repository.dart';
 import '../../features/comunidade/comunidade_usuario/ui/comunidade_usuario_view.dart';
 import '../../features/comunidade/comunidade_usuario/ui/comunidade_usuario_viewmodel.dart';
@@ -57,6 +61,16 @@ class ComunidadeRouter {
           comuId: int.tryParse(state.uri.queryParameters['comuId'] ?? ''),
         );
       },
+    ),
+    GoRoute(
+      path: Routes.comunidadeLista,
+      builder: (context, state) => ComunidadeListaView(
+        viewModel: ComunidadeListaViewmodel(
+          comunidadeListaUseCase: ComunidadeListaUseCase(
+            comunidadeListaRepository: locator<ComunidadeListaRepository>(),
+          ),
+        ),
+      ),
     ),
   };
 }

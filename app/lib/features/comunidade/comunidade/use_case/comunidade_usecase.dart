@@ -19,9 +19,9 @@ enum ComunidadeAba {
   final String icone;
 }
 
-/// Comunidade pronta para exibição, com os nomes do tipo e da denominação (nulos se não informados ou não
-/// encontrados).
-typedef ComunidadeResumo = ({ComunidadeModel comunidade, String? tipo, String? denominacao});
+/// Comunidade pronta para exibição, com os nomes do tipo e da denominação e o ícone do tipo (`ctip_icone`, chave de
+/// `IconsMap.mdiIcons`) — nulos se não informados ou não encontrados.
+typedef ComunidadeResumo = ({ComunidadeModel comunidade, String? tipo, String? denominacao, String? icone});
 
 /// Conteúdo da aba "Minhas comunidades": a lista e as opções de tipo e denominação do formulário.
 typedef MinhasComunidades = ({
@@ -88,6 +88,7 @@ class ComunidadeUseCase {
     }
 
     final nomesTipo = {for (final t in tipos) t.ctipId: t.ctipNome};
+    final iconesTipo = {for (final t in tipos) t.ctipId: t.ctipIcone};
     final nomesDenominacao = {for (final d in denominacoes) d.cdenId: d.cdenNome};
 
     return Result.ok((
@@ -97,6 +98,7 @@ class ComunidadeUseCase {
             comunidade: comunidade,
             tipo: _nome(nomesTipo[comunidade.ctipId]),
             denominacao: _nome(nomesDenominacao[comunidade.cdenId]),
+            icone: _nome(iconesTipo[comunidade.ctipId]),
           ),
       ]),
       tipos: tipos,
