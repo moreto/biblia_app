@@ -117,6 +117,9 @@ class IconsMap {
     // Tela "Encontrar comunidades" (ComunidadeListaView.iconeEncontrar; também serve de menu_icone da rota
     // /comunidade-lista). Endereço usa 'map-marker-outline' (já mapeado).
     'map-search-outline': MdiIcons.mapSearchOutline,
+    // Detalhe da comunidade (ComunidadeDetalheDialog.iconeLideranca): seção de liderança (humanograma). Membros,
+    // endereços e contatos usam 'account-multiple-outline', 'map-marker-outline' e 'card-account-phone-outline'.
+    'sitemap-outline': MdiIcons.sitemapOutline,
     'account-supervisor': MdiIcons.accountSupervisor,
     // ...
   };

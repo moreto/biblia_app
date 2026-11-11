@@ -8,13 +8,15 @@ import 'package:flutter/material.dart';
 import '../../../../data/model/comunidade/comunidade_local_model.dart';
 import '../../comunidade/ui/comunidade_view.dart';
 import 'comunidade_lista_viewmodel.dart';
+import 'widgets/comunidade_detalhe_dialog.dart';
 
 /// Tela "Encontrar comunidades" (`Routes.comunidadeLista`): todas as comunidades, de qualquer usuário, filtradas por
 /// estado e cidade (`/v1/comunidade?estaId=&muniId=`). Tela própria, não é aba de "Comunidades".
 ///
 /// - Topo: estado (obrigatório) e cidade ("Todas as cidades" ou uma do estado); trocar o filtro busca de novo.
 /// - Cada comunidade mostra o ícone do tipo (`ctip_icone`; sem ele, o padrão), o nome, tipo · denominação, o
-///   endereço e bairro · cidade - UF.
+///   endereço e bairro · cidade - UF. Tocar abre o detalhe ([ComunidadeDetalheDialog]): membros ativos, endereços,
+///   contatos e liderança.
 /// - Sem estado: `selecioneEstado`; sem resultado: `nenhumaComunidadeNoLocal`. Erro na primeira busca mostra
 ///   "Tentar novamente"; depois disso a lista é mantida e o erro vira SnackBar. Falha nos estados mostra
 ///   "Tentar novamente" no lugar do filtro.
@@ -247,50 +249,54 @@ class _ComunidadeListaViewState extends State<ComunidadeListaView> {
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            CircleAvatar(
-              backgroundColor: scheme.primaryContainer,
-              child: ComunidadeView.iconeDaComunidade(comunidade.ctipIcone, color: scheme.onPrimaryContainer),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(comunidade.comuNome, style: textTheme.titleMedium),
-                  if (descricao != null) ...[const SizedBox(height: 2), Text(descricao, style: secundario)],
-                  if (endereco != null || local != null) ...[
-                    const SizedBox(height: 8),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _icone(
-                          ComunidadeListaView.iconeEndereco,
-                          Icons.place_outlined,
-                          size: 18,
-                          color: scheme.primary,
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (endereco != null) Text(endereco, style: textTheme.bodyMedium),
-                              if (local != null) Text(local, style: secundario),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ],
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => ComunidadeDetalheDialog.show(context, viewModel: _vm, comunidade: comunidade),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CircleAvatar(
+                backgroundColor: scheme.primaryContainer,
+                child: ComunidadeView.iconeDaComunidade(comunidade.ctipIcone, color: scheme.onPrimaryContainer),
               ),
-            ),
-          ],
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(comunidade.comuNome, style: textTheme.titleMedium),
+                    if (descricao != null) ...[const SizedBox(height: 2), Text(descricao, style: secundario)],
+                    if (endereco != null || local != null) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _icone(
+                            ComunidadeListaView.iconeEndereco,
+                            Icons.place_outlined,
+                            size: 18,
+                            color: scheme.primary,
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (endereco != null) Text(endereco, style: textTheme.bodyMedium),
+                                if (local != null) Text(local, style: secundario),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
