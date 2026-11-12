@@ -20,6 +20,7 @@ FROM (VALUES
   ('instagram', 'Instagram', 'Instagram', 'Instagram'),
   ('youtube', 'YouTube', 'YouTube', 'YouTube'),
   ('telegram', 'Telegram', 'Telegram', 'Telegram'),
+  ('discord', 'Discord', 'Discord', 'Discord'),
   ('contatoObrigatorio', 'Preencha pelo menos um contato', 'Complete al menos un contacto', 'Fill in at least one contact'),
   ('telefoneInvalido', 'Telefone inválido (8 a 15 dígitos)', 'Teléfono inválido (8 a 15 dígitos)', 'Invalid phone (8 to 15 digits)'),
   ('linkInvalido', 'Link ou usuário inválido (sem espaços, até 128 caracteres)', 'Enlace o usuario inválido (sin espacios, hasta 128 caracteres)', 'Invalid link or username (no spaces, up to 128 characters)'),

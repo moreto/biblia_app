@@ -162,8 +162,12 @@ void main() {
         'comu_id': 4,
         'ccon_telefone_principal': '6133334444',
         'ccon_telegram': 'matriz',
+        'ccon_discord': 'convite',
       });
-      expect((snake.cconTelefonePrincipal, snake.cconTelegram), ('6133334444', 'matriz'));
+      expect(
+        (snake.cconTelefonePrincipal, snake.cconTelegram, snake.cconDiscord),
+        ('6133334444', 'matriz', 'convite'),
+      );
 
       final novo = ComunidadeContatoModel.comCampos(comuId: 1, campos: {'cconSite': 'matriz.org'});
       expect((novo.cconId, novo.cconSite, novo.cconEmail), (null, 'matriz.org', null));
@@ -254,6 +258,8 @@ void main() {
       expect(uri(ContatoCampo.facebook, 'matriz'), 'https://facebook.com/matriz');
       expect(uri(ContatoCampo.youtube, '@matriz'), 'https://youtube.com/@matriz');
       expect(uri(ContatoCampo.telegram, 'matriz'), 'https://t.me/matriz');
+      expect(uri(ContatoCampo.discord, 'matriz'), 'https://discord.gg/matriz');
+      expect(uri(ContatoCampo.discord, 'https://discord.gg/matriz'), 'https://discord.gg/matriz');
       expect(uri(ContatoCampo.site, ' '), isNull);
     });
 

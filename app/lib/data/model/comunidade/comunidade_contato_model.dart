@@ -18,6 +18,7 @@ class ComunidadeContatoModel {
     this.cconInstagram,
     this.cconYoutube,
     this.cconTelegram,
+    this.cconDiscord,
   });
 
   /// Nulo enquanto o contato não foi gravado.
@@ -33,6 +34,7 @@ class ComunidadeContatoModel {
   final String? cconInstagram;
   final String? cconYoutube;
   final String? cconTelegram;
+  final String? cconDiscord;
 
   /// Chaves JSON dos campos de contato, na ordem da tabela.
   static const chaves = [
@@ -46,6 +48,7 @@ class ComunidadeContatoModel {
     'cconInstagram',
     'cconYoutube',
     'cconTelegram',
+    'cconDiscord',
   ];
 
   factory ComunidadeContatoModel.fromJson(Map<String, dynamic> json) {
@@ -63,6 +66,7 @@ class ComunidadeContatoModel {
       cconInstagram: texto('cconInstagram'),
       cconYoutube: texto('cconYoutube'),
       cconTelegram: texto('cconTelegram'),
+      cconDiscord: texto('cconDiscord'),
     );
   }
 
@@ -87,6 +91,7 @@ class ComunidadeContatoModel {
     'cconInstagram': cconInstagram,
     'cconYoutube': cconYoutube,
     'cconTelegram': cconTelegram,
+    'cconDiscord': cconDiscord,
   };
 
   static String _snake(String camel) => camel.replaceAllMapped(RegExp('[A-Z]'), (m) => '_${m[0]!.toLowerCase()}');

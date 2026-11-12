@@ -24,7 +24,8 @@ enum ContatoCampo {
   facebook('cconFacebook', 'facebook', 'thumb-up-outline', ContatoTipo.link, 128),
   instagram('cconInstagram', 'instagram', 'camera-outline', ContatoTipo.link, 128),
   youtube('cconYoutube', 'youtube', 'play-box-outline', ContatoTipo.link, 128),
-  telegram('cconTelegram', 'telegram', 'send', ContatoTipo.link, 128);
+  telegram('cconTelegram', 'telegram', 'send', ContatoTipo.link, 128),
+  discord('cconDiscord', 'discord', 'forum-outline', ContatoTipo.link, 128);
 
   const ContatoCampo(this.chave, this.rotulo, this.icone, this.tipo, this.maximo);
 
@@ -159,7 +160,8 @@ class ComunidadeContatoUseCase {
   }
 
   /// Endereço para abrir o contato: ligação (`tel:`), WhatsApp (`https://wa.me/`, com 55 quando o número tem DDD
-  /// sem código do país), e-mail (`mailto:`) ou página. Usuário (`@nome` ou só o nome) vira a página da rede.
+  /// sem código do país), e-mail (`mailto:`) ou página. Usuário (`@nome` ou só o nome) vira a página da rede
+  /// (no Discord, o código do convite vira `https://discord.gg/<código>`).
   /// Nulo se não houver como abrir.
   static Uri? uri(ContatoCampo campo, String valor) {
     final texto = valor.trim();
@@ -183,6 +185,7 @@ class ComunidadeContatoUseCase {
           ContatoCampo.instagram => Uri.https('instagram.com', '/$usuario'),
           ContatoCampo.youtube => Uri.https('youtube.com', '/@$usuario'),
           ContatoCampo.telegram => Uri.https('t.me', '/$usuario'),
+          ContatoCampo.discord => Uri.https('discord.gg', '/$usuario'),
           _ => Uri.tryParse('https://$usuario'),
         };
     }

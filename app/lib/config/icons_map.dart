@@ -86,7 +86,8 @@ class IconsMap {
     // Aba e cards de contatos das comunidades (ComunidadeAba.contatos / ComunidadeContatoView.iconeContato) e
     // campos de contato (ContatoCampo.icone); 'email-outline' e 'thumb-up-outline' já mapeados acima. Os ícones de
     // marca do MDI estão deprecados, então as redes usam ícones genéricos: WhatsApp 'chat-outline', Facebook
-    // 'thumb-up-outline', Instagram 'camera-outline', YouTube 'play-box-outline' e Telegram 'send'.
+    // 'thumb-up-outline', Instagram 'camera-outline', YouTube 'play-box-outline', Telegram 'send' e Discord
+    // 'forum-outline'.
     'card-account-phone-outline': MdiIcons.cardAccountPhoneOutline,
     'phone-outline': MdiIcons.phoneOutline,
     'phone-classic': MdiIcons.phoneClassic,
@@ -96,6 +97,7 @@ class IconsMap {
     'camera-outline': MdiIcons.cameraOutline,
     'play-box-outline': MdiIcons.playBoxOutline,
     'send': MdiIcons.send,
+    'forum-outline': MdiIcons.forumOutline,
     // Aba "Usuários" das comunidades (ComunidadeAba.usuarios / ComunidadeUsuarioView): lista vazia, ativar,
     // desativar e remover; busca e adicionar usam 'account-search-outline' e 'account-plus-outline' (já mapeados).
     'account-multiple-outline': MdiIcons.accountMultipleOutline,
