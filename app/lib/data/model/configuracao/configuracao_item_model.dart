@@ -2,7 +2,6 @@ class ConfiguracaoItemModel {
   const ConfiguracaoItemModel({
     this.citeId,
     required this.confId,
-    required this.citeCampo,
     this.citeChave,
     this.citeValor,
     this.citeSequencia,
@@ -13,8 +12,7 @@ class ConfiguracaoItemModel {
 
   final int? citeId;
   final int confId;
-  final String citeCampo;
-  final int? citeChave;
+  final String? citeChave;
   final String? citeValor;
   final int? citeSequencia;
   final bool citeAtivo;
@@ -34,8 +32,7 @@ class ConfiguracaoItemModel {
     return ConfiguracaoItemModel(
       citeId: (citeId as num).toInt(),
       confId: (confId as num).toInt(),
-      citeCampo: (json['citeCampo'] ?? json['cite_campo']) as String,
-      citeChave: (citeChave as num?)?.toInt(),
+      citeChave: (citeChave as String?),
       citeValor: (json['citeValor'] ?? json['cite_valor']) as String?,
       citeSequencia: (citeSequencia as num?)?.toInt(),
       citeAtivo: (json['citeAtivo'] ?? json['cite_ativo']) as bool? ?? true,
@@ -47,7 +44,6 @@ class ConfiguracaoItemModel {
   Map<String, dynamic> toJson() => {
     'citeId': citeId,
     'confId': confId,
-    'citeCampo': citeCampo,
     'citeChave': citeChave,
     'citeValor': citeValor,
     'citeSequencia': citeSequencia,
@@ -57,15 +53,13 @@ class ConfiguracaoItemModel {
   ConfiguracaoItemModel copyWith({
     int? citeId,
     int? confId,
-    String? citeCampo,
-    int? citeChave,
+    String? citeChave,
     String? citeValor,
     int? citeSequencia,
     bool? citeAtivo,
   }) => ConfiguracaoItemModel(
     citeId: citeId ?? this.citeId,
     confId: confId ?? this.confId,
-    citeCampo: citeCampo ?? this.citeCampo,
     citeChave: citeChave ?? this.citeChave,
     citeValor: citeValor ?? this.citeValor,
     citeSequencia: citeSequencia ?? this.citeSequencia,

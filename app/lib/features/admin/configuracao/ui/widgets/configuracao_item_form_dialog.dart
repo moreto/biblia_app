@@ -33,7 +33,6 @@ class ConfiguracaoItemFormDialog extends StatefulWidget {
 
 class _ConfiguracaoItemFormDialogState extends State<ConfiguracaoItemFormDialog> {
   late int _confId = widget.item?.confId ?? widget.confId;
-  late final TextEditingController _campoController = TextEditingController(text: widget.item?.citeCampo);
   late final TextEditingController _chaveController = TextEditingController(text: widget.item?.citeChave?.toString());
   late final TextEditingController _valorController = TextEditingController(text: widget.item?.citeValor);
   late final TextEditingController _sequenciaController = TextEditingController(
@@ -43,7 +42,6 @@ class _ConfiguracaoItemFormDialogState extends State<ConfiguracaoItemFormDialog>
 
   @override
   void dispose() {
-    _campoController.dispose();
     _chaveController.dispose();
     _valorController.dispose();
     _sequenciaController.dispose();
@@ -55,8 +53,7 @@ class _ConfiguracaoItemFormDialogState extends State<ConfiguracaoItemFormDialog>
       ConfiguracaoItemModel(
         citeId: widget.item?.citeId,
         confId: _confId,
-        citeCampo: _campoController.text,
-        citeChave: int.tryParse(_chaveController.text),
+        citeChave: _chaveController.text.isEmpty ? null : _chaveController.text,
         citeValor: _valorController.text,
         citeSequencia: int.tryParse(_sequenciaController.text),
         citeAtivo: _ativo,
@@ -91,13 +88,6 @@ class _ConfiguracaoItemFormDialogState extends State<ConfiguracaoItemFormDialog>
           onChanged: (value) {
             if (value != null) setState(() => _confId = value);
           },
-        ),
-        TextField(
-          controller: _campoController,
-          autofocus: isNovo,
-          maxLength: 60,
-          textInputAction: TextInputAction.next,
-          decoration: InputDecoration(labelText: strings.translate('campo')),
         ),
         // chave e sequência são numéricos curtos: lado a lado
         Row(

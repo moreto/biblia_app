@@ -10,7 +10,6 @@ class ConfiguracaoUseCase {
   }
 
   static const int kConfNomeMaxLength = 60;
-  static const int kCiteCampoMaxLength = 60;
   static const int kCiteValorMaxLength = 128;
 
   final ConfiguracaoRepository configuracaoRepository;
@@ -80,13 +79,6 @@ class ConfiguracaoUseCase {
 
   /// Insere quando [ConfiguracaoItemModel.citeId] é nulo, senão altera.
   Future<Result<ConfiguracaoItemModel>> saveItem(ConfiguracaoItemModel item) async {
-    final campo = item.citeCampo.trim();
-    if (campo.isEmpty) {
-      return Result.error(HandledException(message: 'campoObrigatorio'));
-    }
-    if (campo.length > kCiteCampoMaxLength) {
-      return Result.error(HandledException(message: 'campoMaximo60'));
-    }
     final valor = item.citeValor?.trim();
     if (valor != null && valor.length > kCiteValorMaxLength) {
       return Result.error(HandledException(message: 'valorMaximo128'));
@@ -95,7 +87,6 @@ class ConfiguracaoUseCase {
     final normalizado = ConfiguracaoItemModel(
       citeId: item.citeId,
       confId: item.confId,
-      citeCampo: campo,
       citeChave: item.citeChave,
       citeValor: valor == null || valor.isEmpty ? null : valor,
       citeSequencia: item.citeSequencia,

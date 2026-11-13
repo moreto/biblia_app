@@ -175,7 +175,7 @@ class _ConfiguracaoViewState extends State<ConfiguracaoView> with SingleTickerPr
   void _deleteItem(ConfiguracaoItemModel item) {
     final strings = AppLocalizations.of(context);
     _confirmDelete(
-      description: '${item.citeCampo} · ${item.citeValor ?? ''}\n\n${strings.translate('confirmarExclusaoItem')}',
+      description: '${item.citeValor ?? item.citeChave ?? ''}\n\n${strings.translate('confirmarExclusaoItem')}',
       onConfirm: () => widget.viewModel.deleteItemCommand.execute(item),
     );
   }
@@ -301,7 +301,6 @@ class _ConfiguracaoViewState extends State<ConfiguracaoView> with SingleTickerPr
           itemBuilder: (context, index) {
             final item = itens[index];
             final detalhes = [
-              item.citeCampo,
               if (item.citeChave != null) '${strings.translate('chave')}: ${item.citeChave}',
               if (item.citeSequencia != null) '${strings.translate('sequencia')}: ${item.citeSequencia}',
             ].join(' · ');
@@ -309,7 +308,7 @@ class _ConfiguracaoViewState extends State<ConfiguracaoView> with SingleTickerPr
               margin: const EdgeInsets.symmetric(horizontal: 16),
               child: ListTile(
                 leading: _ativoIndicator(item.citeAtivo),
-                title: Text(item.citeValor?.isNotEmpty == true ? item.citeValor! : item.citeCampo),
+                title: Text(item.citeValor?.isNotEmpty == true ? item.citeValor! : (item.citeChave ?? '')),
                 subtitle: Text(detalhes),
                 onTap: _saving ? null : () => _editItem(item),
                 trailing: IconButton(

@@ -16,14 +16,8 @@ class _FakeConfiguracaoRepository implements ConfiguracaoRepository {
     const ConfiguracaoModel(confId: 1, confNome: 'Tipos de Itens', confTipo: 1, confAtivo: false),
   ];
   final List<ConfiguracaoItemModel> itens = [
-    const ConfiguracaoItemModel(
-      citeId: 4,
-      confId: 2,
-      citeCampo: 'perf_nivel',
-      citeChave: 1,
-      citeValor: 'Administrador',
-    ),
-    const ConfiguracaoItemModel(citeId: 5, confId: 1, citeCampo: 'conf_tipo', citeChave: 1, citeValor: 'Ativação'),
+    const ConfiguracaoItemModel(citeId: 4, confId: 2, citeChave: '1', citeValor: 'Administrador'),
+    const ConfiguracaoItemModel(citeId: 5, confId: 1, citeChave: '1', citeValor: 'Ativação'),
   ];
   int _nextId = 100;
 
@@ -129,16 +123,13 @@ void main() {
       expect(repository.configuracoes.firstWhere((item) => item.confId == 1).confNome, 'Alterada');
     });
 
-    test('recusa item sem campo e valor acima de 128', () async {
-      final semCampo = await useCase.saveItem(const ConfiguracaoItemModel(confId: 1, citeCampo: ''));
-      expect((semCampo as Error).error, HandledException(message: 'campoObrigatorio'));
-
-      final valorLongo = await useCase.saveItem(ConfiguracaoItemModel(confId: 1, citeCampo: 'x', citeValor: 'v' * 129));
+    test('recusa item com valor acima de 128', () async {
+      final valorLongo = await useCase.saveItem(ConfiguracaoItemModel(confId: 1, citeValor: 'v' * 129));
       expect((valorLongo as Error).error, HandledException(message: 'valorMaximo128'));
     });
 
     test('item com valor vazio é gravado como nulo', () async {
-      final result = await useCase.saveItem(const ConfiguracaoItemModel(confId: 1, citeCampo: 'x', citeValor: '  '));
+      final result = await useCase.saveItem(const ConfiguracaoItemModel(confId: 1, citeValor: '  '));
       expect((result as Ok<ConfiguracaoItemModel>).value.citeValor, isNull);
     });
   });
@@ -180,7 +171,7 @@ void main() {
       await pumpEventQueue();
 
       await viewModel.saveItemCommand.execute(
-        const ConfiguracaoItemModel(confId: 2, citeCampo: 'perf_nivel', citeChave: 5, citeValor: 'Convidado'),
+        const ConfiguracaoItemModel(confId: 2, citeChave: '5', citeValor: 'Convidado'),
       );
       await pumpEventQueue();
 
