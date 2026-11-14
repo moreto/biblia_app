@@ -14,7 +14,8 @@ enum _Acao { editar, excluir }
 /// Aba "Contatos" da tela de comunidades: contatos da comunidade selecionada (`/v1/comunidade-contato/:comuId`).
 ///
 /// - Topo: seleção da comunidade (as do usuário, na ordem de "Minhas comunidades").
-/// - Cada contato é um card com os campos preenchidos (ícone, rótulo e valor; telefones formatados). Tocar num
+/// - Cada contato é um card com os campos preenchidos, um por linha ([_campo]: ícone, valor em até 2 linhas e
+///   rótulo; telefones formatados), sem avatar, para o valor usar a largura do card. Tocar num
 ///   campo abre o contato fora do app (ligação, WhatsApp, e-mail ou página); tocar no card edita ([onEditar]) e o
 ///   menu tem editar e excluir ([onExcluir]). A inclusão é pelo botão "Novo contato" da parte inferior da tela.
 /// - Primeiro carregamento: progresso; se falhar, mensagem com "Tentar novamente". Depois disso a lista é mantida e
@@ -143,9 +144,7 @@ class ComunidadeContatoView extends StatelessWidget {
 
   Widget _contato(BuildContext context, AppLocalizations strings, ComunidadeContatoModel contato) {
     final scheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
     final habilitado = !viewModel.ocupado;
-    final abrindo = viewModel.acessarCommand.running;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -153,37 +152,15 @@ class ComunidadeContatoView extends StatelessWidget {
       child: InkWell(
         onTap: habilitado ? () => onEditar(contato) : null,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 4, 8),
+          padding: const EdgeInsets.fromLTRB(8, 8, 4, 8),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: CircleAvatar(
-                  backgroundColor: scheme.primaryContainer,
-                  child: icone(iconeContato, Icons.contact_phone_outlined, color: scheme.onPrimaryContainer),
-                ),
-              ),
-              const SizedBox(width: 8),
               Expanded(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    for (final (campo, valor) in viewModel.preenchidos(contato))
-                      ListTile(
-                        dense: true,
-                        visualDensity: VisualDensity.compact,
-                        leading: icone(campo.icone, Icons.contact_page_outlined, color: scheme.primary),
-                        title: Text(
-                          viewModel.exibicao(campo, valor),
-                          style: textTheme.bodyLarge,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        subtitle: Text(strings.translate(campo.rotulo)),
-                        onTap: !abrindo && viewModel.acessivel(campo, valor)
-                            ? () => viewModel.acessarCommand.execute((campo, valor))
-                            : null,
-                      ),
+                    for (final (campo, valor) in viewModel.preenchidos(contato)) _campo(context, strings, campo, valor),
                   ],
                 ),
               ),
@@ -216,6 +193,52 @@ class ComunidadeContatoView extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  /// Uma linha do card: ícone do campo, valor (até 2 linhas) e rótulo. Tocar abre o contato fora do app quando o
+  /// campo é acessível.
+  Widget _campo(BuildContext context, AppLocalizations strings, ContatoCampo campo, String valor) {
+    final scheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final acessar = !viewModel.acessarCommand.running && viewModel.acessivel(campo, valor)
+        ? () => viewModel.acessarCommand.execute((campo, valor))
+        : null;
+
+    return InkWell(
+      onTap: acessar,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 1),
+              child: icone(campo.icone, Icons.contact_page_outlined, color: scheme.primary),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    viewModel.exibicao(campo, valor),
+                    style: textTheme.bodyLarge,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    strings.translate(campo.rotulo),
+                    style: textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

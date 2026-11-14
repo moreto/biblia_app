@@ -7,8 +7,8 @@ enum HeaderType { minimal, basicInfo, loggedUser, loggedArea }
 // const String kPrdHost = 'http://172.20.10.14:3000/api';
 
 // acesso externo
-// const String kDesHost = 'http://179.252.135.186:3000/api';
-// const String kPrdHost = 'http://179.252.135.186:3000/api';
+const String kDesHost = 'http://179.252.135.186:3000/api';
+const String kPrdHost = 'http://179.252.135.186:3000/api';
 
 // interno / localhost
 // const String kDesHost = 'http://192.168.1.45:3000/api';
@@ -16,10 +16,10 @@ enum HeaderType { minimal, basicInfo, loggedUser, loggedArea }
 
 // const String kDesHost = 'http://127.20.10.2:3000/api';
 // const String kDesHost = 'http://localhost:3000/api';
-const String kDesHost = 'http://192.168.1.45:3000/api';
+// const String kDesHost = 'http://192.168.1.45:3000/api';
 // prod ou externo para desenvolvimento
 // const String kDesHost = 'http://179.252.135.186:3000/api';
-const String kPrdHost = 'http://179.252.135.186:3000/api';
+// const String kPrdHost = 'http://179.252.135.186:3000/api';
 
 enum ApiCore {
   // Pública (fora da área logada)

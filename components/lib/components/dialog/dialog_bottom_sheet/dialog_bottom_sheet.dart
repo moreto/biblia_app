@@ -31,7 +31,7 @@ class DialogBottomSheet {
   /// Abre o sheet; completa com o valor passado ao `Navigator.pop` (ou `null` ao fechar pelo X/arrastar).
   Future<T?> showModal<T>(BuildContext context) {
     return showModalBottomSheet<T>(
-      backgroundColor: const Color(0xffFEFEFE),
+      backgroundColor: Theme.of(context).colorScheme.surface,
       isScrollControlled: true,
       enableDrag: dropDown.isDismissible,
       isDismissible: dropDown.isDismissible,
@@ -69,9 +69,9 @@ class _DialogBottomSheetMainBodyState extends State<DialogBottomSheetMainBody> {
       onNotification: widget.dropDown.bottomSheetListener,
       child: Container(
         height: widget.dropDown.height,
-        decoration: const BoxDecoration(
-          color: Color(0xffFEFEFE),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(15.0)),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(15.0)),
         ),
         child: SingleChildScrollView(
           child: Column(
@@ -95,7 +95,7 @@ class _DialogBottomSheetMainBodyState extends State<DialogBottomSheetMainBody> {
                       child: Align(
                         alignment: Alignment.topRight,
                         child: IconButton(
-                          icon: const Icon(Icons.clear, color: Color(0xff888D95)),
+                          icon: Icon(Icons.clear, color: Theme.of(context).colorScheme.onSurfaceVariant),
                           onPressed: () {
                             _onUnFocusKeyboardAndPop();
                           },

@@ -4,18 +4,12 @@ import 'package:flutter/material.dart';
 /// Abre telas e formulários no componente `DialogBottomSheet` (no lugar de `showDialog`/`AlertDialog`).
 ///
 /// - Título: [titulo] (texto) ou [cabecalho] (widget livre), ao lado do X do componente.
-/// - [conteudo] ganha margem lateral/inferior, tema claro com a cor primária do app ([tema]: o componente tem
-///   fundo claro fixo, então o conteúdo fica legível também no modo escuro) e um `Material` transparente (o
-///   componente pinta o fundo num `Container`, e `ListTile`/`InkWell` precisam de um `Material` para o toque).
+/// - O sheet segue o tema do app (claro ou escuro): o componente pinta o fundo com `colorScheme.surface`.
+/// - [conteudo] ganha margem lateral/inferior e um `Material` transparente (o componente pinta o fundo num
+///   `Container`, e `ListTile`/`InkWell` precisam de um `Material` para o toque).
 /// - Retorna o valor passado ao `Navigator.pop`, ou `null` ao fechar pelo X/arrastar.
 /// - [isDismissible] falso (formulários) impede fechar tocando fora/arrastando; o X continua fechando.
 abstract final class DialogSheet {
-  /// Tema claro com a cor primária do app, para o fundo claro fixo do `DialogBottomSheet`.
-  static ThemeData tema(BuildContext context) => ThemeData(
-    colorScheme: ColorScheme.fromSeed(seedColor: Theme.of(context).colorScheme.primary),
-    useMaterial3: true,
-  );
-
   static Future<T?> show<T>(
     BuildContext context, {
     String? titulo,
@@ -23,29 +17,22 @@ abstract final class DialogSheet {
     required Widget conteudo,
     bool isDismissible = true,
   }) {
-    final tema = DialogSheet.tema(context);
     return componentes.DialogBottomSheet(
       componentes.Dialog(
         isDismissible: isDismissible,
-        bottomSheetTitle: Theme(
-          data: tema,
-          child:
-              cabecalho ??
-              Builder(
-                builder: (context) => Text(
-                  titulo ?? '',
-                  style: Theme.of(context).textTheme.titleLarge,
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 2,
-                ),
+        bottomSheetTitle:
+            cabecalho ??
+            Builder(
+              builder: (context) => Text(
+                titulo ?? '',
+                style: Theme.of(context).textTheme.titleLarge,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
               ),
-        ),
-        widget: Theme(
-          data: tema,
-          child: Material(
-            type: MaterialType.transparency,
-            child: Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 16), child: conteudo),
-          ),
+            ),
+        widget: Material(
+          type: MaterialType.transparency,
+          child: Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 16), child: conteudo),
         ),
       ),
     ).showModal<T>(context);
