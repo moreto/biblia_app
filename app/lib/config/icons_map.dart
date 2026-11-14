@@ -144,6 +144,15 @@ class IconsMap {
     'toolbox-outline': MdiIcons.toolboxOutline,
     'book-heart-outline': MdiIcons.bookHeartOutline,
     'message-text-outline': MdiIcons.messageTextOutline,
+    // Tela "Dicionário" (DicionarioView): 'book-alphabet' também é func_icone/menu_icone de /dicionario. Abrir
+    // palavra ('chevron-right') e tentar novamente ('refresh') já mapeados acima.
+    'book-alphabet': MdiIcons.bookAlphabet,
+    'magnify': MdiIcons.magnify,
+    'close': MdiIcons.close,
+    'text-search': MdiIcons.textSearch,
+    'link-variant': MdiIcons.linkVariant,
+    'alert-circle-outline': MdiIcons.alertCircleOutline,
+    'alphabetical': MdiIcons.alphabetical,
     // ...
   };
 }

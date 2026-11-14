@@ -1,4 +1,4 @@
-construir a view de mensagem_lista, sendo que será listada todas as mensagens q o usuario recebeu, 
+construir a view de dicionario para informar a busca e retornar valores na mesma pagina
 não será aba de nada, será uma nova tela, não é TAB
 
 
@@ -6,8 +6,8 @@ internacionalizar os textos, verificar se existem na API /v1/traducao
 adicionar essa feature em uma nova pasta features/mensagem/
 
 API:
-/v1/mensagem
-
+/v1/dicionario/busca?texto=devocionaista&limite=1
+/v1/dicionario/palavra/abegao
 
 gerar um script de insert no banco de dados das traduções faltantes:
 
