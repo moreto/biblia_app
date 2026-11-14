@@ -38,9 +38,21 @@ abstract final class DialogSheet {
     ).showModal<T>(context);
   }
 
-  /// Linha de ações no fim do conteúdo (alinhada à direita), como as `actions` de um `AlertDialog`.
+  /// Altura dos botões de [acoes], a mesma do `FilledButton` do tema do app.
+  static const double alturaAcao = 52;
+
+  /// Linha de ações no fim do conteúdo, como as `actions` de um `AlertDialog`: os [botoes] ficam lado a lado,
+  /// dividem a largura em partes iguais e têm a mesma altura ([alturaAcao]). Ponha a ação principal por último
+  /// (à direita).
   static Widget acoes(List<Widget> botoes) => Padding(
     padding: const EdgeInsets.only(top: 16),
-    child: Wrap(alignment: WrapAlignment.end, spacing: 8, runSpacing: 8, children: botoes),
+    child: Row(
+      children: [
+        for (var i = 0; i < botoes.length; i++) ...[
+          if (i > 0) const SizedBox(width: 8),
+          Expanded(child: SizedBox(height: alturaAcao, child: botoes[i])),
+        ],
+      ],
+    ),
   );
 }
