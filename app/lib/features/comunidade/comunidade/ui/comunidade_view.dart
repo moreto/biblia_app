@@ -6,19 +6,21 @@ import 'package:app/l10n/app_localizations.dart';
 import 'package:commons/commons.dart';
 import 'package:components/components.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:service/service.dart';
 
 import '../../../../data/model/comunidade/comunidade_contato_model.dart';
 import '../../../../data/model/comunidade/comunidade_endereco_model.dart';
 import '../../../../data/model/comunidade/comunidade_model.dart';
-import '../../../../routing/routes.dart';
+import '../../../../data/model/comunidade/comunidade_usuario_model.dart';
 import '../../comunidade_contato/ui/comunidade_contato_view.dart';
 import '../../comunidade_contato/ui/comunidade_contato_viewmodel.dart';
 import '../../comunidade_contato/ui/widgets/comunidade_contato_form_dialog.dart';
 import '../../comunidade_endereco/ui/comunidade_endereco_view.dart';
 import '../../comunidade_endereco/ui/comunidade_endereco_viewmodel.dart';
 import '../../comunidade_endereco/ui/widgets/comunidade_endereco_form_dialog.dart';
+import '../../comunidade_usuario/ui/comunidade_usuario_view.dart';
+import '../../comunidade_usuario/ui/comunidade_usuario_viewmodel.dart';
+import '../../comunidade_usuario/ui/widgets/comunidade_usuario_adicionar_dialog.dart';
 import '../use_case/comunidade_usecase.dart';
 import 'comunidade_viewmodel.dart';
 import 'widgets/comunidade_form_dialog.dart';
@@ -35,9 +37,9 @@ import 'widgets/minhas_comunidades_tab.dart';
 ///   (`/v1/comunidade-contato`), com as mesmas regras de carregamento e seleção da aba "Endereços"; "Contatos" no
 ///   menu de uma comunidade abre a aba com ela selecionada. Tocar num campo do contato abre o discador, o WhatsApp,
 ///   o e-mail ou o navegador (erro em SnackBar).
-///
-/// "Usuários" no menu de uma comunidade abre a tela de usuários da comunidade (`Routes.comunidadeUsuario`, com
-/// `?comuId=`).
+/// - "Usuários" ([ComunidadeUsuarioView]): usuários vinculados à comunidade selecionada no topo da aba
+///   (`/v1/comunidade-usuario`), com as mesmas regras de carregamento e seleção; "Usuários" no menu de uma
+///   comunidade abre a aba com ela selecionada. O menu de cada usuário ativa/desativa e remove (com confirmação).
 ///
 /// AppBar: tema, orientação e atualizar (recarrega a aba aberta). Erro numa atualização aparece em SnackBar e
 /// mantém a lista; o do primeiro carregamento fica na aba.
@@ -47,7 +49,8 @@ import 'widgets/minhas_comunidades_tab.dart';
 /// formulário preenchido; "Excluir" pede confirmação. Sucesso mostra SnackBar e recarrega a lista; erro abre o
 /// aviso de erro. Na aba "Endereços", o botão inferior vira "Novo endereço" (endereço da comunidade selecionada,
 /// [ComunidadeEnderecoFormDialog]) e editar/excluir funcionam do mesmo jeito (`/v1/comunidade-endereco`); na aba
-/// "Contatos", vira "Novo contato" ([ComunidadeContatoFormDialog], `/v1/comunidade-contato`).
+/// "Contatos", vira "Novo contato" ([ComunidadeContatoFormDialog], `/v1/comunidade-contato`); na aba "Usuários",
+/// vira "Adicionar usuário" ([ComunidadeUsuarioAdicionarDialog], busca em `/v1/usuario/busca`).
 ///
 /// Para uma nova aba: valor em [ComunidadeAba], comando no viewmodel, widget em `widgets/` e casos em
 /// [_conteudo] e [_comandoDa].
@@ -60,6 +63,7 @@ class ComunidadeView extends StatefulWidget {
     required this.viewModel,
     required this.enderecoViewModel,
     required this.contatoViewModel,
+    required this.usuarioViewModel,
   });
 
   final ComunidadeViewmodel viewModel;
@@ -70,6 +74,9 @@ class ComunidadeView extends StatefulWidget {
   /// Aba "Contatos".
   final ComunidadeContatoViewmodel contatoViewModel;
 
+  /// Aba "Usuários".
+  final ComunidadeUsuarioViewmodel usuarioViewModel;
+
   /// Ícone de cada comunidade e da lista vazia.
   static const iconeComunidade = 'church';
   static const iconeAtualizar = 'refresh';
@@ -78,7 +85,7 @@ class ComunidadeView extends StatefulWidget {
   static const iconeEditar = 'pencil-outline';
   static const iconeExcluir = 'delete-outline';
 
-  /// "Usuários" no menu da comunidade (abre `Routes.comunidadeUsuario`).
+  /// "Usuários" no menu da comunidade (abre a aba "Usuários").
   static const iconeUsuarios = 'account-multiple-outline';
 
   /// Ícone de [IconsMap.mdiIcons] pela chave; usa [fallback] se a chave não estiver mapeada.
@@ -110,6 +117,7 @@ class _ComunidadeViewState extends State<ComunidadeView> with SingleTickerProvid
   ComunidadeViewmodel get _vm => widget.viewModel;
   ComunidadeEnderecoViewmodel get _enderecoVm => widget.enderecoViewModel;
   ComunidadeContatoViewmodel get _contatoVm => widget.contatoViewModel;
+  ComunidadeUsuarioViewmodel get _usuarioVm => widget.usuarioViewModel;
 
   late final TabController _tabs = TabController(length: _vm.abas.length, vsync: this);
 
@@ -127,6 +135,11 @@ class _ComunidadeViewState extends State<ComunidadeView> with SingleTickerProvid
     view.contatoViewModel.salvarCommand,
     view.contatoViewModel.excluirCommand,
     view.contatoViewModel.acessarCommand,
+    view.usuarioViewModel.carregarCommand,
+    view.usuarioViewModel.selecionarCommand,
+    view.usuarioViewModel.adicionarCommand,
+    view.usuarioViewModel.ativarCommand,
+    view.usuarioViewModel.removerCommand,
   ];
 
   @override
@@ -170,6 +183,8 @@ class _ComunidadeViewState extends State<ComunidadeView> with SingleTickerProvid
         _enderecoVm.abrir();
       case ComunidadeAba.contatos:
         _contatoVm.abrir();
+      case ComunidadeAba.usuarios:
+        _usuarioVm.abrir();
     }
   }
 
@@ -184,12 +199,14 @@ class _ComunidadeViewState extends State<ComunidadeView> with SingleTickerProvid
       _mostrarMensagem(mensagem);
     }
 
-    // Atualização dos endereços/contatos e troca de comunidade: mesma regra.
+    // Atualização dos endereços/contatos/usuários e troca de comunidade: mesma regra.
     for (final (command, carregado) in [
       (_enderecoVm.carregarCommand, _enderecoVm.comunidades != null),
       (_enderecoVm.selecionarCommand, _enderecoVm.comunidades != null),
       (_contatoVm.carregarCommand, _contatoVm.comunidades != null),
       (_contatoVm.selecionarCommand, _contatoVm.comunidades != null),
+      (_usuarioVm.carregarCommand, _usuarioVm.comunidades != null),
+      (_usuarioVm.selecionarCommand, _usuarioVm.comunidades != null),
     ]) {
       if (command.error && carregado) {
         final mensagem = ComunidadeView.mensagemErro(command.result);
@@ -208,8 +225,8 @@ class _ComunidadeViewState extends State<ComunidadeView> with SingleTickerProvid
       acessar.clearResult();
     }
 
-    // Gravação e exclusão (comunidades, endereços e contatos): sucesso em SnackBar, erro no aviso de erro. Mudança
-    // nas comunidades faz as abas "Endereços" e "Contatos" recarregarem na próxima abertura.
+    // Gravação e exclusão (comunidades, endereços, contatos e usuários): sucesso em SnackBar, erro no aviso de erro.
+    // Mudança nas comunidades faz as abas "Endereços", "Contatos" e "Usuários" recarregarem na próxima abertura.
     for (final (command, sucesso, comunidade) in [
       (_vm.salvarCommand, 'registroSalvo', true),
       (_vm.excluirCommand, 'registroExcluido', true),
@@ -217,6 +234,9 @@ class _ComunidadeViewState extends State<ComunidadeView> with SingleTickerProvid
       (_enderecoVm.excluirCommand, 'registroExcluido', false),
       (_contatoVm.salvarCommand, 'registroSalvo', false),
       (_contatoVm.excluirCommand, 'registroExcluido', false),
+      (_usuarioVm.adicionarCommand, 'registroSalvo', false),
+      (_usuarioVm.ativarCommand, 'registroSalvo', false),
+      (_usuarioVm.removerCommand, 'registroExcluido', false),
     ]) {
       if (command.error) {
         final mensagem = ComunidadeView.mensagemErro(command.result);
@@ -227,6 +247,7 @@ class _ComunidadeViewState extends State<ComunidadeView> with SingleTickerProvid
         if (comunidade) {
           _enderecoVm.invalidar();
           _contatoVm.invalidar();
+          _usuarioVm.invalidar();
         }
         _mostrarMensagem(sucesso);
       }
@@ -305,11 +326,12 @@ class _ComunidadeViewState extends State<ComunidadeView> with SingleTickerProvid
     _tabs.animateTo(_vm.abas.indexOf(ComunidadeAba.contatos));
   }
 
-  /// Abre a tela de usuários da [comunidade].
+  /// Abre a aba "Usuários" com a [comunidade] selecionada.
   void _verUsuarios(ComunidadeModel comunidade) {
     final comuId = comunidade.comuId;
     if (comuId == null) return;
-    context.push(Uri(path: Routes.comunidadeUsuario, queryParameters: {'comuId': '$comuId'}).toString());
+    _usuarioVm.selecionar(comuId);
+    _tabs.animateTo(_vm.abas.indexOf(ComunidadeAba.usuarios));
   }
 
   /// Inclui (sem [endereco]) ou altera endereço da comunidade selecionada na aba "Endereços".
@@ -387,9 +409,36 @@ class _ComunidadeViewState extends State<ComunidadeView> with SingleTickerProvid
     ).showModal(context);
   }
 
+  /// Adiciona usuário à comunidade selecionada na aba "Usuários".
+  Future<void> _adicionarUsuario() async {
+    final comunidade = _usuarioVm.selecionada?.comunidade;
+    if (comunidade == null) return;
+    await ComunidadeUsuarioAdicionarDialog.show(context, viewModel: _usuarioVm, comunidadeNome: comunidade.comuNome);
+  }
+
+  void _removerUsuario(ComunidadeUsuarioModel membro) {
+    final strings = AppLocalizations.of(context);
+    final nome = _usuarioVm.nomeExibicao(udetNome: membro.udetNome, udetUsuario: membro.udetUsuario) ?? '';
+    DialogBottomSheetWarning(
+      dialogWarning: DialogWarning(
+        title: strings.translate('confirmarExclusao'),
+        description: '$nome\n\n${strings.translate('confirmarRemocaoUsuario')}',
+        titleButtonPrimary: strings.translate('remover'),
+        titleButtonSecondary: strings.translate('cancelar'),
+        typeButtonsDialog: DialogBottomSheetTypeButtons.horizontalButtons,
+        statusDialog: DialogBottomSheetStatus.statusCritical,
+        onPressedPrimary: () {
+          Navigator.of(context).pop();
+          _usuarioVm.removerCommand.execute(membro);
+        },
+        onPressedSecondary: () => Navigator.of(context).pop(),
+      ),
+    ).showModal(context);
+  }
+
   // layout
 
-  /// Botão inferior da aba aberta: "Nova comunidade", "Novo endereço" ou "Novo contato".
+  /// Botão inferior da aba aberta: "Nova comunidade", "Novo endereço", "Novo contato" ou "Adicionar usuário".
   ViewBottomAction _botaoAdicionar(ComunidadeAba aba, AppLocalizations strings) {
     final icone = IconsMap.mdiIcons[ComunidadeView.iconeAdicionar] ?? Icons.add;
     return switch (aba) {
@@ -411,6 +460,12 @@ class _ComunidadeViewState extends State<ComunidadeView> with SingleTickerProvid
         isEnabled: _contatoVm.selecionada != null && !_contatoVm.ocupado,
         onPressed: () => _editarContato(),
       ),
+      ComunidadeAba.usuarios => ViewBottomAction(
+        text: strings.translate('adicionarUsuario'),
+        icon: IconsMap.mdiIcons[ComunidadeUsuarioAdicionarDialog.iconeAdicionar] ?? Icons.person_add_alt_outlined,
+        isEnabled: _usuarioVm.selecionada != null && !_usuarioVm.ocupado,
+        onPressed: _adicionarUsuario,
+      ),
     };
   }
 
@@ -418,6 +473,7 @@ class _ComunidadeViewState extends State<ComunidadeView> with SingleTickerProvid
     ComunidadeAba.minhas => _vm.minhasCommand,
     ComunidadeAba.enderecos => _enderecoVm.carregarCommand,
     ComunidadeAba.contatos => _contatoVm.carregarCommand,
+    ComunidadeAba.usuarios => _usuarioVm.carregarCommand,
   };
 
   Widget _conteudo(ComunidadeAba aba) => switch (aba) {
@@ -439,6 +495,7 @@ class _ComunidadeViewState extends State<ComunidadeView> with SingleTickerProvid
       onEditar: _editarContato,
       onExcluir: _excluirContato,
     ),
+    ComunidadeAba.usuarios => ComunidadeUsuarioView(viewModel: _usuarioVm, onRemover: _removerUsuario),
   };
 
   Widget _screen() {
@@ -484,7 +541,7 @@ class _ComunidadeViewState extends State<ComunidadeView> with SingleTickerProvid
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: Listenable.merge([_vm, _enderecoVm, _contatoVm, _tabs]),
+      listenable: Listenable.merge([_vm, _enderecoVm, _contatoVm, _usuarioVm, _tabs]),
       builder: (context, child) => _screen(),
     );
   }

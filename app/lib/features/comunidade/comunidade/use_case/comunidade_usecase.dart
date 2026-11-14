@@ -11,7 +11,8 @@ import '../repository/comunidade_repository.dart';
 enum ComunidadeAba {
   minhas(rotulo: 'minhasComunidades', icone: 'account-group-outline'),
   enderecos(rotulo: 'enderecos', icone: 'map-marker-outline'),
-  contatos(rotulo: 'contatos', icone: 'card-account-phone-outline');
+  contatos(rotulo: 'contatos', icone: 'card-account-phone-outline'),
+  usuarios(rotulo: 'usuarios', icone: 'account-multiple-outline');
 
   const ComunidadeAba({required this.rotulo, required this.icone});
 

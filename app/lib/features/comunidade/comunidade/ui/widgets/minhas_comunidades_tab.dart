@@ -16,7 +16,7 @@ enum _Acao { editar, enderecos, contatos, usuarios, excluir }
 ///   a atualização (AppBar ou puxar para baixo), a gravação e a exclusão mostram uma barra de progresso.
 /// - Tocar no card edita ([onEditar]); o menu do card tem editar, endereços ([onEnderecos], abre a aba "Endereços"
 ///   com a comunidade selecionada), contatos ([onContatos], idem na aba "Contatos"),
-///   usuários ([onUsuarios], abre a tela de usuários da comunidade) e excluir ([onExcluir]).
+///   usuários ([onUsuarios], abre a aba "Usuários" com ela selecionada) e excluir ([onExcluir]).
 class MinhasComunidadesTab extends StatelessWidget {
   const MinhasComunidadesTab({
     super.key,

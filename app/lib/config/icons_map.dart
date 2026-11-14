@@ -98,7 +98,7 @@ class IconsMap {
     'play-box-outline': MdiIcons.playBoxOutline,
     'send': MdiIcons.send,
     'forum-outline': MdiIcons.forumOutline,
-    // Aba "Usuários" das comunidades (ComunidadeAba.usuarios / ComunidadeUsuarioView): lista vazia, ativar,
+    // Aba "Usuários" das comunidades (ComunidadeAba.usuarios / ComunidadeUsuarioView.iconeUsuarios): lista vazia, ativar,
     // desativar e remover; busca e adicionar usam 'account-search-outline' e 'account-plus-outline' (já mapeados).
     'account-multiple-outline': MdiIcons.accountMultipleOutline,
     'account-check-outline': MdiIcons.accountCheckOutline,

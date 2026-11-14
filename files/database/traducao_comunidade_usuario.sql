@@ -1,4 +1,4 @@
--- Traduções da tela "Usuários" da comunidade (rota /comunidade-usuario; GET, POST, PUT e DELETE
+-- Traduções da aba "Usuários" das comunidades (rota /comunidade; GET, POST, PUT e DELETE
 -- /v1/comunidade-usuario e busca em /v1/usuario/busca). Idempotente: só insere chaves inexistentes.
 -- Chaves já existentes reutilizadas: usuarios, inativo, comunidade, buscarUsuario, buscarUsuarioDica,
 -- nenhumUsuarioEncontrado, nenhumaComunidadeCadastrada, comunidadeObrigatoria, acoes, atualizar, voltar,

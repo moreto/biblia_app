@@ -3,6 +3,8 @@ import 'package:app/data/model/comunidade/comunidade_contato_model.dart';
 import 'package:app/data/model/comunidade/comunidade_denominacao_model.dart';
 import 'package:app/data/model/comunidade/comunidade_model.dart';
 import 'package:app/data/model/comunidade/comunidade_tipo_model.dart';
+import 'package:app/data/model/comunidade/comunidade_usuario_model.dart';
+import 'package:app/data/model/usuario/usuario_resumo_model.dart';
 import 'package:app/data/model/localidade/estado_model.dart';
 import 'package:app/data/model/localidade/municipio_model.dart';
 import 'package:app/data/model/comunidade/comunidade_endereco_model.dart';
@@ -12,6 +14,9 @@ import 'package:app/features/comunidade/comunidade_contato/use_case/comunidade_c
 import 'package:app/features/comunidade/comunidade_endereco/repository/comunidade_endereco_repository.dart';
 import 'package:app/features/comunidade/comunidade_endereco/ui/comunidade_endereco_viewmodel.dart';
 import 'package:app/features/comunidade/comunidade_endereco/use_case/comunidade_endereco_usecase.dart';
+import 'package:app/features/comunidade/comunidade_usuario/repository/comunidade_usuario_repository.dart';
+import 'package:app/features/comunidade/comunidade_usuario/ui/comunidade_usuario_viewmodel.dart';
+import 'package:app/features/comunidade/comunidade_usuario/use_case/comunidade_usuario_usecase.dart';
 import 'package:app/features/comunidade/comunidade/repository/comunidade_repository.dart';
 import 'package:app/features/comunidade/comunidade/ui/comunidade_view.dart';
 import 'package:app/features/comunidade/comunidade/ui/comunidade_viewmodel.dart';
@@ -205,6 +210,39 @@ class _FakeComunidadeContatoRepository implements ComunidadeContatoRepository {
   }
 }
 
+/// Usuários por comunidade em memória (comunidade 1 já tem a Ana).
+class _FakeComunidadeUsuarioRepository implements ComunidadeUsuarioRepository {
+  final consultas = <int>[];
+  final excluidos = <int>[];
+  final porComunidade = <int, List<ComunidadeUsuarioModel>>{
+    1: [const ComunidadeUsuarioModel(cusuId: 10, comuId: 1, usuaId: 3, udetNome: 'Ana Souza', udetUsuario: 'ana')],
+  };
+
+  @override
+  Future<Result<List<ComunidadeUsuarioModel>>> usuarios(int comuId) async {
+    consultas.add(comuId);
+    return Result.ok(List.of(porComunidade[comuId] ?? const []));
+  }
+
+  @override
+  Future<Result<List<UsuarioResumoModel>>> buscarUsuarios(String texto) async => const Result.ok([]);
+
+  @override
+  Future<Result<ComunidadeUsuarioModel>> incluir(ComunidadeUsuarioModel vinculo) async => Result.ok(vinculo);
+
+  @override
+  Future<Result<ComunidadeUsuarioModel>> alterar(ComunidadeUsuarioModel vinculo) async => Result.ok(vinculo);
+
+  @override
+  Future<Result<void>> excluir(int cusuId) async {
+    excluidos.add(cusuId);
+    for (final lista in porComunidade.values) {
+      lista.removeWhere((u) => u.cusuId == cusuId);
+    }
+    return const Result.ok(null);
+  }
+}
+
 class _TestLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _TestLocalizationsDelegate();
 
@@ -231,7 +269,14 @@ void main() {
     ComunidadeViewmodel viewModel, {
     _FakeComunidadeEnderecoRepository? enderecos,
     _FakeComunidadeContatoRepository? contatos,
+    _FakeComunidadeUsuarioRepository? usuarios,
   }) async {
+    final usuarioViewModel = ComunidadeUsuarioViewmodel(
+      comunidadeUsuarioUseCase: ComunidadeUsuarioUseCase(
+        comunidadeUsuarioRepository: usuarios ?? _FakeComunidadeUsuarioRepository(),
+        comunidadeUseCase: viewModel.comunidadeUseCase,
+      ),
+    );
     final contatoViewModel = ComunidadeContatoViewmodel(
       comunidadeContatoUseCase: ComunidadeContatoUseCase(
         comunidadeContatoRepository: contatos ?? _FakeComunidadeContatoRepository(),
@@ -256,6 +301,7 @@ void main() {
           viewModel: viewModel,
           enderecoViewModel: enderecoViewModel,
           contatoViewModel: contatoViewModel,
+          usuarioViewModel: usuarioViewModel,
         ),
       ),
     );
@@ -629,11 +675,37 @@ void main() {
       expect(find.widgetWithText(SnackBar, 'registroExcluido'), findsOneWidget);
     });
 
-    testWidgets('o menu da comunidade tem "Usuários" (abre a tela de usuários)', (tester) async {
-      await montar(tester, criar(_FakeComunidadeRepository([_matriz])));
+    testWidgets('"Usuários" no menu da comunidade abre a aba com ela selecionada', (tester) async {
+      final usuarios = _FakeComunidadeUsuarioRepository();
+      await montar(tester, criar(_FakeComunidadeRepository([_capela, _matriz])), usuarios: usuarios);
+      expect(usuarios.consultas, isEmpty, reason: 'só carrega ao abrir a aba');
+
+      await tester.tap(find.byTooltip('acoes').last); // Paróquia Matriz (depois de capela por nome)
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('usuarios').last);
+      await tester.pumpAndSettle();
+
+      expect(usuarios.consultas, [1]);
+      expect(find.text('Ana Souza'), findsOneWidget);
+      expect(find.text('adicionarUsuario'), findsOneWidget, reason: 'botão inferior da aba');
+    });
+
+    testWidgets('remover usuário pede confirmação, remove e mostra SnackBar', (tester) async {
+      final usuarios = _FakeComunidadeUsuarioRepository();
+      await montar(tester, criar(_FakeComunidadeRepository([_matriz])), usuarios: usuarios);
+      await abrirAba(tester, 'usuarios');
+
       await tester.tap(find.byTooltip('acoes'));
       await tester.pumpAndSettle();
-      expect(find.text('usuarios'), findsOneWidget);
+      await tester.tap(find.text('remover'));
+      await tester.pumpAndSettle();
+      expect(usuarios.excluidos, isEmpty, reason: 'pede confirmação');
+      await tester.tap(find.text('REMOVER'));
+      await tester.pumpAndSettle();
+
+      expect(usuarios.excluidos, [10]);
+      expect(find.text('nenhumUsuarioNaComunidade'), findsOneWidget);
+      expect(find.widgetWithText(SnackBar, 'registroExcluido'), findsOneWidget);
     });
 
     testWidgets('lista vazia mostra nenhumaComunidadeCadastrada', (tester) async {

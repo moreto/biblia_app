@@ -153,15 +153,35 @@ void main() {
   ComunidadeUsuarioViewmodel criar([List<ComunidadeModel> comunidades = const [_matriz, _capela]]) =>
       ComunidadeUsuarioViewmodel(comunidadeUsuarioUseCase: criarUseCase(comunidades));
 
-  Future<void> montar(WidgetTester tester, ComunidadeUsuarioViewmodel viewModel, {int? comuId}) async {
-    // tela de celular: o aviso de confirmação (DialogBottomSheetWarning) tem largura de botões de celular
+  /// Monta a aba sozinha (como na tela de comunidades: seleciona [comuId] e abre). O botão "adicionarUsuario" faz
+  /// o papel do botão inferior da tela; [onRemover] recebe o pedido de remoção (a confirmação é da tela).
+  Future<void> montar(
+    WidgetTester tester,
+    ComunidadeUsuarioViewmodel viewModel, {
+    int? comuId,
+    ValueChanged<ComunidadeUsuarioModel>? onRemover,
+  }) async {
     tester.view.physicalSize = const Size(1080, 2340);
     tester.view.devicePixelRatio = 3;
     addTearDown(tester.view.reset);
+    if (comuId != null) viewModel.selecionar(comuId);
+    viewModel.abrir();
     await tester.pumpWidget(
       MaterialApp(
         localizationsDelegates: const [_TestLocalizationsDelegate(), DefaultMaterialLocalizations.delegate],
-        home: ComunidadeUsuarioView(viewModel: viewModel, comuId: comuId),
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: ComunidadeUsuarioView(viewModel: viewModel, onRemover: onRemover ?? (_) {}),
+            bottomNavigationBar: TextButton(
+              onPressed: () => ComunidadeUsuarioAdicionarDialog.show(
+                context,
+                viewModel: viewModel,
+                comunidadeNome: viewModel.selecionada!.comunidade.comuNome,
+              ),
+              child: const Text('adicionarUsuario'),
+            ),
+          ),
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -303,9 +323,6 @@ void main() {
     testWidgets('abre na comunidade do comuId; lista nome, @usuario, iniciais e marca o inativo', (tester) async {
       await montar(tester, criar(), comuId: 1);
 
-      expect(find.text('usuarios'), findsOneWidget, reason: 'título da tela');
-      expect(find.text('adicionarUsuario'), findsOneWidget, reason: 'botão ao lado de voltar');
-
       expect(find.text('Paróquia Matriz'), findsOneWidget);
       expect(find.text('Ana Souza'), findsOneWidget);
       expect(find.text('@ana'), findsOneWidget);
@@ -320,8 +337,9 @@ void main() {
       expect(find.text('Capela São José'), findsOneWidget);
     });
 
-    testWidgets('menu: desativar/ativar e remover com confirmação', (tester) async {
-      await montar(tester, criar(), comuId: 1);
+    testWidgets('menu: desativar/ativar e remover', (tester) async {
+      final removidos = <ComunidadeUsuarioModel>[];
+      await montar(tester, criar(), comuId: 1, onRemover: removidos.add);
 
       await tester.tap(find.byTooltip('acoes').first); // Ana (ativa) vem primeiro
       await tester.pumpAndSettle();
@@ -335,11 +353,8 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('remover'));
       await tester.pumpAndSettle();
-      expect(repository.excluidos, isEmpty, reason: 'pede confirmação');
-      await tester.tap(find.text('REMOVER'));
-      await tester.pumpAndSettle();
-      expect(repository.excluidos, hasLength(1));
-      expect(find.widgetWithText(SnackBar, 'registroExcluido'), findsOneWidget);
+      expect(removidos.single.usuaId, 3, reason: 'a confirmação fica com a tela');
+      expect(repository.excluidos, isEmpty);
     });
 
     testWidgets('sem usuários e sem comunidades mostram a mensagem', (tester) async {
@@ -376,7 +391,6 @@ void main() {
       await tester.tap(find.text('fechar'));
       await tester.pumpAndSettle();
       expect(viewModel.encontrados, isEmpty);
-      expect(find.widgetWithText(SnackBar, 'registroSalvo'), findsOneWidget);
     });
   });
 }
