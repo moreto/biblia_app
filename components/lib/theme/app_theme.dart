@@ -19,6 +19,8 @@ abstract final class AppTheme {
       onPrimaryContainer: p.onPrimaryContainer,
       secondary: p.secondary,
       onSecondary: p.onSecondary,
+      secondaryContainer: p.secondaryContainer,
+      onSecondaryContainer: p.onSecondaryContainer,
       error: p.error,
       onError: p.onError,
       surface: p.surface,
@@ -117,6 +119,10 @@ abstract final class AppTheme {
         indicatorColor: p.primaryContainer,
         surfaceTintColor: Colors.transparent,
         labelTextStyle: WidgetStatePropertyAll(text.labelMedium),
+      ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: p.primary,
+        linearTrackColor: p.outlineVariant,
       ),
       dividerTheme: DividerThemeData(
         color: p.outlineVariant,
