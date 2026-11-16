@@ -3,8 +3,10 @@ import '../biblia/json_reader.dart';
 /// Verbete completo do dicionário (`GET /v1/dicionario/palavra/:palavra`, um item por homônimo): palavra,
 /// pronúncia, etimologia e as acepções.
 ///
-/// Fonte: Novo Diccionário da Língua Portuguesa, de Cândido de Figueiredo (1913). Textos na grafia original; o
-/// itálico vem marcado com `_sublinhados_` e os exemplos entre « ».
+/// Fonte: Projeto Gutenberg (eBook #31552) e Dicionário Aberto, edição digital de Rita Farinha, Alberto Manuel
+/// Brandão Simões e Online Distributed Proofreading Team, a partir de imagens da Biblioteca Nacional de Portugal;
+/// importada do PDF pela API. Textos na grafia original; o itálico vem marcado com `_sublinhados_` e os exemplos
+/// entre « ».
 class DicionarioVerbeteModel {
   const DicionarioVerbeteModel({
     required this.dverId,

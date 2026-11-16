@@ -148,6 +148,8 @@ class IconsMap {
     // palavra ('chevron-right') e tentar novamente ('refresh') já mapeados acima.
     'book-alphabet': MdiIcons.bookAlphabet,
     'magnify': MdiIcons.magnify,
+    'microphone': MdiIcons.microphone,
+    'microphone-outline': MdiIcons.microphoneOutline,
     'close': MdiIcons.close,
     'text-search': MdiIcons.textSearch,
     'link-variant': MdiIcons.linkVariant,

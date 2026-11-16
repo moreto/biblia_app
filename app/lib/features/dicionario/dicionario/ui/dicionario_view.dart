@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:app/config/icons_map.dart';
 import 'package:app/config/orientation_button.dart';
+import 'package:app/config/reconhecimento_voz.dart';
 import 'package:app/config/theme_mode_button.dart';
 import 'package:app/l10n/app_localizations.dart';
 import 'package:components/components.dart';
@@ -23,20 +24,34 @@ import 'dicionario_viewmodel.dart';
 /// - Palavra não encontrada: aviso e as palavras semelhantes.
 /// - Erros aparecem no lugar do resultado; o da consulta tem "Tentar novamente".
 ///
-/// Ícones (em [IconsMap.mdiIcons]): [iconeDicionario], [iconeBuscar], [iconeLimpar], [iconeNaoEncontrada],
-/// [iconeRemissao], [iconeAbrir] e [iconeErro].
+/// - Microfone no campo de busca: o usuário fala a palavra em vez de digitar ([reconhecimentoVoz], em
+///   [idiomaVoz]). Enquanto ouve, o texto reconhecido vai para o campo (e busca as sugestões); no resultado final
+///   a palavra é consultada. Tocar de novo no microfone para de ouvir.
+///
+/// Ícones (em [IconsMap.mdiIcons]): [iconeDicionario], [iconeBuscar], [iconeLimpar], [iconeFalar], [iconeOuvindo],
+/// [iconeNaoEncontrada], [iconeRemissao], [iconeAbrir] e [iconeErro].
 class DicionarioView extends StatefulWidget {
-  const DicionarioView({super.key, required this.viewModel});
+  const DicionarioView({super.key, required this.viewModel, this.reconhecimentoVoz});
 
   final DicionarioViewmodel viewModel;
 
+  /// Reconhecimento de fala do microfone; sem ele usa o nativo do aparelho ([SpeechToTextReconhecimentoVoz]).
+  final ReconhecimentoVoz? reconhecimentoVoz;
+
   /// Espera depois da última tecla para buscar.
   static const esperaBusca = Duration(milliseconds: 400);
+
+  /// Idioma do reconhecimento de fala: o dicionário é de português, qualquer que seja o idioma do app.
+  static const idiomaVoz = 'pt_BR';
 
   /// Tela (início e `func_icone`/`menu_icone` de /dicionario).
   static const iconeDicionario = 'book-alphabet';
   static const iconeBuscar = 'magnify';
   static const iconeLimpar = 'close';
+
+  /// Microfone parado e ouvindo.
+  static const iconeFalar = 'microphone-outline';
+  static const iconeOuvindo = 'microphone';
   static const iconeNaoEncontrada = 'text-search';
 
   /// Remissão "Veja também".
@@ -60,12 +75,75 @@ class _DicionarioViewState extends State<DicionarioView> {
   final _foco = FocusNode();
   Timer? _esperaBusca;
 
+  late final ReconhecimentoVoz _voz = widget.reconhecimentoVoz ?? SpeechToTextReconhecimentoVoz();
+
+  /// Microfone ouvindo; [_iniciandoVoz] enquanto prepara/pede permissão.
+  bool _ouvindo = false;
+  bool _iniciandoVoz = false;
+
   @override
   void dispose() {
     _esperaBusca?.cancel();
+    if (_ouvindo) _voz.cancelar();
     _busca.dispose();
     _foco.dispose();
     super.dispose();
+  }
+
+  /// Toque no microfone: começa a ouvir ou, se já está ouvindo, para (consultando o que foi falado).
+  Future<void> _alternarVoz() async {
+    if (_ouvindo) {
+      await _voz.parar();
+      return;
+    }
+    if (_iniciandoVoz) return;
+    setState(() => _iniciandoVoz = true);
+    final disponivel = await _voz.iniciar();
+    if (!mounted) return;
+    setState(() => _iniciandoVoz = false);
+    if (!disponivel) {
+      _mensagem('reconhecimentoVozIndisponivel');
+      return;
+    }
+    _foco.unfocus();
+    setState(() => _ouvindo = true);
+    await _voz.ouvir(localeId: DicionarioView.idiomaVoz, onResultado: _onVozReconhecida, onFim: _onVozFim);
+  }
+
+  void _onVozReconhecida(String texto, bool definitivo) {
+    if (!mounted) return;
+    final palavra = _palavraFalada(texto);
+    if (palavra.isEmpty) return;
+    if (definitivo) {
+      _consultar(palavra);
+      return;
+    }
+    _busca.value = TextEditingValue(text: palavra, selection: TextSelection.collapsed(offset: palavra.length));
+    _onBuscaAlterada(palavra);
+  }
+
+  void _onVozFim(String? erro) {
+    if (!mounted) return;
+    setState(() => _ouvindo = false);
+    if (erro == 'error_no_match' || erro == 'error_speech_timeout') {
+      _mensagem('vozNaoReconhecida');
+    } else if (erro != null) {
+      _mensagem('reconhecimentoVozIndisponivel');
+    }
+  }
+
+  /// Texto falado sem espaços nas pontas e sem a pontuação final que alguns aparelhos acrescentam, limitado ao
+  /// tamanho do campo.
+  String _palavraFalada(String texto) {
+    final palavra = texto.trim().replaceAll(RegExp(r'[\s.,;:!?…]+$'), '');
+    final maximo = _vm.textoMaximo;
+    return palavra.length > maximo ? palavra.substring(0, maximo) : palavra;
+  }
+
+  void _mensagem(String chave) {
+    ScaffoldMessenger.maybeOf(context)
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).translate(chave))));
   }
 
   void _onBuscaAlterada(String texto) {
@@ -88,6 +166,7 @@ class _DicionarioViewState extends State<DicionarioView> {
   }
 
   void _limpar() {
+    if (_ouvindo) _voz.cancelar();
     _esperaBusca?.cancel();
     _busca.clear();
     _vm.limpar();
@@ -123,6 +202,7 @@ class _DicionarioViewState extends State<DicionarioView> {
               DicionarioExibicao.consulta => _consulta(strings),
             },
           ),
+          _credito(strings),
         ],
       ),
       bottomNavigationBar: ViewBottomActions(
@@ -141,25 +221,52 @@ class _DicionarioViewState extends State<DicionarioView> {
       autofocus: true,
       maxLength: _vm.textoMaximo,
       textInputAction: TextInputAction.search,
-      onChanged: _onBuscaAlterada,
+      onChanged: (texto) {
+        // Digitar enquanto ouve descarta a fala.
+        if (_ouvindo) _voz.cancelar();
+        _onBuscaAlterada(texto);
+      },
       onSubmitted: (texto) {
         if (DicionarioUseCase.normalizar(texto).isNotEmpty) _consultar(texto);
       },
       decoration: InputDecoration(
         labelText: strings.translate('buscarPalavra'),
-        hintText: strings.translate('buscarPalavraDica'),
+        hintText: strings.translate(_ouvindo ? 'ouvindo' : 'buscarPalavraDica'),
         counterText: '',
         prefixIcon: DicionarioView.icone(DicionarioView.iconeBuscar, Icons.search),
-        suffixIcon: _busca.text.isEmpty
-            ? null
-            : IconButton(
+        suffixIcon: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (_busca.text.isNotEmpty)
+              IconButton(
                 tooltip: strings.translate('limpar'),
                 onPressed: _limpar,
                 icon: DicionarioView.icone(DicionarioView.iconeLimpar, Icons.close),
               ),
+            _botaoVoz(strings),
+          ],
+        ),
       ),
     ),
   );
+
+  Widget _botaoVoz(AppLocalizations strings) {
+    final scheme = Theme.of(context).colorScheme;
+    if (_ouvindo) {
+      return IconButton.filledTonal(
+        key: const ValueKey('dicionarioVoz'),
+        tooltip: strings.translate('pararDeOuvir'),
+        onPressed: _alternarVoz,
+        icon: DicionarioView.icone(DicionarioView.iconeOuvindo, Icons.mic, color: scheme.primary),
+      );
+    }
+    return IconButton(
+      key: const ValueKey('dicionarioVoz'),
+      tooltip: strings.translate('falarPalavra'),
+      onPressed: _iniciandoVoz ? null : _alternarVoz,
+      icon: DicionarioView.icone(DicionarioView.iconeFalar, Icons.mic_none),
+    );
+  }
 
   Widget _aviso(String icone, IconData fallback, String texto, {Widget? acao}) {
     final scheme = Theme.of(context).colorScheme;
@@ -249,18 +356,20 @@ class _DicionarioViewState extends State<DicionarioView> {
 
     return ListView(
       padding: const EdgeInsets.only(bottom: 8),
-      children: [
-        for (final v in consulta.verbetes) _verbete(v, strings),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-          child: Text(
-            strings.translate('dicionarioFonte'),
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodySmall
-                ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
-          ),
-        ),
-      ],
+      children: [for (final v in consulta.verbetes) _verbete(v, strings)],
+    );
+  }
+
+  /// Crédito do dicionário, fixo no rodapé da tela.
+  Widget _credito(AppLocalizations strings) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+      child: Text(
+        strings.translate('dicionarioFonte'),
+        textAlign: TextAlign.center,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+      ),
     );
   }
 

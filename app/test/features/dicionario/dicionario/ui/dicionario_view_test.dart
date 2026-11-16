@@ -1,3 +1,4 @@
+import 'package:app/config/reconhecimento_voz.dart';
 import 'package:app/data/model/dicionario/dicionario_busca_model.dart';
 import 'package:app/data/model/dicionario/dicionario_verbete_model.dart';
 import 'package:app/features/dicionario/dicionario/repository/dicionario_repository.dart';
@@ -110,6 +111,49 @@ class _FakeDicionarioRepository implements DicionarioRepository {
   }
 }
 
+/// Reconhecimento de voz controlado pelo teste: [falar] entrega resultados e [terminar] encerra a escuta.
+class _FakeReconhecimentoVoz implements ReconhecimentoVoz {
+  bool disponivel = true;
+  String? localeId;
+  int cancelamentos = 0;
+  void Function(String, bool)? _onResultado;
+  void Function(String?)? _onFim;
+
+  @override
+  Future<bool> iniciar() async => disponivel;
+
+  @override
+  Future<void> ouvir({
+    required String localeId,
+    required void Function(String texto, bool definitivo) onResultado,
+    required void Function(String? erro) onFim,
+  }) async {
+    this.localeId = localeId;
+    _onResultado = onResultado;
+    _onFim = onFim;
+  }
+
+  void falar(String texto, {bool definitivo = false}) {
+    _onResultado?.call(texto, definitivo);
+    if (definitivo) terminar();
+  }
+
+  void terminar([String? erro]) {
+    final onFim = _onFim;
+    _onFim = null;
+    onFim?.call(erro);
+  }
+
+  @override
+  Future<void> parar() async => terminar();
+
+  @override
+  Future<void> cancelar() async {
+    cancelamentos++;
+    terminar();
+  }
+}
+
 class _TestLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _TestLocalizationsDelegate();
 
@@ -126,8 +170,12 @@ class _TestLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations>
 
 void main() {
   late _FakeDicionarioRepository repository;
+  late _FakeReconhecimentoVoz voz;
 
-  setUp(() => repository = _FakeDicionarioRepository());
+  setUp(() {
+    repository = _FakeDicionarioRepository();
+    voz = _FakeReconhecimentoVoz();
+  });
 
   DicionarioUseCase criarUseCase() => DicionarioUseCase(dicionarioRepository: repository);
 
@@ -140,7 +188,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         localizationsDelegates: const [_TestLocalizationsDelegate(), DefaultMaterialLocalizations.delegate],
-        home: DicionarioView(viewModel: viewModel),
+        home: DicionarioView(viewModel: viewModel, reconhecimentoVoz: voz),
       ),
     );
     await tester.pumpAndSettle();
@@ -301,6 +349,7 @@ void main() {
       await montar(tester, criar());
       expect(find.text('dicionario'), findsOneWidget);
       expect(find.text('dicionarioInicio'), findsOneWidget);
+      expect(find.text('dicionarioFonte'), findsOneWidget);
 
       await tester.enterText(find.byType(TextField), 'abe');
       await tester.pump(DicionarioView.esperaBusca);
@@ -318,7 +367,6 @@ void main() {
       expect(find.textContaining('vejaTambem'), findsOneWidget);
       expect(tester.widget<ActionChip>(find.widgetWithText(ActionChip, 'inexistente')).onPressed, isNull);
 
-      await tester.dragUntilVisible(find.text('dicionarioFonte'), find.byType(ListView), const Offset(0, -300));
       expect(find.text('dicionarioFonte'), findsOneWidget);
     });
 
@@ -370,6 +418,66 @@ void main() {
       await tester.tap(find.text('tentarNovamente'));
       await tester.pumpAndSettle();
       expect(find.text('Abegão¹'), findsOneWidget);
+    });
+    testWidgets('microfone: fala preenche o campo e o resultado final consulta a palavra', (tester) async {
+      await montar(tester, criar());
+      expect(find.byTooltip('falarPalavra'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('falarPalavra'));
+      await tester.pump();
+      expect(voz.localeId, DicionarioView.idiomaVoz);
+      expect(find.byTooltip('pararDeOuvir'), findsOneWidget);
+      expect(find.text('ouvindo'), findsOneWidget);
+
+      voz.falar('abeg');
+      await tester.pump(DicionarioView.esperaBusca);
+      await tester.pumpAndSettle();
+      expect(tester.widget<TextField>(find.byType(TextField)).controller?.text, 'abeg');
+      expect(find.text('Abegoaria'), findsOneWidget);
+
+      voz.falar(' Abegão. ', definitivo: true);
+      await tester.pumpAndSettle();
+      expect(repository.palavras, ['Abegão']);
+      expect(tester.widget<TextField>(find.byType(TextField)).controller?.text, 'Abegão');
+      expect(find.text('Abegão¹'), findsOneWidget);
+      expect(find.byTooltip('falarPalavra'), findsOneWidget);
+    });
+
+    testWidgets('microfone: tocar de novo para de ouvir; limpar cancela', (tester) async {
+      await montar(tester, criar());
+      await tester.tap(find.byTooltip('falarPalavra'));
+      await tester.pump();
+      await tester.tap(find.byTooltip('pararDeOuvir'));
+      await tester.pump();
+      expect(find.byTooltip('falarPalavra'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('falarPalavra'));
+      await tester.pump();
+      voz.falar('abeg');
+      await tester.pump();
+      await tester.tap(find.byTooltip('limpar'));
+      await tester.pumpAndSettle();
+      expect(voz.cancelamentos, 1);
+      expect(find.byTooltip('falarPalavra'), findsOneWidget);
+      expect(find.text('dicionarioInicio'), findsOneWidget);
+    });
+
+    testWidgets('microfone: indisponível ou fala não entendida avisam', (tester) async {
+      voz.disponivel = false;
+      await montar(tester, criar());
+      await tester.tap(find.byTooltip('falarPalavra'));
+      await tester.pump();
+      expect(find.text('reconhecimentoVozIndisponivel'), findsOneWidget);
+      expect(find.byTooltip('pararDeOuvir'), findsNothing);
+
+      voz.disponivel = true;
+      await tester.tap(find.byTooltip('falarPalavra'));
+      await tester.pump();
+      voz.terminar('error_no_match');
+      await tester.pump();
+      expect(find.text('vozNaoReconhecida'), findsOneWidget);
+      expect(find.byTooltip('falarPalavra'), findsOneWidget);
+      expect(repository.palavras, isEmpty);
     });
   });
 }

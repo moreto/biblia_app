@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>O microfone é usado para você falar a palavra que quer buscar no dicionário.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>O reconhecimento de fala transforma a palavra falada em texto para a busca no dicionário.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
