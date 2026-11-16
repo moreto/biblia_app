@@ -365,7 +365,11 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
           ),
           const SizedBox(height: 4),
           // Avança por versículo lido, para a leitura parcial também aparecer na barra.
-          LinearProgressIndicator(value: progresso.fracao),
+          LinearProgressIndicator(
+            value: progresso.fracao,
+            minHeight: 6,
+            borderRadius: BorderRadius.circular(3),
+          ),
         ],
       ),
       childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
