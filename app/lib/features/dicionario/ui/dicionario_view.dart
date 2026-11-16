@@ -8,8 +8,8 @@ import 'package:app/l10n/app_localizations.dart';
 import 'package:components/components.dart';
 import 'package:flutter/material.dart';
 
-import '../../../../data/model/dicionario/dicionario_busca_model.dart';
-import '../../../../data/model/dicionario/dicionario_verbete_model.dart';
+import '../../../data/model/dicionario/dicionario_busca_model.dart';
+import '../../../data/model/dicionario/dicionario_verbete_model.dart';
 import '../use_case/dicionario_usecase.dart';
 import 'dicionario_viewmodel.dart';
 

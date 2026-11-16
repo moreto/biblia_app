@@ -2,8 +2,8 @@ import 'package:app/config/command.dart';
 import 'package:commons/commons.dart';
 import 'package:flutter/material.dart';
 
-import '../../../../data/model/dicionario/dicionario_busca_model.dart';
-import '../../../../data/model/dicionario/dicionario_verbete_model.dart';
+import '../../../data/model/dicionario/dicionario_busca_model.dart';
+import '../../../data/model/dicionario/dicionario_verbete_model.dart';
 import '../use_case/dicionario_usecase.dart';
 
 /// O que a tela "Dicionário" mostra abaixo do campo de busca.

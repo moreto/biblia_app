@@ -1,8 +1,8 @@
 import 'package:commons/commons.dart';
 import 'package:service/service.dart';
 
-import '../../../../data/model/dicionario/dicionario_busca_model.dart';
-import '../../../../data/model/dicionario/dicionario_verbete_model.dart';
+import '../../../data/model/dicionario/dicionario_busca_model.dart';
+import '../../../data/model/dicionario/dicionario_verbete_model.dart';
 import 'dicionario_repository.dart';
 
 class DicionarioRepositoryImpl implements DicionarioRepository {

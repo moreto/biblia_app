@@ -1,8 +1,8 @@
 import 'package:commons/commons.dart';
 import 'package:service/service.dart';
 
-import '../../../../data/model/dicionario/dicionario_busca_model.dart';
-import '../../../../data/model/dicionario/dicionario_verbete_model.dart';
+import '../../../data/model/dicionario/dicionario_busca_model.dart';
+import '../../../data/model/dicionario/dicionario_verbete_model.dart';
 import '../repository/dicionario_repository.dart';
 
 /// Resultado da consulta de uma palavra: os verbetes (um por homônimo) ou, se a palavra não existir, as

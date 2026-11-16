@@ -1,7 +1,7 @@
 import 'package:commons/commons.dart';
 
-import '../../../../data/model/dicionario/dicionario_busca_model.dart';
-import '../../../../data/model/dicionario/dicionario_verbete_model.dart';
+import '../../../data/model/dicionario/dicionario_busca_model.dart';
+import '../../../data/model/dicionario/dicionario_verbete_model.dart';
 
 abstract class DicionarioRepository {
   /// Verbetes que começam pelo [texto] ou são semelhantes a ele, no máximo [limite]

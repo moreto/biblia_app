@@ -1,10 +1,10 @@
 import 'package:app/config/reconhecimento_voz.dart';
 import 'package:app/data/model/dicionario/dicionario_busca_model.dart';
 import 'package:app/data/model/dicionario/dicionario_verbete_model.dart';
-import 'package:app/features/dicionario/dicionario/repository/dicionario_repository.dart';
-import 'package:app/features/dicionario/dicionario/ui/dicionario_view.dart';
-import 'package:app/features/dicionario/dicionario/ui/dicionario_viewmodel.dart';
-import 'package:app/features/dicionario/dicionario/use_case/dicionario_usecase.dart';
+import 'package:app/features/dicionario/repository/dicionario_repository.dart';
+import 'package:app/features/dicionario/ui/dicionario_view.dart';
+import 'package:app/features/dicionario/ui/dicionario_viewmodel.dart';
+import 'package:app/features/dicionario/use_case/dicionario_usecase.dart';
 import 'package:app/l10n/app_localizations.dart';
 import 'package:commons/commons.dart';
 import 'package:flutter/foundation.dart';
