@@ -1,0 +1,20 @@
+1. Ajuste de texto na leitura: tamanho da fonte, espaçamento entre linhas e tipo de fonte (com/sem serifa), salvos nas preferências.
+2. Modo sépia / leitura noturna: terceiro tema com fundo de papel e menos brilho.
+3. Tela sempre ligada durante a leitura (wakelock).
+4. Continuar de onde parou: card no dashboard que abre o último capítulo/versículo lido.
+5. Leitura em voz alta (TTS): ler o capítulo destacando o versículo atual, com velocidade ajustável e avanço automático.
+6. Dicionário na leitura: tocar e segurar uma palavra para ver o verbete sem sair do capítulo.
+7. Marca-texto com cores: grifar versículos em cores e lista "Meus destaques" filtrada por cor.
+8. Notas pessoais e favoritos: anotação privada por versículo e lista de favoritos.
+9. Busca na Bíblia: por palavra ou frase, com filtro por testamento/livro, destaque nos resultados e busca por voz.
+10. Comparar versões: mesmo versículo em todas as versões ou duas versões lado a lado.
+11. Referências cruzadas: versículos relacionados ao que está sendo lido.
+12. Planos de leitura: Bíblia em 1 ano, NT em 90 dias, Salmos/Provérbios, com capítulo do dia e progresso.
+13. Sequência e estatísticas: dias seguidos lendo, % da Bíblia lida, livros concluídos e mapa de calor.
+14. Lembrete diário: notificação local no horário escolhido com a leitura ou o versículo do dia.
+15. Compartilhar versículo como imagem ou texto com referência (WhatsApp, Instagram).
+16. Leitura em grupo: comunidade segue um plano junto, vê o progresso dos membros e comenta o capítulo do dia.
+17. Pedidos de oração na comunidade: membros acompanham e marcam "orei por você".
+18. Leitura offline: baixar versões e sincronizar marcações quando voltar a conexão.
+19. Widget na tela inicial do celular com o versículo do dia.
+20. Acessibilidade: respeitar o tamanho de fonte do sistema e revisar rótulos para TalkBack/VoiceOver.
