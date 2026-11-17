@@ -74,6 +74,11 @@ enum ApiCore {
   usuarioBusca('/v1/usuario/busca', kDesHost, kPrdHost, HeaderType.loggedArea),
   // Dados (e-mail, nome) do usuário do token.
   usuarioDetalhe('/v1/usuario/usuario-detalhe-by-id', kDesHost, kPrdHost, HeaderType.loggedUser),
+  // Meus dados: alteração do nome completo e do nome de usuário (PUT), da senha (PUT) e das configurações do
+  // usuário do token (GET, POST e PUT).
+  usuarioDetalheAlterar('/v1/usuario/usuario-detalhe', kDesHost, kPrdHost, HeaderType.loggedUser),
+  acessoSenha('/v1/acesso/senha', kDesHost, kPrdHost, HeaderType.loggedUser),
+  usuarioConfiguracao('/v1/usuario-configuracao', kDesHost, kPrdHost, HeaderType.loggedUser),
   usuarioConsentimento('/v1/usuario-consentimento', kDesHost, kPrdHost, HeaderType.loggedUser),
   usuarioDispositivo('/v1/usuario-dispositivo', kDesHost, kPrdHost, HeaderType.loggedUser),
   versao('/v1/versao', kDesHost, kPrdHost, HeaderType.loggedArea),

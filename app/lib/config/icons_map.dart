@@ -187,6 +187,17 @@ class IconsMap {
     'lock-open-variant-outline': MdiIcons.lockOpenVariantOutline,
     'web-box': MdiIcons.webBox,
     'file-lock': MdiIcons.fileLock,
+    // Meus dados (UsuarioView.icone* e UsuarioAba); 'account-cog-outline' também é func_icone/menu_icone de /usuario.
+    'account-cog-outline': MdiIcons.accountCogOutline,
+    'card-account-details-outline': MdiIcons.cardAccountDetailsOutline,
+    'lock-reset': MdiIcons.lockReset,
+    'cog-outline': MdiIcons.cogOutline,
+    'identifier': MdiIcons.identifier,
+    'lock-plus-outline': MdiIcons.lockPlusOutline,
+    'content-save-outline': MdiIcons.contentSaveOutline,
+    'undo': MdiIcons.undo,
+    'information-outline': MdiIcons.informationOutline,
+    'email-fast-outline': MdiIcons.emailFastOutline,
     // ...
   };
 }

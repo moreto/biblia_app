@@ -49,6 +49,10 @@ abstract final class Routes {
   /// Aceite e revogação dos consentimentos do usuário (LGPD; tela própria, não é aba).
   static const usuarioConsentimento = '/usuario-consentimento';
 
+  // usuario
+  /// Meus dados: dados do cadastro (nome, usuário), senha e configurações do usuário (tela própria, com abas).
+  static const usuario = '/usuario';
+
   // comunidade
   static const comunidade = '/comunidade';
 

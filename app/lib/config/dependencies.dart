@@ -54,6 +54,8 @@ import '../features/mensagem/mensagem_envio/repository/mensagem_envio_repository
 import '../features/mensagem/mensagem_lista/repository/mensagem_lista_repository.dart';
 import '../features/mensagem/mensagem_lista/repository/mensagem_lista_repository_impl.dart';
 import '../features/dashboard/repository/dashboard_repository_impl.dart';
+import '../features/usuario/repository/usuario_repository.dart';
+import '../features/usuario/repository/usuario_repository_impl.dart';
 import '../features/dashboard/widgets/musica/repository/musica_repository.dart';
 import '../features/dashboard/widgets/musica/repository/musica_repository_impl.dart';
 import '../features/dashboard/widgets/oracao/repository/oracao_repository.dart';
@@ -99,4 +101,5 @@ void configDependencies() {
   locator.registerLazySingleton<UsuarioConsentimentoRepository>(() => UsuarioConsentimentoRepositoryImpl());
   locator.registerLazySingleton<FaleConoscoRepository>(() => FaleConoscoRepositoryImpl());
   locator.registerLazySingleton<FaleConoscoAtendimentoRepository>(() => FaleConoscoAtendimentoRepositoryImpl());
+  locator.registerLazySingleton<UsuarioRepository>(() => UsuarioRepositoryImpl());
 }

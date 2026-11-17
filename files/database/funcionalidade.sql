@@ -38,7 +38,10 @@ WITH v (ordem, func_nome, func_descricao, func_icone, func_rota) AS (
     (15, 'Privacidade e Consentimentos', 'Aceite dos termos de uso, da política de privacidade e do tratamento de dados religiosos (LGPD), com a situação e a data de cada aceite, revogação e histórico.', 'shield-account-outline', '/usuario-consentimento'),
 
     -- Fale Conosco
-    (16, 'Fale Conosco', 'Envio de mensagens ao atendimento com categoria e protocolo, acompanhamento da situação de cada chamado e conversa com as respostas da equipe.', 'face-agent', '/fale-conosco')
+    (16, 'Fale Conosco', 'Envio de mensagens ao atendimento com categoria e protocolo, acompanhamento da situação de cada chamado e conversa com as respostas da equipe.', 'face-agent', '/fale-conosco'),
+
+    -- Usuário
+    (17, 'Meus Dados', 'Consulta e alteração dos dados do cadastro (nome completo e nome de usuário), troca de senha e configurações dos avisos por e-mail, da leitura aberta e do histórico guardado.', 'account-cog-outline', '/usuario')
 ),
 atualizadas AS (
   UPDATE public.funcionalidade f

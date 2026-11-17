@@ -15,6 +15,7 @@ import 'router/configuracao_router.dart';
 import 'router/log_router.dart';
 import 'router/menu_router.dart';
 import 'router/notificacao_router.dart';
+import 'router/usuario_router.dart';
 import 'routes.dart';
 
 GoRouter router() => GoRouter(
@@ -38,5 +39,6 @@ GoRouter router() => GoRouter(
     ...DicionarioRouter.routes,
     ...LgpdRouter.routes,
     ...FaleConoscoRouter.routes,
+    ...UsuarioRouter.routes,
   ],
 );
