@@ -155,6 +155,17 @@ class IconsMap {
     'link-variant': MdiIcons.linkVariant,
     'alert-circle-outline': MdiIcons.alertCircleOutline,
     'alphabetical': MdiIcons.alphabetical,
+    // Tela "Privacidade e consentimentos" (UsuarioConsentimentoView / ConsentimentoFinalidade): 'shield-account-outline'
+    // também é func_icone/menu_icone de /usuario-consentimento. Dados religiosos ('hands-pray'), aceito
+    // ('check-circle'), pendente ('alert-circle-outline'), histórico ('history') e atualizar ('refresh') já mapeados.
+    'shield-account-outline': MdiIcons.shieldAccountOutline,
+    'file-document-outline': MdiIcons.fileDocumentOutline,
+    'shield-lock-outline': MdiIcons.shieldLockOutline,
+    'check': MdiIcons.check,
+    'check-all': MdiIcons.checkAll,
+    'close-circle-outline': MdiIcons.closeCircleOutline,
+    'cancel': MdiIcons.cancel,
+    'file-lock': MdiIcons.fileLock,
     // ...
   };
 }

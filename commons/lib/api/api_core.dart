@@ -66,6 +66,7 @@ enum ApiCore {
   renomado('/v1/renomado', kDesHost, kPrdHost, HeaderType.loggedArea),
   testamento('/v1/testamento', kDesHost, kPrdHost, HeaderType.loggedArea),
   usuarioBusca('/v1/usuario/busca', kDesHost, kPrdHost, HeaderType.loggedArea),
+  usuarioConsentimento('/v1/usuario-consentimento', kDesHost, kPrdHost, HeaderType.loggedUser),
   usuarioDispositivo('/v1/usuario-dispositivo', kDesHost, kPrdHost, HeaderType.loggedUser),
   versao('/v1/versao', kDesHost, kPrdHost, HeaderType.loggedArea),
   versiculoAleatorio('/v1/versiculo/aleatorio', kDesHost, kPrdHost, HeaderType.loggedArea),

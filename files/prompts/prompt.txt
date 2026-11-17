@@ -1,13 +1,13 @@
-construir a view de dicionario para informar a busca e retornar valores na mesma pagina
+construir a view de lgpd para para o usuário aceitar os concentimentos
+
 não será aba de nada, será uma nova tela, não é TAB
 
 
 internacionalizar os textos, verificar se existem na API /v1/traducao
-adicionar essa feature em uma nova pasta features/mensagem/
+adicionar essa feature em uma nova pasta features/
 
 API:
-/v1/dicionario/busca?texto=devocionaista&limite=1
-/v1/dicionario/palavra/abegao
+/v1/usuario-consentimento
 
 gerar um script de insert no banco de dados das traduções faltantes:
 

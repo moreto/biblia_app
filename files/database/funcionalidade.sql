@@ -32,7 +32,10 @@ WITH v (ordem, func_nome, func_descricao, func_icone, func_rota) AS (
     (13, 'Mensagens', 'Mensagens recebidas, com filtros de caixa de entrada, não lidas e arquivadas, marcação de lida, arquivamento e envio de mensagens a outros usuários.', 'message-text-outline', '/mensagem-lista'),
 
     -- Dicionário
-    (14, 'Dicionário', 'Busca de palavras no dicionário da língua portuguesa enquanto digita, com etimologia, acepções, rótulos de uso e remissões de cada verbete.', 'book-alphabet', '/dicionario')
+    (14, 'Dicionário', 'Busca de palavras no dicionário da língua portuguesa enquanto digita, com etimologia, acepções, rótulos de uso e remissões de cada verbete.', 'book-alphabet', '/dicionario'),
+
+    -- LGPD
+    (15, 'Privacidade e Consentimentos', 'Aceite dos termos de uso, da política de privacidade e do tratamento de dados religiosos (LGPD), com a situação e a data de cada aceite, revogação e histórico.', 'shield-account-outline', '/usuario-consentimento')
 ),
 atualizadas AS (
   UPDATE public.funcionalidade f

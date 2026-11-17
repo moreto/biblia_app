@@ -37,6 +37,10 @@ abstract final class Routes {
   /// Busca no dicionário com o resultado na mesma página (tela própria, não é aba).
   static const dicionario = '/dicionario';
 
+  // lgpd
+  /// Aceite e revogação dos consentimentos do usuário (LGPD; tela própria, não é aba).
+  static const usuarioConsentimento = '/usuario-consentimento';
+
   // comunidade
   static const comunidade = '/comunidade';
 
