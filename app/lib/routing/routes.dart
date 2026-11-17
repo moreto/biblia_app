@@ -33,6 +33,10 @@ abstract final class Routes {
   /// Mensagens recebidas pelo usuário (tela própria, não é aba).
   static const mensagemLista = '/mensagem-lista';
 
+  // dicionario
+  /// Busca no dicionário com o resultado na mesma página (tela própria, não é aba).
+  static const dicionario = '/dicionario';
+
   // comunidade
   static const comunidade = '/comunidade';
 

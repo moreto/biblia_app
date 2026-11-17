@@ -29,7 +29,10 @@ WITH v (ordem, func_nome, func_descricao, func_icone, func_rota) AS (
     (12, 'Encontrar Comunidades', 'Busca de comunidades por estado e cidade, com membros, endereços, contatos e liderança de cada uma.', 'map-search-outline', '/comunidade-lista'),
 
     -- Mensagem
-    (13, 'Mensagens', 'Mensagens recebidas, com filtros de caixa de entrada, não lidas e arquivadas, marcação de lida, arquivamento e envio de mensagens a outros usuários.', 'message-text-outline', '/mensagem-lista')
+    (13, 'Mensagens', 'Mensagens recebidas, com filtros de caixa de entrada, não lidas e arquivadas, marcação de lida, arquivamento e envio de mensagens a outros usuários.', 'message-text-outline', '/mensagem-lista'),
+
+    -- Dicionário
+    (14, 'Dicionário', 'Busca de palavras no dicionário da língua portuguesa enquanto digita, com etimologia, acepções, rótulos de uso e remissões de cada verbete.', 'book-alphabet', '/dicionario')
 ),
 atualizadas AS (
   UPDATE public.funcionalidade f

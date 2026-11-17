@@ -50,6 +50,8 @@ enum ApiCore {
   municipio('/v1/municipio', kDesHost, kPrdHost, HeaderType.loggedArea),
   configuracao('/v1/configuracao', kDesHost, kPrdHost, HeaderType.loggedArea),
   configuracaoItem('/v1/configuracao-item', kDesHost, kPrdHost, HeaderType.loggedArea),
+  dicionarioBusca('/v1/dicionario/busca', kDesHost, kPrdHost, HeaderType.loggedArea),
+  dicionarioPalavra('/v1/dicionario/palavra', kDesHost, kPrdHost, HeaderType.loggedArea),
   livro('/v1/livro', kDesHost, kPrdHost, HeaderType.loggedArea),
   log('/v1/log', kDesHost, kPrdHost, HeaderType.loggedArea),
   menu('/v1/menu', kDesHost, kPrdHost, HeaderType.loggedArea),

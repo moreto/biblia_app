@@ -1,6 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Acesso à biblia_api também na build de release. -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- speech_to_text: falar a palavra no campo de busca do dicionário (microfone e fones bluetooth). -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
     <application
         android:label="app"
         android:name="${applicationName}"
@@ -47,6 +52,10 @@
         <intent>
             <action android:name="android.intent.action.VIEW"/>
             <data android:scheme="https"/>
+        </intent>
+        <!-- speech_to_text: serviço de reconhecimento de fala do aparelho. -->
+        <intent>
+            <action android:name="android.speech.RecognitionService"/>
         </intent>
     </queries>
 </manifest>
