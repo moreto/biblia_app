@@ -5,9 +5,9 @@
 -- API e em files/prompts/l10n.csv em 17/11/2026).
 -- Chaves já existentes reutilizadas: voltar, ocultarAcoes, exibirAcoes, tentarNovamente, atualizar, fechar, enviar,
 -- novaMensagem, nome, email, informeEmail, emailInvalido, dadosInvalidos, registroNaoEncontrado,
--- respostaApiInvalida, erroGeralApi, tokenInvalido, headerInvalido; rótulos das configurações (cite_valor):
--- duvida, sugestao, reclamacao, erroTecnico, elogio, outros (categoria) e novo, emAnalise, emAtendimento,
--- respondido, fechado (situação).
+-- respostaApiInvalida, erroGeralApi, tokenInvalido, headerInvalido.
+-- Os rótulos das opções das configurações (cite_valor de faleConoscoCategoria e faleConoscoStatus) também são chaves
+-- de tradução e entram no fim da lista.
 INSERT INTO public.traducao (trad_chave, trad_pt_br, trad_es_es, trad_en_us, usua_id, trad_status, created_at)
 SELECT v.trad_chave, v.trad_pt_br, v.trad_es_es, v.trad_en_us, 1, true, now()
 FROM (VALUES
@@ -38,6 +38,19 @@ FROM (VALUES
   ('chamadoFechado', 'Este atendimento foi encerrado e não aceita novas mensagens', 'Esta atención fue cerrada y no acepta nuevos mensajes', 'This request was closed and does not accept new messages'),
   ('chamadoFechadoAviso', 'Atendimento encerrado. Para outro assunto, envie uma nova mensagem.', 'Atención cerrada. Para otro asunto, envíe un nuevo mensaje.', 'Request closed. For another subject, send a new message.'),
   ('faleConoscoIndisponivel', 'Fale conosco indisponível no momento. Tente novamente mais tarde', 'Contáctenos no disponible en este momento. Intente de nuevo más tarde', 'Contact us is unavailable right now. Try again later'),
-  ('formatoFaleConoscoInvalido', 'Formato do Fale conosco inválido', 'Formato de Contáctenos inválido', 'Invalid contact us format')
+  ('formatoFaleConoscoInvalido', 'Formato do Fale conosco inválido', 'Formato de Contáctenos inválido', 'Invalid contact us format'),
+  -- faleConoscoCategoria
+  ('duvida', 'Dúvida', 'Duda', 'Question'),
+  ('sugestao', 'Sugestão', 'Sugerencia', 'Suggestion'),
+  ('reclamacao', 'Reclamação', 'Reclamo', 'Complaint'),
+  ('erroTecnico', 'Erro técnico', 'Error técnico', 'Technical issue'),
+  ('elogio', 'Elogio', 'Elogio', 'Compliment'),
+  ('outros', 'Outros', 'Otros', 'Other'),
+  -- faleConoscoStatus
+  ('novo', 'Novo', 'Nuevo', 'New'),
+  ('emAnalise', 'Em análise', 'En análisis', 'Under review'),
+  ('emAtendimento', 'Em atendimento', 'En atención', 'In progress'),
+  ('respondido', 'Respondido', 'Respondido', 'Answered'),
+  ('fechado', 'Fechado', 'Cerrado', 'Closed')
 ) AS v (trad_chave, trad_pt_br, trad_es_es, trad_en_us)
 WHERE NOT EXISTS (SELECT 1 FROM public.traducao t WHERE t.trad_chave = v.trad_chave);

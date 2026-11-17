@@ -173,6 +173,19 @@ class IconsMap {
     'ticket-outline': MdiIcons.ticketOutline,
     'progress-clock': MdiIcons.progressClock,
     'tag-outline': MdiIcons.tagOutline,
+    // Atendimento do Fale Conosco (FaleConoscoAtendimentoView / FaleConoscoAtendimentoDetalheDialog). Tela e
+    // mensagens do atendimento ('face-agent'), meus chamados ('account-check-outline'), contato ('email-outline',
+    // 'phone-outline'), solicitante ('account-outline'), liberar ('account-remove-outline'), fechar ('lock-outline'),
+    // excluir ('delete-outline'), enviar ('send') e atualizar ('refresh') já mapeados acima.
+    'inbox-multiple-outline': MdiIcons.inboxMultipleOutline,
+    'flag-outline': MdiIcons.flagOutline,
+    'account-tie-outline': MdiIcons.accountTieOutline,
+    'timer-outline': MdiIcons.timerOutline,
+    'tag-edit-outline': MdiIcons.tagEditOutline,
+    'account-arrow-right-outline': MdiIcons.accountArrowRightOutline,
+    'message-lock-outline': MdiIcons.messageLockOutline,
+    'lock-open-variant-outline': MdiIcons.lockOpenVariantOutline,
+    'web-box': MdiIcons.webBox,
     'file-lock': MdiIcons.fileLock,
     // ...
   };

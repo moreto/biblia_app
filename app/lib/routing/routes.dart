@@ -41,6 +41,10 @@ abstract final class Routes {
   /// Chamados do usuário no Fale Conosco e envio de nova mensagem (tela própria, não é aba).
   static const faleConosco = '/fale-conosco';
 
+  /// Fila de atendimento do Fale Conosco (tela própria, não é aba; ainda fora do menu, que vai controlar o acesso
+  /// pelo perfil).
+  static const faleConoscoAtendimento = '/fale-conosco-atendimento';
+
   // lgpd
   /// Aceite e revogação dos consentimentos do usuário (LGPD; tela própria, não é aba).
   static const usuarioConsentimento = '/usuario-consentimento';

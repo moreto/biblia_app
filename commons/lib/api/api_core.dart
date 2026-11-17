@@ -55,6 +55,8 @@ enum ApiCore {
   // Fale Conosco: o POST é público, mas com o token a API grava o usuário (e o chamado aparece em "meus").
   faleConosco('/v1/fale-conosco', kDesHost, kPrdHost, HeaderType.loggedUser),
   faleConoscoMeus('/v1/fale-conosco/meus', kDesHost, kPrdHost, HeaderType.loggedUser),
+  // Atendimento do Fale Conosco: a API pode recusar o acesso (403 acessoNegado).
+  faleConoscoInteracao('/v1/fale-conosco-interacao', kDesHost, kPrdHost, HeaderType.loggedUser),
   faleConoscoInteracaoSolicitante('/v1/fale-conosco-interacao/solicitante', kDesHost, kPrdHost, HeaderType.loggedUser),
   livro('/v1/livro', kDesHost, kPrdHost, HeaderType.loggedArea),
   log('/v1/log', kDesHost, kPrdHost, HeaderType.loggedArea),

@@ -45,6 +45,8 @@ import '../features/dicionario/repository/dicionario_repository.dart';
 import '../features/dicionario/repository/dicionario_repository_impl.dart';
 import '../features/fale_conosco/repository/fale_conosco_repository.dart';
 import '../features/fale_conosco/repository/fale_conosco_repository_impl.dart';
+import '../features/fale_conosco_atendimento/repository/fale_conosco_atendimento_repository.dart';
+import '../features/fale_conosco_atendimento/repository/fale_conosco_atendimento_repository_impl.dart';
 import '../features/lgpd/usuario_consentimento/repository/usuario_consentimento_repository.dart';
 import '../features/lgpd/usuario_consentimento/repository/usuario_consentimento_repository_impl.dart';
 import '../features/mensagem/mensagem_envio/repository/mensagem_envio_repository.dart';
@@ -96,4 +98,5 @@ void configDependencies() {
   locator.registerLazySingleton<DicionarioRepository>(() => DicionarioRepositoryImpl());
   locator.registerLazySingleton<UsuarioConsentimentoRepository>(() => UsuarioConsentimentoRepositoryImpl());
   locator.registerLazySingleton<FaleConoscoRepository>(() => FaleConoscoRepositoryImpl());
+  locator.registerLazySingleton<FaleConoscoAtendimentoRepository>(() => FaleConoscoAtendimentoRepositoryImpl());
 }
