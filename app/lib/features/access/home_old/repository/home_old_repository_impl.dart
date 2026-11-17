@@ -2,9 +2,9 @@ import 'package:commons/commons.dart';
 import 'package:service/service.dart';
 
 import '../../../../data/model/healt_model.dart';
-import 'home_repository.dart';
+import 'home_old_repository.dart';
 
-class HomeRepositoryImpl implements HomeRepository {
+class HomeOldRepositoryImpl implements HomeOldRepository {
   @override
   Future<Result<HealtModel>> healt() async {
     try {

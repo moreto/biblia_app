@@ -266,7 +266,10 @@ void main() {
       expect(find.byType(DialogBottomSheetMainBody), findsOneWidget);
       expect(find.text('de: sistema'), findsOneWidget);
       expect(
-        find.descendant(of: find.byType(DialogBottomSheetMainBody), matching: find.textContaining('O que foi indicado:')),
+        find.descendant(
+          of: find.byType(DialogBottomSheetMainBody),
+          matching: find.textContaining('O que foi indicado:'),
+        ),
         findsOneWidget,
       );
       expect(find.text('lidaEm: 11/11/2026 ${_hora('2026-11-11T15:00:00.000Z')}'), findsOneWidget);

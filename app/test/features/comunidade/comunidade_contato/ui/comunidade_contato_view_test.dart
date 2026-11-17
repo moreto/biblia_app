@@ -164,10 +164,7 @@ void main() {
         'ccon_telegram': 'matriz',
         'ccon_discord': 'convite',
       });
-      expect(
-        (snake.cconTelefonePrincipal, snake.cconTelegram, snake.cconDiscord),
-        ('6133334444', 'matriz', 'convite'),
-      );
+      expect((snake.cconTelefonePrincipal, snake.cconTelegram, snake.cconDiscord), ('6133334444', 'matriz', 'convite'));
 
       final novo = ComunidadeContatoModel.comCampos(comuId: 1, campos: {'cconSite': 'matriz.org'});
       expect((novo.cconId, novo.cconSite, novo.cconEmail), (null, 'matriz.org', null));

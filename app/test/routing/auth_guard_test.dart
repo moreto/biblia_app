@@ -10,6 +10,10 @@ void main() {
       }
     });
 
+    test('a leitura da Bíblia é pública', () {
+      expect(authRedirect(path: Routes.bibliaLeitura, isLogged: false), isNull);
+    });
+
     test('/ (sem tela própria) vai para a home', () {
       expect(authRedirect(path: Routes.splash, isLogged: false), Routes.home);
     });
@@ -22,7 +26,6 @@ void main() {
         Routes.log,
         Routes.configuracao,
         Routes.menu,
-        Routes.bibliaLeitura,
       ]) {
         expect(authRedirect(path: path, isLogged: false), Routes.home, reason: path);
       }
@@ -37,6 +40,7 @@ void main() {
 
     test('home e login vão para a dashboard', () {
       expect(authRedirect(path: Routes.home, isLogged: true), Routes.dashboard);
+      expect(authRedirect(path: Routes.homeOld, isLogged: true), Routes.dashboard);
       expect(authRedirect(path: Routes.login, isLogged: true), Routes.dashboard);
       expect(authRedirect(path: Routes.splash, isLogged: true), Routes.dashboard);
     });

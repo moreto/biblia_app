@@ -67,13 +67,21 @@ class LeituraDestino {
 /// - a leitura abre na versão salva em [versaoPreferencia] (a primeira, se não há versão salva ou se a salva não
 ///   existe mais) e cada troca de versão é salva;
 /// - toda marcação (capítulo ou versículo) devolve uma mensagem de confirmação ao usuário ([mensagemCapitulo] e
-///   [mensagemVersiculo]); ao marcar o último versículo que faltava, a mensagem avisa que o capítulo foi concluído.
+///   [mensagemVersiculo]); ao marcar o último versículo que faltava, a mensagem avisa que o capítulo foi concluído;
+/// - sem login ([logado] falso) a leitura é pública: só versões, livros, índice e capítulos; progresso, reações,
+///   marcações e indicações dependem do usuário e não são carregados.
 class BibliaLeituraUseCase {
-  BibliaLeituraUseCase({required this.bibliaLeituraRepository, this.versaoPreferencia}) {
+  BibliaLeituraUseCase({required this.bibliaLeituraRepository, this.versaoPreferencia, bool Function()? estaLogado})
+    : _estaLogado = estaLogado ?? (() => AuthSession.instance.isLogged) {
     Log.print(super.runtimeType);
   }
 
   final BibliaLeituraRepository bibliaLeituraRepository;
+
+  final bool Function() _estaLogado;
+
+  /// Há usuário logado: libera progresso, marcações e indicações.
+  bool get logado => _estaLogado();
 
   /// Onde a versão escolhida é guardada; nulo não guarda (sempre abre na primeira).
   final VersaoPreferencia? versaoPreferencia;

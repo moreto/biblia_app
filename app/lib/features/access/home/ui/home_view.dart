@@ -1,152 +1,101 @@
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
-
-import '../../../../../config/app_config.dart';
-import '../../../../../config/dialog_sheet.dart';
-import '../../../../../l10n/app_localizations.dart';
-import '../../../../../routing/routes.dart';
-import '../widgets/funcionalidade/ui/funcionalidade_view.dart';
-import '../widgets/funcionalidade/ui/funcionalidade_viewmodel.dart';
-import 'home_viewmodel.dart';
-
 import 'package:app/config/orientation_button.dart';
 import 'package:app/config/theme_mode_button.dart';
+import 'package:app/l10n/app_localizations.dart';
+import 'package:app/routing/routes.dart';
+import 'package:components/components.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
-class HomeView extends StatefulWidget {
-  const HomeView({super.key, required this.viewModel, required this.funcionalidadeViewModel});
+import 'home_viewmodel.dart';
+
+/// Tela de entrada: menu hambúrguer (Drawer) na AppBar e, no corpo, o botão "Bíblia" com o id do aparelho embaixo.
+class HomeView extends StatelessWidget {
+  const HomeView({super.key, required this.viewModel});
 
   final HomeViewmodel viewModel;
-
-  /// Viewmodel do card de funcionalidades exibido no corpo da home.
-  final FuncionalidadeViewmodel funcionalidadeViewModel;
-
-  @override
-  State<HomeView> createState() => _HomeViewState();
-}
-
-class _HomeViewState extends State<HomeView> {
-  /// Posição do item de login na [NavigationBar], à direita de tema e idioma.
-  static const _loginIndex = 2;
 
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(
-        title: Text(strings.translate('home')),
-        elevation: 0,
-        actions: const [OrientationButton(), ThemeModeButton()],
+      // Com `drawer`, a AppBar mostra o ícone do menu hambúrguer sozinha.
+      appBar: AppBar(title: Text(strings.translate('home')), actions: const [OrientationButton(), ThemeModeButton()]),
+      drawer: const _HomeDrawer(),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              FilledButton.icon(
+                onPressed: () => context.push(Routes.bibliaLeitura),
+                icon: const Icon(Icons.menu_book_outlined),
+                label: Text(strings.translate('biblia')),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              ListenableBuilder(
+                listenable: viewModel.idDispositivoCommand,
+                builder: (context, _) => _IdDispositivo(viewModel: viewModel),
+              ),
+            ],
+          ),
+        ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [FuncionalidadeView(viewModel: widget.funcionalidadeViewModel)],
-      ),
-      // Tema, idioma e login são atalhos: nenhum item fica selecionado, então todos usam a mesma cor
-      // (sem a pílula e sem a troca de cor do item selecionado).
-      bottomNavigationBar: NavigationBarTheme(
-        data: _atalhosTheme(context),
-        child: NavigationBar(
-          indicatorColor: Colors.transparent,
-          onDestinationSelected: (index) {
-            if (index == _loginIndex) {
-              context.push(Routes.login);
-              return;
-            }
-            _showSetting(index);
-          },
-          destinations: [
-            NavigationDestination(icon: Icon(Icons.palette_outlined), label: strings.translate('tema')),
-            NavigationDestination(icon: Icon(Icons.language), label: strings.translate('idioma')),
-            // Login em destaque: borda e ícone na cor primária.
-            NavigationDestination(icon: _loginIcon(context), label: strings.translate('login')),
+    );
+  }
+}
+
+/// Id do aparelho (Android ID / `identifierForVendor`), selecionável para poder copiar.
+class _IdDispositivo extends StatelessWidget {
+  const _IdDispositivo({required this.viewModel});
+
+  final HomeViewmodel viewModel;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final estilo = theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant);
+
+    if (viewModel.idDispositivoCommand.running) {
+      return const SizedBox.square(dimension: 16, child: CircularProgressIndicator(strokeWidth: 2));
+    }
+
+    final id = viewModel.idDispositivo;
+    if (id == null) {
+      return Text(AppLocalizations.of(context).translate('dispositivoNaoIdentificado'), style: estilo);
+    }
+    return SelectableText(id, style: estilo, textAlign: TextAlign.center);
+  }
+}
+
+/// Menu lateral da tela de entrada.
+class _HomeDrawer extends StatelessWidget {
+  const _HomeDrawer();
+
+  @override
+  Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
+    return Drawer(
+      child: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, AppSpacing.sm),
+              child: Text(strings.translate('menus'), style: Theme.of(context).textTheme.titleMedium),
+            ),
+            ListTile(
+              leading: const Icon(Icons.home_outlined),
+              title: Text(strings.translate('homeAntiga')),
+              onTap: () {
+                // Fecha o menu antes de abrir a tela, para ele não ficar aberto ao voltar.
+                Navigator.pop(context);
+                context.push(Routes.homeOld);
+              },
+            ),
           ],
         ),
       ),
-    );
-  }
-
-  /// Mesma cor de ícone e texto em qualquer estado (a do item não selecionado do Material 3).
-  NavigationBarThemeData _atalhosTheme(BuildContext context) {
-    final theme = Theme.of(context);
-    final cor = theme.colorScheme.onSurfaceVariant;
-    return NavigationBarTheme.of(context).copyWith(
-      iconTheme: WidgetStatePropertyAll(IconThemeData(color: cor)),
-      labelTextStyle: WidgetStatePropertyAll(theme.textTheme.labelMedium?.copyWith(color: cor)),
-    );
-  }
-
-  Widget _loginIcon(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-      decoration: BoxDecoration(
-        border: Border.all(color: primary, width: 1.5),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Icon(Icons.login, color: primary),
-    );
-  }
-
-  void _showSetting(int index) {
-    final strings = AppLocalizations.of(context);
-    final title = switch (index) {
-      0 => strings.translate('tema'),
-      _ => strings.translate('idioma'),
-    };
-
-    DialogSheet.show<void>(
-      context,
-      titulo: title,
-      conteudo: Builder(
-        builder: (context) => Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: index == 0 ? _themeControl(context) : _localeControl(context),
-        ),
-      ),
-    );
-  }
-
-  Widget _themeControl(BuildContext context) {
-    final strings = AppLocalizations.of(context);
-    return SegmentedButton<ThemeMode>(
-      expandedInsets: EdgeInsets.zero,
-      segments: [
-        ButtonSegment(
-          value: ThemeMode.system,
-          icon: Icon(Icons.brightness_auto_outlined),
-          label: Text(strings.translate('sistema')),
-        ),
-        ButtonSegment(
-          value: ThemeMode.light,
-          icon: Icon(Icons.light_mode_outlined),
-          label: Text(strings.translate('claro')),
-        ),
-        ButtonSegment(
-          value: ThemeMode.dark,
-          icon: Icon(Icons.dark_mode_outlined),
-          label: Text(strings.translate('escuro')),
-        ),
-      ],
-      selected: {context.watch<AppConfig>().mode},
-      onSelectionChanged: (selection) {
-        context.read<AppConfig>().setMode(selection.first);
-      },
-    );
-  }
-
-  Widget _localeControl(BuildContext context) {
-    final strings = AppLocalizations.of(context);
-    return DropdownButtonFormField<Locale?>(
-      initialValue: context.watch<AppConfig>().locale,
-      decoration: InputDecoration(labelText: strings.translate('idioma')),
-      items: [
-        DropdownMenuItem(value: null, child: Text(strings.translate('sistema'))),
-        DropdownMenuItem(value: Locale('pt', 'BR'), child: Text('Português')),
-        DropdownMenuItem(value: Locale('es', 'ES'), child: Text('Español')),
-        DropdownMenuItem(value: Locale('en', 'US'), child: Text('English')),
-      ],
-      onChanged: context.read<AppConfig>().setLocale,
     );
   }
 }

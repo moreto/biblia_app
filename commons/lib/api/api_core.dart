@@ -35,9 +35,14 @@ enum ApiCore {
   traducao('/v1/traducao', kDesHost, kPrdHost, HeaderType.basicInfo),
   usuarioAtivacaoConfirmar('/v1/usuario-ativacao/confirmar', kDesHost, kPrdHost, HeaderType.basicInfo),
 
+  // Pública: leitura da Bíblia sem login (a API não exige token nessas rotas).
+  bibliaCapitulo('/v1/biblia/capitulo', kDesHost, kPrdHost, HeaderType.basicInfo),
+  bibliaIndice('/v1/biblia/indice', kDesHost, kPrdHost, HeaderType.basicInfo),
+  livro('/v1/livro', kDesHost, kPrdHost, HeaderType.basicInfo),
+  testamento('/v1/testamento', kDesHost, kPrdHost, HeaderType.basicInfo),
+  versao('/v1/versao', kDesHost, kPrdHost, HeaderType.basicInfo),
+
   // Area Logada (requere autenticação)
-  bibliaCapitulo('/v1/biblia/capitulo', kDesHost, kPrdHost, HeaderType.loggedArea),
-  bibliaIndice('/v1/biblia/indice', kDesHost, kPrdHost, HeaderType.loggedArea),
   comunidade('/v1/comunidade', kDesHost, kPrdHost, HeaderType.loggedArea),
   comunidadeContato('/v1/comunidade-contato', kDesHost, kPrdHost, HeaderType.loggedArea),
   comunidadeDenominacao('/v1/comunidade-denominacao', kDesHost, kPrdHost, HeaderType.loggedArea),
@@ -52,7 +57,6 @@ enum ApiCore {
   configuracaoItem('/v1/configuracao-item', kDesHost, kPrdHost, HeaderType.loggedArea),
   dicionarioBusca('/v1/dicionario/busca', kDesHost, kPrdHost, HeaderType.loggedArea),
   dicionarioPalavra('/v1/dicionario/palavra', kDesHost, kPrdHost, HeaderType.loggedArea),
-  livro('/v1/livro', kDesHost, kPrdHost, HeaderType.loggedArea),
   log('/v1/log', kDesHost, kPrdHost, HeaderType.loggedArea),
   menu('/v1/menu', kDesHost, kPrdHost, HeaderType.loggedArea),
   mensagem('/v1/mensagem', kDesHost, kPrdHost, HeaderType.loggedArea),
@@ -64,10 +68,8 @@ enum ApiCore {
   notificacao('/v1/notificacao', kDesHost, kPrdHost, HeaderType.loggedArea),
   oracaoAleatoria('/v1/oracao/aleatoria', kDesHost, kPrdHost, HeaderType.loggedArea),
   renomado('/v1/renomado', kDesHost, kPrdHost, HeaderType.loggedArea),
-  testamento('/v1/testamento', kDesHost, kPrdHost, HeaderType.loggedArea),
   usuarioBusca('/v1/usuario/busca', kDesHost, kPrdHost, HeaderType.loggedArea),
   usuarioDispositivo('/v1/usuario-dispositivo', kDesHost, kPrdHost, HeaderType.loggedUser),
-  versao('/v1/versao', kDesHost, kPrdHost, HeaderType.loggedArea),
   versiculoAleatorio('/v1/versiculo/aleatorio', kDesHost, kPrdHost, HeaderType.loggedArea),
   versiculoIndicacao('/v1/versiculo-indicacao', kDesHost, kPrdHost, HeaderType.loggedArea),
   versiculoIndicacaoCapitulo('/v1/versiculo-indicacao/capitulo', kDesHost, kPrdHost, HeaderType.loggedArea),
