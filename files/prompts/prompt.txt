@@ -1,4 +1,4 @@
-construir a view de lgpd para para o usuário aceitar os concentimentos
+construir a view de fale conosco
 
 não será aba de nada, será uma nova tela, não é TAB
 
@@ -7,7 +7,7 @@ internacionalizar os textos, verificar se existem na API /v1/traducao
 adicionar essa feature em uma nova pasta features/
 
 API:
-/v1/usuario-consentimento
+/v1/fale-conosco
 
 gerar um script de insert no banco de dados das traduções faltantes:
 

@@ -35,7 +35,10 @@ WITH v (ordem, func_nome, func_descricao, func_icone, func_rota) AS (
     (14, 'Dicionário', 'Busca de palavras no dicionário da língua portuguesa enquanto digita, com etimologia, acepções, rótulos de uso e remissões de cada verbete.', 'book-alphabet', '/dicionario'),
 
     -- LGPD
-    (15, 'Privacidade e Consentimentos', 'Aceite dos termos de uso, da política de privacidade e do tratamento de dados religiosos (LGPD), com a situação e a data de cada aceite, revogação e histórico.', 'shield-account-outline', '/usuario-consentimento')
+    (15, 'Privacidade e Consentimentos', 'Aceite dos termos de uso, da política de privacidade e do tratamento de dados religiosos (LGPD), com a situação e a data de cada aceite, revogação e histórico.', 'shield-account-outline', '/usuario-consentimento'),
+
+    -- Fale Conosco
+    (16, 'Fale Conosco', 'Envio de mensagens ao atendimento com categoria e protocolo, acompanhamento da situação de cada chamado e conversa com as respostas da equipe.', 'face-agent', '/fale-conosco')
 ),
 atualizadas AS (
   UPDATE public.funcionalidade f

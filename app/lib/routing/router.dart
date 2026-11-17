@@ -8,6 +8,7 @@ import 'router/access_router.dart';
 import 'router/biblia_router.dart';
 import 'router/comunidade_router.dart';
 import 'router/dicionario_router.dart';
+import 'router/fale_conosco_router.dart';
 import 'router/lgpd_router.dart';
 import 'router/mensagem_router.dart';
 import 'router/configuracao_router.dart';
@@ -36,5 +37,6 @@ GoRouter router() => GoRouter(
     ...MensagemRouter.routes,
     ...DicionarioRouter.routes,
     ...LgpdRouter.routes,
+    ...FaleConoscoRouter.routes,
   ],
 );

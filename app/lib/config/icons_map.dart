@@ -165,6 +165,14 @@ class IconsMap {
     'check-all': MdiIcons.checkAll,
     'close-circle-outline': MdiIcons.closeCircleOutline,
     'cancel': MdiIcons.cancel,
+    // Tela "Fale conosco" (FaleConoscoView / FaleConoscoFormDialog / FaleConoscoDetalheDialog): 'face-agent' também é
+    // func_icone/menu_icone de /fale-conosco e marca as mensagens do atendimento. Nova mensagem
+    // ('email-plus-outline'), respondido ('message-reply-text-outline'), fechado ('lock-outline'), enviar ('send'),
+    // usuário ('account-outline') e atualizar ('refresh') já mapeados acima.
+    'face-agent': MdiIcons.faceAgent,
+    'ticket-outline': MdiIcons.ticketOutline,
+    'progress-clock': MdiIcons.progressClock,
+    'tag-outline': MdiIcons.tagOutline,
     'file-lock': MdiIcons.fileLock,
     // ...
   };

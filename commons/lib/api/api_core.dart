@@ -52,6 +52,10 @@ enum ApiCore {
   configuracaoItem('/v1/configuracao-item', kDesHost, kPrdHost, HeaderType.loggedArea),
   dicionarioBusca('/v1/dicionario/busca', kDesHost, kPrdHost, HeaderType.loggedArea),
   dicionarioPalavra('/v1/dicionario/palavra', kDesHost, kPrdHost, HeaderType.loggedArea),
+  // Fale Conosco: o POST é público, mas com o token a API grava o usuário (e o chamado aparece em "meus").
+  faleConosco('/v1/fale-conosco', kDesHost, kPrdHost, HeaderType.loggedUser),
+  faleConoscoMeus('/v1/fale-conosco/meus', kDesHost, kPrdHost, HeaderType.loggedUser),
+  faleConoscoInteracaoSolicitante('/v1/fale-conosco-interacao/solicitante', kDesHost, kPrdHost, HeaderType.loggedUser),
   livro('/v1/livro', kDesHost, kPrdHost, HeaderType.loggedArea),
   log('/v1/log', kDesHost, kPrdHost, HeaderType.loggedArea),
   menu('/v1/menu', kDesHost, kPrdHost, HeaderType.loggedArea),

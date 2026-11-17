@@ -1,6 +1,7 @@
 class ConfiguracaoModel {
   const ConfiguracaoModel({
     this.confId,
+    this.confCodigo,
     required this.confNome,
     this.confTipo,
     this.confAtivo = true,
@@ -9,6 +10,10 @@ class ConfiguracaoModel {
   });
 
   final int? confId;
+
+  /// Código da configuração (`conf_codigo`, ex.: `faleConoscoCategoria`); nulo se a API não devolver. Só leitura:
+  /// não vai no [toJson].
+  final String? confCodigo;
   final String confNome;
   final int? confTipo;
   final bool confAtivo;
@@ -25,6 +30,7 @@ class ConfiguracaoModel {
 
     return ConfiguracaoModel(
       confId: (confId as num).toInt(),
+      confCodigo: (json['confCodigo'] ?? json['conf_codigo']) as String?,
       confNome: (json['confNome'] ?? json['conf_nome']) as String,
       confTipo: (confTipo as num?)?.toInt(),
       confAtivo: (json['confAtivo'] ?? json['conf_ativo']) as bool? ?? true,
@@ -42,6 +48,7 @@ class ConfiguracaoModel {
 
   ConfiguracaoModel copyWith({int? confId, String? confNome, int? confTipo, bool? confAtivo}) => ConfiguracaoModel(
     confId: confId ?? this.confId,
+    confCodigo: confCodigo,
     confNome: confNome ?? this.confNome,
     confTipo: confTipo ?? this.confTipo,
     confAtivo: confAtivo ?? this.confAtivo,

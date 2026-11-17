@@ -37,6 +37,10 @@ abstract final class Routes {
   /// Busca no dicionário com o resultado na mesma página (tela própria, não é aba).
   static const dicionario = '/dicionario';
 
+  // fale conosco
+  /// Chamados do usuário no Fale Conosco e envio de nova mensagem (tela própria, não é aba).
+  static const faleConosco = '/fale-conosco';
+
   // lgpd
   /// Aceite e revogação dos consentimentos do usuário (LGPD; tela própria, não é aba).
   static const usuarioConsentimento = '/usuario-consentimento';

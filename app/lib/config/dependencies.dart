@@ -43,6 +43,8 @@ import '../features/comunidade/comunidade_endereco/repository/comunidade_enderec
 import '../features/dashboard/repository/dashboard_repository.dart';
 import '../features/dicionario/repository/dicionario_repository.dart';
 import '../features/dicionario/repository/dicionario_repository_impl.dart';
+import '../features/fale_conosco/repository/fale_conosco_repository.dart';
+import '../features/fale_conosco/repository/fale_conosco_repository_impl.dart';
 import '../features/lgpd/usuario_consentimento/repository/usuario_consentimento_repository.dart';
 import '../features/lgpd/usuario_consentimento/repository/usuario_consentimento_repository_impl.dart';
 import '../features/mensagem/mensagem_envio/repository/mensagem_envio_repository.dart';
@@ -93,4 +95,5 @@ void configDependencies() {
   locator.registerLazySingleton<MensagemEnvioRepository>(() => MensagemEnvioRepositoryImpl());
   locator.registerLazySingleton<DicionarioRepository>(() => DicionarioRepositoryImpl());
   locator.registerLazySingleton<UsuarioConsentimentoRepository>(() => UsuarioConsentimentoRepositoryImpl());
+  locator.registerLazySingleton<FaleConoscoRepository>(() => FaleConoscoRepositoryImpl());
 }
