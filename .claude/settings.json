@@ -1,8 +1,18 @@
 {
   "permissions": {
     "allow": [
-      "Bash(cd /Users/mmoreto/Documents/Projetos/mm/biblia_app/app && mason make feature --name fale_conosco_atendimento 2>&1 | grep -c created; grep -n \"class\\\\|udetNome\\\\|final\" lib/config/usuario_session.dart | head; grep -rn \"'baixa'\\\\|'media'\\\\|'alta'\\\\|'urgente'\\\\|'redesSociais'\\\\|'whatsapp'\\\\|'site'\" ../files/database ../../biblia_api/files/database 2>/dev/null | grep -v fale_conosco.sql | cut -c1-120)",
-      "Read(//Users/mmoreto/Documents/Projetos/biblia_api/files/**)"
+      "Bash",
+      "Read",
+      "Edit",
+      "Write",
+      "NotebookEdit",
+      "WebFetch",
+      "WebSearch",
+      "Skill"
+    ],
+    "additionalDirectories": [
+      "../biblia_api",
+      "../biblia_app"
     ]
   }
 }
