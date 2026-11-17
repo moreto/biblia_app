@@ -5,7 +5,6 @@ import 'package:service/service.dart';
 import '../../../data/model/configuracao/configuracao_item_model.dart';
 import '../../../data/model/configuracao/configuracao_model.dart';
 import '../../../data/model/fale_conosco/fale_conosco_model.dart';
-import '../../../data/model/usuario/usuario_detalhe_model.dart';
 import '../repository/fale_conosco_repository.dart';
 
 /// Opção de uma configuração do Fale Conosco: [chave] (`cite_chave`, gravada no chamado) e [rotulo] (`cite_valor`,
@@ -23,12 +22,19 @@ class FaleConoscoOpcoes {
   final int? origemApp;
 }
 
-/// Chamados do usuário e as opções das configurações.
+/// Chamados do usuário, as opções das configurações e o contato do usuário logado (para o formulário).
 class FaleConoscoDados {
-  const FaleConoscoDados({required this.chamados, required this.opcoes});
+  const FaleConoscoDados({
+    required this.chamados,
+    required this.opcoes,
+    this.contato = const FaleConoscoContatoModel(),
+  });
 
   final List<FaleConoscoModel> chamados;
   final FaleConoscoOpcoes opcoes;
+
+  /// Nome e e-mail da conta; vazios se a consulta falhar.
+  final FaleConoscoContatoModel contato;
 }
 
 /// Campos do formulário "Nova mensagem".
@@ -51,16 +57,16 @@ typedef FaleConoscoFormulario = ({
 ///   [textoMaximo] e categoria obrigatória); [enviar] valida, tira os espaços das pontas e grava com a origem "app";
 /// - [detalhe] traz o chamado com as interações; [responder] grava a mensagem do usuário e devolve o chamado
 ///   atualizado. Chamado fechado não aceita mensagem (`chamadoFechado`);
-/// - o formulário começa com o nome e o e-mail do usuário logado ([prefixoNome], [prefixoEmail]);
+/// - o formulário começa com o nome e o e-mail da conta do usuário logado ([FaleConoscoDados.contato], de
+///   `/v1/usuario/usuario-detalhe-by-id`, buscado no [carregar]); se a consulta falhar, a tela abre igual e os campos
+///   ficam vazios;
 /// - textos: [rotulo] (chave de tradução da opção; `?` se o código não estiver na configuração) e [data].
 class FaleConoscoUseCase {
-  FaleConoscoUseCase({required this.faleConoscoRepository, UsuarioDetalheModel? Function()? usuario})
-    : _usuario = usuario ?? (() => null) {
+  FaleConoscoUseCase({required this.faleConoscoRepository}) {
     Log.print(super.runtimeType);
   }
 
   final FaleConoscoRepository faleConoscoRepository;
-  final UsuarioDetalheModel? Function() _usuario;
 
   static const nomeMaximo = 150;
   static const emailMaximo = 90;
@@ -81,15 +87,24 @@ class FaleConoscoUseCase {
 
   static final _email = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
 
-  String get prefixoNome => _usuario()?.udetNome.trim() ?? '';
-
-  String get prefixoEmail => _usuario()?.usuaEmail.trim() ?? '';
-
   Future<Result<FaleConoscoDados>> carregar() async {
-    final (chamados, opcoes) = await (faleConoscoRepository.meus(), _opcoes()).wait;
+    final (chamados, opcoes, contato) = await (
+      faleConoscoRepository.meus(),
+      _opcoes(),
+      faleConoscoRepository.contato(),
+    ).wait;
     switch ((chamados, opcoes)) {
       case (Ok(value: final lista), Ok(value: final opcoes)):
-        return Result.ok(FaleConoscoDados(chamados: ordenar(lista), opcoes: opcoes));
+        return Result.ok(
+          FaleConoscoDados(
+            chamados: ordenar(lista),
+            opcoes: opcoes,
+            contato: switch (contato) {
+              Ok(value: final value) => value,
+              Error() => const FaleConoscoContatoModel(),
+            },
+          ),
+        );
       case (Error(error: final error), _) || (_, Error(error: final error)):
         return Result.error(error);
     }

@@ -2,7 +2,6 @@ import 'package:commons/commons.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/dependencies.dart';
-import '../../config/usuario_session.dart';
 import '../../features/fale_conosco_atendimento/repository/fale_conosco_atendimento_repository.dart';
 import '../../features/fale_conosco_atendimento/ui/fale_conosco_atendimento_view.dart';
 import '../../features/fale_conosco_atendimento/ui/fale_conosco_atendimento_viewmodel.dart';
@@ -19,10 +18,7 @@ class FaleConoscoRouter {
       path: Routes.faleConosco,
       builder: (context, state) => FaleConoscoView(
         viewModel: FaleConoscoViewmodel(
-          faleConoscoUseCase: FaleConoscoUseCase(
-            faleConoscoRepository: locator<FaleConoscoRepository>(),
-            usuario: () => UsuarioSession.instance.usuarioDetalhe,
-          ),
+          faleConoscoUseCase: FaleConoscoUseCase(faleConoscoRepository: locator<FaleConoscoRepository>()),
         ),
       ),
     ),

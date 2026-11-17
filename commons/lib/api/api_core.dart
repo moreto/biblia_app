@@ -72,6 +72,8 @@ enum ApiCore {
   renomado('/v1/renomado', kDesHost, kPrdHost, HeaderType.loggedArea),
   testamento('/v1/testamento', kDesHost, kPrdHost, HeaderType.loggedArea),
   usuarioBusca('/v1/usuario/busca', kDesHost, kPrdHost, HeaderType.loggedArea),
+  // Dados (e-mail, nome) do usuário do token.
+  usuarioDetalhe('/v1/usuario/usuario-detalhe-by-id', kDesHost, kPrdHost, HeaderType.loggedUser),
   usuarioConsentimento('/v1/usuario-consentimento', kDesHost, kPrdHost, HeaderType.loggedUser),
   usuarioDispositivo('/v1/usuario-dispositivo', kDesHost, kPrdHost, HeaderType.loggedUser),
   versao('/v1/versao', kDesHost, kPrdHost, HeaderType.loggedArea),

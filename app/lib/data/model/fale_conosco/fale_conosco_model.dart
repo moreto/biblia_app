@@ -111,6 +111,20 @@ class FaleConoscoEnvioModel {
   );
 }
 
+/// Contato do usuário logado (`GET /v1/usuario/usuario-detalhe-by-id`), para preencher o formulário: nome
+/// (`udetNome`) e e-mail da conta (`usuaEmail`).
+class FaleConoscoContatoModel {
+  const FaleConoscoContatoModel({this.nome = '', this.email = ''});
+
+  final String nome;
+  final String email;
+
+  factory FaleConoscoContatoModel.fromJson(Map<String, dynamic> json) => FaleConoscoContatoModel(
+    nome: JsonReader.textoOpcional(json, 'udetNome', 'udet_nome')?.trim() ?? '',
+    email: JsonReader.textoOpcional(json, 'usuaEmail', 'usua_email')?.trim() ?? '',
+  );
+}
+
 /// Corpo de `POST /v1/fale-conosco`. Categoria e origem são `cite_chave` (inteiros) das configurações.
 class FaleConoscoBodyModel {
   const FaleConoscoBodyModel({

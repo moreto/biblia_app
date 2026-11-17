@@ -40,6 +40,10 @@ class FaleConoscoRepositoryImpl implements FaleConoscoRepository {
     ConfiguracaoItemModel.fromJson,
   );
 
+  @override
+  Future<Result<FaleConoscoContatoModel>> contato() =>
+      _um(DioProvider.of(ApiCore.usuarioDetalhe).request(verb: Verb.get), FaleConoscoContatoModel.fromJson);
+
   Future<Result<T>> _um<T>(Future<Result<dynamic>> request, T Function(Map<String, dynamic>) fromJson) =>
       _converter(request, (value) {
         if (value is! Map) return null;

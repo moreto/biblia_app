@@ -40,9 +40,10 @@ class FaleConoscoViewmodel extends ChangeNotifier {
 
   bool get ocupado => carregarCommand.running || enviarCommand.running;
 
-  String get prefixoNome => faleConoscoUseCase.prefixoNome;
+  /// Nome e e-mail da conta do usuário logado, para preencher o formulário (vazios se não carregaram).
+  String get prefixoNome => _dados?.contato.nome ?? '';
 
-  String get prefixoEmail => faleConoscoUseCase.prefixoEmail;
+  String get prefixoEmail => _dados?.contato.email ?? '';
 
   int get nomeMaximo => FaleConoscoUseCase.nomeMaximo;
   int get emailMaximo => FaleConoscoUseCase.emailMaximo;

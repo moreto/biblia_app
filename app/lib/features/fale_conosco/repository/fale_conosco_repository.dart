@@ -25,4 +25,7 @@ abstract class FaleConoscoRepository {
 
   /// Itens da configuração [confId] (`GET /v1/configuracao-item/:confId`).
   Future<Result<List<ConfiguracaoItemModel>>> itens(int confId);
+
+  /// Nome e e-mail do usuário do token (`GET /v1/usuario/usuario-detalhe-by-id`).
+  Future<Result<FaleConoscoContatoModel>> contato();
 }

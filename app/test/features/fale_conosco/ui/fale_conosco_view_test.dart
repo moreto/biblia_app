@@ -1,7 +1,6 @@
 import 'package:app/data/model/configuracao/configuracao_item_model.dart';
 import 'package:app/data/model/configuracao/configuracao_model.dart';
 import 'package:app/data/model/fale_conosco/fale_conosco_model.dart';
-import 'package:app/data/model/usuario/usuario_detalhe_model.dart';
 import 'package:app/features/fale_conosco/repository/fale_conosco_repository.dart';
 import 'package:app/features/fale_conosco/ui/fale_conosco_view.dart';
 import 'package:app/features/fale_conosco/ui/fale_conosco_viewmodel.dart';
@@ -162,18 +161,27 @@ class _FakeFaleConoscoRepository implements FaleConoscoRepository {
     13 => [_item(13, 1, 'site'), if (!semOrigemApp) _item(13, 2, 'app')],
     _ => const [],
   });
-}
 
-final _usuario = UsuarioDetalheModel(
-  usuaId: 1,
-  usuaUuid: 'u',
-  usuaEmail: 'ana@exemplo.com',
-  usuaAtivo: true,
-  udetNome: 'Ana Souza',
-  udetUsuario: 'ana',
-  emprId: 1,
-  emprNome: 'E',
-);
+  /// Erro na consulta do contato do usuário logado.
+  Exception? erroContato;
+
+  @override
+  Future<Result<FaleConoscoContatoModel>> contato() async {
+    final e = erroContato;
+    if (e != null) return Result.error(e);
+    // Como a API: usuaId, usuaUuid, usuaEmail, usuaAtivo, udetNome e udetUsuario (sem empresa).
+    return Result.ok(
+      FaleConoscoContatoModel.fromJson({
+        'usuaId': '1',
+        'usuaUuid': 'u',
+        'usuaEmail': 'ana@exemplo.com',
+        'usuaAtivo': true,
+        'udetNome': 'Ana Souza',
+        'udetUsuario': 'ana',
+      }),
+    );
+  }
+}
 
 class _TestLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _TestLocalizationsDelegate();
@@ -203,7 +211,7 @@ void main() {
 
   setUp(() => repository = _FakeFaleConoscoRepository());
 
-  FaleConoscoUseCase criarUseCase() => FaleConoscoUseCase(faleConoscoRepository: repository, usuario: () => _usuario);
+  FaleConoscoUseCase criarUseCase() => FaleConoscoUseCase(faleConoscoRepository: repository);
 
   FaleConoscoViewmodel criar() => FaleConoscoViewmodel(faleConoscoUseCase: criarUseCase());
 
@@ -346,7 +354,21 @@ void main() {
       final sem = await useCase.enviar(_valido, const FaleConoscoOpcoes());
       expect(FaleConoscoUseCase.mensagemErro((sem as Error).error), FaleConoscoUseCase.kIndisponivel);
       expect(repository.enviados, hasLength(1));
-      expect((useCase.prefixoNome, useCase.prefixoEmail), ('Ana Souza', 'ana@exemplo.com'));
+    });
+
+    test('carregar traz o contato da conta; falha no contato não impede a tela (campos vazios)', () async {
+      final dados = (await criarUseCase().carregar() as Ok<FaleConoscoDados>).value;
+      expect((dados.contato.nome, dados.contato.email), ('Ana Souza', 'ana@exemplo.com'));
+
+      repository.erroContato = HttpServiceException(message: 'erroGeralApi', code: 500);
+      final semContato = (await criarUseCase().carregar() as Ok<FaleConoscoDados>).value;
+      expect((semContato.contato.nome, semContato.contato.email), ('', ''));
+      expect(semContato.chamados, hasLength(2));
+    });
+
+    test('contato aceita snake_case e campos ausentes', () {
+      final c = FaleConoscoContatoModel.fromJson({'usua_email': ' a@b.co ', 'udet_nome': null});
+      expect((c.nome, c.email), ('', 'a@b.co'));
     });
 
     test('responder grava e devolve o chamado atualizado; fechado (ou 404) vira chamadoFechado', () async {
