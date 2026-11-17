@@ -50,7 +50,9 @@ abstract final class DialogSheet {
       children: [
         for (var i = 0; i < botoes.length; i++) ...[
           if (i > 0) const SizedBox(width: 8),
-          Expanded(child: SizedBox(height: alturaAcao, child: botoes[i])),
+          Expanded(
+            child: SizedBox(height: alturaAcao, child: botoes[i]),
+          ),
         ],
       ],
     ),

@@ -2,10 +2,10 @@ import 'package:get_it/get_it.dart';
 
 import '../features/access/configuracao_app/repository/configuracao_app_repository.dart';
 import '../features/access/configuracao_app/repository/configuracao_app_repository_impl.dart';
-import '../features/access/home/repository/home_repository.dart';
-import '../features/access/home/repository/home_repository_impl.dart';
-import '../features/access/home/widgets/funcionalidade/repository/funcionalidade_repository.dart';
-import '../features/access/home/widgets/funcionalidade/repository/funcionalidade_repository_impl.dart';
+import '../features/access/home_old/repository/home_old_repository.dart';
+import '../features/access/home_old/repository/home_old_repository_impl.dart';
+import '../features/access/home_old/widgets/funcionalidade/repository/funcionalidade_repository.dart';
+import '../features/access/home_old/widgets/funcionalidade/repository/funcionalidade_repository_impl.dart';
 import '../features/access/login/repository/login_repository.dart';
 import '../features/access/login/repository/login_repository_impl.dart';
 import '../features/access/registro/repository/registro_repository.dart';
@@ -63,7 +63,7 @@ final GetIt locator = GetIt.instance;
 void configDependencies() {
   locator.registerLazySingleton<AppConfig>(() => AppConfig());
   locator.registerLazySingleton<ConfiguracaoAppRepository>(() => ConfiguracaoAppRepositoryImpl());
-  locator.registerLazySingleton<HomeRepository>(() => HomeRepositoryImpl());
+  locator.registerLazySingleton<HomeOldRepository>(() => HomeOldRepositoryImpl());
   locator.registerLazySingleton<FuncionalidadeRepository>(() => FuncionalidadeRepositoryImpl());
   locator.registerLazySingleton<LoginRepository>(() => LoginRepositoryImpl());
   locator.registerLazySingleton<RegistroRepository>(() => RegistroRepositoryImpl());

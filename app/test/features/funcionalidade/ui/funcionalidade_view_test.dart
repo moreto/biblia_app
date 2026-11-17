@@ -1,8 +1,8 @@
 import 'package:app/data/model/funcionalidade/funcionalidade_model.dart';
-import 'package:app/features/access/home/widgets/funcionalidade/repository/funcionalidade_repository.dart';
-import 'package:app/features/access/home/widgets/funcionalidade/ui/funcionalidade_view.dart';
-import 'package:app/features/access/home/widgets/funcionalidade/ui/funcionalidade_viewmodel.dart';
-import 'package:app/features/access/home/widgets/funcionalidade/use_case/funcionalidade_usecase.dart';
+import 'package:app/features/access/home_old/widgets/funcionalidade/repository/funcionalidade_repository.dart';
+import 'package:app/features/access/home_old/widgets/funcionalidade/ui/funcionalidade_view.dart';
+import 'package:app/features/access/home_old/widgets/funcionalidade/ui/funcionalidade_viewmodel.dart';
+import 'package:app/features/access/home_old/widgets/funcionalidade/use_case/funcionalidade_usecase.dart';
 import 'package:app/l10n/app_localizations.dart';
 import 'package:commons/commons.dart';
 import 'package:flutter/foundation.dart';

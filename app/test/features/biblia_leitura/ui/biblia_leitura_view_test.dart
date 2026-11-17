@@ -280,7 +280,11 @@ void main() {
   late _FakeVersiculoIndicacaoUsuarioRepository indicados;
   late _FakeVersaoPreferencia preferencia;
 
+  /// Sessão do usuário; os testes sem login trocam para false.
+  late bool logado;
+
   setUp(() {
+    logado = true;
     repository = _FakeBibliaLeituraRepository(
       lidos: {
         _arc.versaId: [
@@ -303,8 +307,11 @@ void main() {
     usuarioLogado: () => _usuario,
   );
 
-  BibliaLeituraUseCase leituraUseCase() =>
-      BibliaLeituraUseCase(bibliaLeituraRepository: repository, versaoPreferencia: preferencia);
+  BibliaLeituraUseCase leituraUseCase() => BibliaLeituraUseCase(
+    bibliaLeituraRepository: repository,
+    versaoPreferencia: preferencia,
+    estaLogado: () => logado,
+  );
 
   VersiculoIndicacaoUseCase indicacaoUseCase() =>
       VersiculoIndicacaoUseCase(versiculoIndicacaoRepository: indicacoes, usuarioLogado: () => _usuario);
@@ -508,6 +515,18 @@ void main() {
   });
 
   group('BibliaLeituraViewmodel', () {
+    test('sem login não carrega progresso, reações nem indicações', () async {
+      logado = false;
+      final viewModel = await criarViewModel();
+      expect(viewModel.indice, isNotNull);
+      expect(viewModel.lidoDe(_genesis.livrId, 1), isNull);
+      expect(viewModel.historico, isEmpty);
+
+      await viewModel.abrirCapituloCommand.execute((livrId: _genesis.livrId, capiNumero: 2));
+      expect(viewModel.versiculos, isNotEmpty);
+      expect(viewModel.versiculoLido(1201), isFalse);
+    });
+
     test('carrega versões, livros, índice e progresso da primeira versão', () async {
       final viewModel = await criarViewModel();
       expect(viewModel.carregarCommand.completed, isTrue);
@@ -768,6 +787,30 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('capituloDesmarcadoLido'), findsOneWidget);
       expect(find.text('capituloMarcadoLido'), findsNothing);
+    });
+
+    testWidgets('sem login lê o capítulo sem progresso, histórico, marcações nem indicações', (tester) async {
+      logado = false;
+      final viewModel = await montar(tester);
+      expect(viewModel.logado, isFalse);
+      expect(find.text('Gênesis'), findsOneWidget);
+      expect(find.textContaining('capitulosLidos'), findsNothing);
+      expect(find.byType(LinearProgressIndicator), findsNothing);
+      expect(find.byTooltip('historicoLeitura'), findsNothing);
+
+      await tester.tap(find.text('Gênesis'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(CapituloChip, '2'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Gênesis 2 texto 1'), findsOneWidget);
+      expect(find.textContaining('versiculosLidos'), findsNothing);
+      expect(find.text('marcarCapituloLido'), findsNothing);
+      expect(find.byTooltip('marcarVersiculoLido'), findsNothing);
+      expect(find.byTooltip('desmarcarVersiculoLido'), findsNothing);
+      expect(find.byTooltip('comentarIndicarVersiculo'), findsNothing);
+      expect(find.byTooltip('versiculoComComentario'), findsNothing);
+      // Navegação entre capítulos continua.
+      expect(find.byTooltip('proximoCapitulo'), findsOneWidget);
     });
 
     testWidgets('a versão é escolhida no índice, acima dos testamentos, e não na AppBar', (tester) async {

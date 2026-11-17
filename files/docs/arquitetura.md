@@ -47,8 +47,8 @@ A mensagem de erro sai da exceção. `HandledException.message` e `HttpServiceEx
 
 O `redirect` do `GoRouter` chama `authRedirect` ([`routing/auth_guard.dart`](../../app/lib/routing/auth_guard.dart)):
 
-- Sem login, só `/home`, `/login` e `/registro` abrem; as demais rotas (e `/`, que não tem tela) vão para `/home`.
-- Com login, `/`, `/home` e `/login` vão para `/dashboard`.
+- Sem login, só `/home`, `/home-old`, `/login`, `/registro` e `/biblia-leitura` abrem; as demais rotas (e `/`, que não tem tela) vão para `/home`. A leitura sem login usa só os endpoints públicos (`HeaderType.basicInfo`) e esconde o que é do usuário.
+- Com login, `/`, `/home`, `/home-old` e `/login` vão para `/dashboard`.
 
 ## Traduções
 

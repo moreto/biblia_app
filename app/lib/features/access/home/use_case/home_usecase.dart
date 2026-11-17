@@ -1,20 +1,33 @@
 import 'package:commons/commons.dart';
 
-import '../../../../data/model/healt_model.dart';
-import '../repository/home_repository.dart';
+import '../../../../config/device_info.dart';
 
+/// Lê o id do aparelho; lança se a plataforma não tiver essa informação.
+typedef LerIdDispositivo = Future<String> Function();
+
+Future<String> _idDoAparelho() async {
+  final info = DeviceInfo.instance;
+  await info.initialize();
+  return info.deviceId;
+}
+
+/// Regras da tela de entrada.
 class HomeUseCase {
-  HomeUseCase({required this.homeRepository});
+  HomeUseCase({LerIdDispositivo? lerIdDispositivo}) : _lerIdDispositivo = lerIdDispositivo ?? _idDoAparelho;
 
-  final HomeRepository homeRepository;
+  final LerIdDispositivo _lerIdDispositivo;
 
-  Future<Result<HealtModel>> healt() async {
-    final result = await homeRepository.healt();
-    switch (result) {
-      case Ok<HealtModel>():
-        return Result.ok(result.value);
-      case Error<HealtModel>():
-        return Result.error(result.error);
+  /// Id do aparelho: Android ID no Android, `identifierForVendor` no iPhone e iPad.
+  ///
+  /// Na web, no desktop ou se o sistema não devolver o id, falha com `dispositivoNaoIdentificado`.
+  Future<Result<String>> idDispositivo() async {
+    try {
+      final id = await _lerIdDispositivo();
+      if (id.isEmpty) return Result.error(HandledException(message: 'dispositivoNaoIdentificado'));
+      return Result.ok(id);
+    } catch (error) {
+      Log.print(error.toString(), name: kApp, title: 'Id do dispositivo');
+      return Result.error(HandledException(message: 'dispositivoNaoIdentificado'));
     }
   }
 }

@@ -228,11 +228,13 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
             ),
       title: Text(ref == null ? strings.translate('leituraBiblica') : _tituloCapitulo(ref)),
       actions: [
-        IconButton(
-          tooltip: strings.translate('historicoLeitura'),
-          onPressed: _vm.indice == null ? null : _abrirHistorico,
-          icon: BibliaLeituraView.icone(BibliaLeituraView.iconeHistorico, Icons.history),
-        ),
+        // Histórico, progresso e marcações são do usuário: só aparecem com login.
+        if (_vm.logado)
+          IconButton(
+            tooltip: strings.translate('historicoLeitura'),
+            onPressed: _vm.indice == null ? null : _abrirHistorico,
+            icon: BibliaLeituraView.icone(BibliaLeituraView.iconeHistorico, Icons.history),
+          ),
         const OrientationButton(),
         const ThemeModeButton(),
       ],
@@ -356,22 +358,20 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
         ),
       ),
       title: Text(livro.livrNome),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '${progresso.completos}/${progresso.total} ${strings.translate('capitulosLidos')}'
-            '${progresso.emAndamento > 0 ? ' · ${progresso.emAndamento} ${strings.translate('emAndamento')}' : ''}',
-          ),
-          const SizedBox(height: 4),
-          // Avança por versículo lido, para a leitura parcial também aparecer na barra.
-          LinearProgressIndicator(
-            value: progresso.fracao,
-            minHeight: 6,
-            borderRadius: BorderRadius.circular(3),
-          ),
-        ],
-      ),
+      subtitle: !_vm.logado
+          ? null
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${progresso.completos}/${progresso.total} ${strings.translate('capitulosLidos')}'
+                  '${progresso.emAndamento > 0 ? ' · ${progresso.emAndamento} ${strings.translate('emAndamento')}' : ''}',
+                ),
+                const SizedBox(height: 4),
+                // Avança por versículo lido, para a leitura parcial também aparecer na barra.
+                LinearProgressIndicator(value: progresso.fracao, minHeight: 6, borderRadius: BorderRadius.circular(3)),
+              ],
+            ),
       childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       expandedAlignment: Alignment.centerLeft,
       children: [
@@ -480,10 +480,11 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
                 ),
               ),
             ),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [_marcaVersiculo(versiculo, strings), _comentarIndicarVersiculo(versiculo, strings)],
-            ),
+            if (_vm.logado)
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [_marcaVersiculo(versiculo, strings), _comentarIndicarVersiculo(versiculo, strings)],
+              ),
           ],
         );
       },
@@ -559,16 +560,18 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
           ),
           Expanded(
             child: Center(
-              child: FilledButton.tonalIcon(
-                onPressed: marcando || _vm.versiculos == null ? null : _vm.marcarLidoCommand.execute,
-                icon: marcando
-                    ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                    : BibliaLeituraView.icone(
-                        lido ? BibliaLeituraView.iconeLido : BibliaLeituraView.iconeNaoLido,
-                        lido ? Icons.check_circle : Icons.check_circle_outline,
-                      ),
-                label: Text(strings.translate(lido ? 'desmarcarCapituloLido' : 'marcarCapituloLido')),
-              ),
+              child: !_vm.logado
+                  ? null
+                  : FilledButton.tonalIcon(
+                      onPressed: marcando || _vm.versiculos == null ? null : _vm.marcarLidoCommand.execute,
+                      icon: marcando
+                          ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                          : BibliaLeituraView.icone(
+                              lido ? BibliaLeituraView.iconeLido : BibliaLeituraView.iconeNaoLido,
+                              lido ? Icons.check_circle : Icons.check_circle_outline,
+                            ),
+                      label: Text(strings.translate(lido ? 'desmarcarCapituloLido' : 'marcarCapituloLido')),
+                    ),
             ),
           ),
           IconButton(

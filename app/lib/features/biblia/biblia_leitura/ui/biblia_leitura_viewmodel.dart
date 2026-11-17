@@ -60,6 +60,9 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
   /// A tela foi aberta direto num capítulo: voltar sai da tela em vez de ir ao índice.
   bool get abertaPorDestino => destino != null;
 
+  /// Há usuário logado. Sem login a leitura é pública: sem progresso, marcações, histórico e indicações.
+  bool get logado => bibliaLeituraUseCase.logado;
+
   int? _versiculoAlvo;
 
   /// Versículo do [destino] para onde a view deve rolar; nulo quando não há rolagem pendente.
@@ -378,9 +381,12 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
 
   /// Carrega índice e progresso da [versao]. Falha no progresso não impede a leitura: o índice aparece sem lidos.
   Future<Result<void>> _carregarVersao(VersaoModel versao) async {
+    // Sem login não há progresso: nem chama a API (que exigiria o token do usuário).
     final (indice, lidos) = await (
       bibliaLeituraUseCase.indice(versao.versaId),
-      bibliaLeituraUseCase.lidos(versao.versaId),
+      logado
+          ? bibliaLeituraUseCase.lidos(versao.versaId)
+          : Future.value(const Result<Map<String, CapituloLidoModel>>.ok({})),
     ).wait;
 
     switch (indice) {
@@ -452,10 +458,15 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
     _limparVersiculo();
     notifyListeners();
 
+    // Sem login só o texto: reações e indicações são do usuário.
     final (result, reacoes, indicacoes) = await (
       bibliaLeituraUseCase.capitulo(versao.versaId, ref),
-      bibliaLeituraUseCase.reacoesCapitulo(versao.versaId, ref),
-      versiculoIndicacaoUseCase.indicacoesCapitulo(versao.versaId, ref.livrId, ref.capiNumero),
+      logado
+          ? bibliaLeituraUseCase.reacoesCapitulo(versao.versaId, ref)
+          : Future.value(const Result<Map<int, VersiculoReacaoModel>>.ok({})),
+      logado
+          ? versiculoIndicacaoUseCase.indicacoesCapitulo(versao.versaId, ref.livrId, ref.capiNumero)
+          : Future.value(const Result<Map<int, VersiculoIndicacaoModel>>.ok({})),
     ).wait;
     // Ignora a resposta se outro capítulo foi aberto enquanto este carregava.
     final atual = _capitulo == ref;

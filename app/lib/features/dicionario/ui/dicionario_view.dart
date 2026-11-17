@@ -118,7 +118,10 @@ class _DicionarioViewState extends State<DicionarioView> {
       _consultar(palavra);
       return;
     }
-    _busca.value = TextEditingValue(text: palavra, selection: TextSelection.collapsed(offset: palavra.length));
+    _busca.value = TextEditingValue(
+      text: palavra,
+      selection: TextSelection.collapsed(offset: palavra.length),
+    );
     _onBuscaAlterada(palavra);
   }
 
