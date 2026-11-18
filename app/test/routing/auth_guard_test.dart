@@ -45,4 +45,33 @@ void main() {
       expect(authRedirect(path: Routes.splash, isLogged: true), Routes.dashboard);
     });
   });
+
+  group('rotaInicial (ROTA_INICIAL do .env)', () {
+    test('vazia ou só espaços abre a home', () {
+      expect(rotaInicial(''), Routes.home);
+      expect(rotaInicial('   '), Routes.home);
+    });
+
+    test('rota preenchida abre direto nela, com query string', () {
+      expect(rotaInicial('/dashboard'), Routes.dashboard);
+      expect(rotaInicial(' /biblia-leitura?livrId=43&capiNumero=3 '), '/biblia-leitura?livrId=43&capiNumero=3');
+    });
+
+    test('valor sem barra no começo é ignorado', () {
+      expect(rotaInicial('dashboard'), Routes.home);
+    });
+  });
+
+  group('rotaInicial continuar', () {
+    test('abre a leitura no último capítulo aberto', () {
+      expect(
+        rotaInicial('continuar', ultimoCapitulo: (versaId: 1, livrId: 43, capiNumero: 3)),
+        '/biblia-leitura?versaId=1&livrId=43&capiNumero=3',
+      );
+    });
+
+    test('sem capítulo guardado abre a home', () {
+      expect(rotaInicial(' continuar '), Routes.home);
+    });
+  });
 }

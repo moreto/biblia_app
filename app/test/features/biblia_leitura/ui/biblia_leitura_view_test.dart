@@ -1,5 +1,14 @@
+import 'package:app/config/brilho_tela.dart';
+
+import 'dart:async';
+
+import 'package:app/config/leitura_preferencia.dart';
+import 'package:app/config/narracao_voz.dart';
+import 'package:app/config/ultimo_capitulo_preferencia.dart';
 import 'package:app/config/versao_preferencia.dart';
 import 'package:app/data/model/biblia/capitulo_lido_model.dart';
+import 'package:app/data/model/dicionario/dicionario_busca_model.dart';
+import 'package:app/data/model/dicionario/dicionario_verbete_model.dart';
 import 'package:app/data/model/biblia/indice_capitulo_model.dart';
 import 'package:app/data/model/biblia/livro_model.dart';
 import 'package:app/data/model/biblia/testamento_model.dart';
@@ -13,6 +22,8 @@ import 'package:app/features/biblia/biblia_leitura/repository/biblia_leitura_rep
 import 'package:app/features/biblia/biblia_leitura/ui/biblia_leitura_view.dart';
 import 'package:app/features/biblia/biblia_leitura/ui/biblia_leitura_viewmodel.dart';
 import 'package:app/features/biblia/biblia_leitura/ui/widgets/capitulo_chip.dart';
+import 'package:app/features/biblia/biblia_leitura/ui/widgets/opcoes_leitura_sheet.dart';
+import 'package:app/features/biblia/biblia_leitura/ui/widgets/palavra_dicionario_sheet.dart';
 import 'package:app/features/biblia/biblia_leitura/ui/widgets/versiculo_indicacao_sheet.dart';
 import 'package:app/features/biblia/biblia_leitura/use_case/biblia_leitura_usecase.dart';
 import 'package:app/features/biblia/biblia_leitura/versiculo_indicacao/repository/versiculo_indicacao_repository.dart';
@@ -21,11 +32,18 @@ import 'package:app/features/biblia/biblia_leitura/versiculo_indicacao/use_case/
 import 'package:app/features/biblia/biblia_leitura/versiculo_indicacao/use_case/versiculo_indicacao_usuario_usecase.dart';
 import 'package:app/features/dashboard/widgets/versiculo_reacao/repository/versiculo_reacao_repository.dart';
 import 'package:app/features/dashboard/widgets/versiculo_reacao/use_case/versiculo_reacao_usecase.dart';
+import 'package:app/features/dicionario/repository/dicionario_repository.dart';
+import 'package:app/features/dicionario/use_case/dicionario_usecase.dart';
 import 'package:app/l10n/app_localizations.dart';
+import 'package:app/routing/routes.dart';
 import 'package:commons/commons.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart' show kLongPressTimeout;
+import 'package:flutter/rendering.dart' show RenderParagraph;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+import 'package:paper_curl/paper_curl.dart';
 
 const _usuario = 7;
 
@@ -240,6 +258,152 @@ class _FakeVersiculoIndicacaoUsuarioRepository implements VersiculoIndicacaoUsua
 }
 
 /// Preferência de versão em memória (no app é o `AppConfig`, em secure storage).
+class _FakeUltimoCapitulo implements UltimoCapituloPreferencia {
+  @override
+  UltimoCapitulo? ultimoCapitulo;
+
+  @override
+  void setUltimoCapitulo(UltimoCapitulo capitulo) => ultimoCapitulo = capitulo;
+}
+
+/// Dicionário com um verbete: "texto" (com remissão para "letra"); as demais palavras não existem.
+class _FakeDicionarioRepository implements DicionarioRepository {
+  final consultadas = <String>[];
+
+  static const _verbetes = {
+    'texto': DicionarioVerbeteModel(
+      dverId: 1,
+      dverPalavra: 'Texto',
+      acepcoes: [
+        DicionarioAcepcaoModel(
+          daceId: 1,
+          daceSeq: 1,
+          daceClasse: 'm.',
+          daceDefinicao: 'Palavras de um autor.',
+          remissoes: [DicionarioRemissaoModel(dremTermo: 'letra', dverId: 2)],
+        ),
+      ],
+    ),
+    'letra': DicionarioVerbeteModel(
+      dverId: 2,
+      dverPalavra: 'Letra',
+      acepcoes: [DicionarioAcepcaoModel(daceId: 2, daceSeq: 1, daceDefinicao: 'Sinal gráfico.')],
+    ),
+  };
+
+  @override
+  Future<Result<List<DicionarioBuscaModel>>> buscar(String texto, {required int limite}) async =>
+      const Result.ok([DicionarioBuscaModel(dverId: 1, dverPalavra: 'Texto')]);
+
+  @override
+  Future<Result<List<DicionarioVerbeteModel>>> palavra(String palavra) async {
+    consultadas.add(palavra);
+    final verbete = _verbetes[palavra];
+    return Result.ok([?verbete]);
+  }
+}
+
+/// Voz em memória: cada fala fica pendente até [terminarFala] (ou [parar]).
+class _FakeNarracaoVoz implements NarracaoVoz {
+  final falados = <String>[];
+  Completer<void>? _fala;
+  bool parou = false;
+
+  /// Vozes do aparelho: uma pt-BR comum, uma pt-BR de alta qualidade, uma pt-PT e uma em inglês.
+  static const vozesAparelho = [
+    VozNarracao(nome: 'pt-br-comum', locale: 'pt-BR', qualidade: 'normal'),
+    VozNarracao(nome: 'pt-br-neural', locale: 'pt-BR', qualidade: 'very high', online: true),
+    VozNarracao(nome: 'pt-pt', locale: 'pt-PT', qualidade: 'very high'),
+    VozNarracao(nome: 'en-us', locale: 'en-US', qualidade: 'very high'),
+  ];
+
+  /// Voz e velocidade da última fala.
+  VozNarracao? ultimaVoz;
+  double? ultimaVelocidade;
+
+  @override
+  Future<List<VozNarracao>> vozes() async => vozesAparelho;
+
+  @override
+  Future<void> falar(String texto, {required String idioma, VozNarracao? voz, double velocidade = 0.5}) {
+    falados.add(texto);
+    ultimaVoz = voz;
+    ultimaVelocidade = velocidade;
+    return (_fala = Completer<void>()).future;
+  }
+
+  void terminarFala() => _fala?.complete();
+
+  @override
+  Future<void> parar() async {
+    parou = true;
+    if (_fala?.isCompleted == false) _fala!.complete();
+  }
+}
+
+class _FakeLeituraPreferencia implements LeituraPreferencia {
+  @override
+  double escalaFonte = 1;
+
+  @override
+  TemaApp tema = TemaApp.sistema;
+
+  @override
+  bool mostrarSetas = true;
+
+  /// Nos testes, não pergunta ao passar a página (no app o padrão é perguntar).
+  @override
+  MarcarAoPassar marcarAoPassar = MarcarAoPassar.nunca;
+
+  @override
+  void setMarcarAoPassar(MarcarAoPassar valor) => marcarAoPassar = valor;
+
+  @override
+  String? vozNarracao;
+
+  @override
+  void setVozNarracao(String? nome) => vozNarracao = nome;
+
+  @override
+  double? velocidadeNarracao;
+
+  @override
+  bool narracaoContinua = false;
+
+  @override
+  void setNarracaoContinua(bool continua) => narracaoContinua = continua;
+
+  @override
+  void setVelocidadeNarracao(double velocidade) => velocidadeNarracao = velocidade;
+
+  @override
+  void setMostrarSetas(bool mostrar) => mostrarSetas = mostrar;
+
+  @override
+  void setEscalaFonte(double escala) => escalaFonte = escala;
+
+  @override
+  void setTema(TemaApp tema) => this.tema = tema;
+}
+
+/// Brilho em memória; [definidos] registra cada valor aplicado e [restaurado] se voltou ao do sistema.
+class _FakeBrilhoTela implements BrilhoTela {
+  _FakeBrilhoTela({this.suportado = true});
+
+  final bool suportado;
+  final definidos = <double>[];
+  bool restaurado = false;
+
+  @override
+  Future<double> atual() async => suportado ? 0.5 : throw UnsupportedError('sem brilho');
+
+  @override
+  Future<void> definir(double brilho) async => definidos.add(brilho);
+
+  @override
+  Future<void> restaurar() async => restaurado = true;
+}
+
 class _FakeVersaoPreferencia implements VersaoPreferencia {
   _FakeVersaoPreferencia();
 
@@ -282,9 +446,19 @@ void main() {
 
   /// Sessão do usuário; os testes sem login trocam para false.
   late bool logado;
+  late _FakeUltimoCapitulo ultimo;
+  late _FakeLeituraPreferencia leitura;
+  late _FakeBrilhoTela brilho;
+  late _FakeDicionarioRepository dicionario;
+  late _FakeNarracaoVoz voz;
 
   setUp(() {
     logado = true;
+    ultimo = _FakeUltimoCapitulo();
+    leitura = _FakeLeituraPreferencia();
+    brilho = _FakeBrilhoTela();
+    dicionario = _FakeDicionarioRepository();
+    voz = _FakeNarracaoVoz();
     repository = _FakeBibliaLeituraRepository(
       lidos: {
         _arc.versaId: [
@@ -310,6 +484,11 @@ void main() {
   BibliaLeituraUseCase leituraUseCase() => BibliaLeituraUseCase(
     bibliaLeituraRepository: repository,
     versaoPreferencia: preferencia,
+    ultimoCapituloPreferencia: ultimo,
+    leituraPreferencia: leitura,
+    brilhoTela: brilho,
+    dicionarioUseCase: DicionarioUseCase(dicionarioRepository: dicionario),
+    narracaoVoz: voz,
     estaLogado: () => logado,
   );
 
@@ -331,6 +510,29 @@ void main() {
     return viewModel;
   }
 
+  group('BibliaLeituraUseCase.ordenarVozes', () {
+    test('só português: pt-BR antes de pt-PT, a de maior qualidade primeiro', () {
+      expect(BibliaLeituraUseCase.ordenarVozes(_FakeNarracaoVoz.vozesAparelho).map((v) => v.nome), [
+        'pt-br-neural',
+        'pt-br-comum',
+        'pt-pt',
+      ]);
+    });
+  });
+
+  group('BibliaLeituraUseCase.palavraEm', () {
+    test('acha a palavra sob o dedo, com acentos, sem pontuação nem número', () {
+      const texto = '3  E disse Adão: Esta é agora osso dos meus ossos, apegar-se-á.';
+      expect(BibliaLeituraUseCase.palavraEm(texto, texto.indexOf('Adão') + 1), 'Adão');
+      // Logo depois da última letra (antes dos dois-pontos) ainda vale a palavra.
+      expect(BibliaLeituraUseCase.palavraEm(texto, texto.indexOf(':')), 'Adão');
+      expect(BibliaLeituraUseCase.palavraEm(texto, texto.indexOf('ossos,') + 2), 'ossos');
+      expect(BibliaLeituraUseCase.palavraEm(texto, texto.indexOf('se-á')), 'se');
+      expect(BibliaLeituraUseCase.palavraEm(texto, 0), isNull);
+      expect(BibliaLeituraUseCase.palavraEm(texto, 2), isNull);
+    });
+  });
+
   group('BibliaLeituraUseCase', () {
     test('lista o Novo Testamento antes do Antigo', () async {
       final testamentos = (await leituraUseCase().testamentos() as Ok<List<TestamentoModel>>).value;
@@ -350,6 +552,16 @@ void main() {
         _lido(_genesis, 2, 1, 2, DateTime(2026, 11, 5)),
       ]);
       expect(historico.map((c) => c.chave), ['1:2', '1:1', '43:1']);
+    });
+
+    test('sequencia: um capítulo por página, na ordem dos livros, sem capítulos vazios', () async {
+      final useCase = leituraUseCase();
+      final indice = (await useCase.indice(_arc.versaId) as Ok<Map<int, List<IndiceCapituloModel>>>).value;
+      expect(useCase.sequencia(indice, [_genesis, _joao]), [
+        (livrId: _genesis.livrId, capiNumero: 1),
+        (livrId: _genesis.livrId, capiNumero: 2),
+        (livrId: _joao.livrId, capiNumero: 1),
+      ]);
     });
 
     test('vizinho passa de um livro para o outro e é nulo nas pontas', () async {
@@ -515,6 +727,25 @@ void main() {
   });
 
   group('BibliaLeituraViewmodel', () {
+    test('precarrega o texto da página vizinha sem abrir o capítulo', () async {
+      final viewModel = await criarViewModel();
+      const vizinha = (livrId: 43, capiNumero: 1);
+      expect(viewModel.textoDe(vizinha), isNull);
+
+      await viewModel.precarregar(vizinha);
+      expect(viewModel.textoDe(vizinha)!.map((v) => v.versTexto), ['João 1 texto 1', 'João 1 texto 2']);
+      expect(viewModel.capitulo, isNull);
+    });
+
+    test('guarda o último capítulo aberto, com ou sem login', () async {
+      logado = false;
+      final viewModel = await criarViewModel();
+      expect(ultimo.ultimoCapitulo, isNull);
+
+      await viewModel.abrirCapituloCommand.execute((livrId: _genesis.livrId, capiNumero: 2));
+      expect(ultimo.ultimoCapitulo, (versaId: _arc.versaId, livrId: _genesis.livrId, capiNumero: 2));
+    });
+
     test('sem login não carrega progresso, reações nem indicações', () async {
       logado = false;
       final viewModel = await criarViewModel();
@@ -744,6 +975,41 @@ void main() {
   });
 
   group('BibliaLeituraView', () {
+    testWidgets('como primeira tela (ROTA_INICIAL=continuar), voltar vai para a home', (tester) async {
+      final viewModel = BibliaLeituraViewmodel(
+        bibliaLeituraUseCase: leituraUseCase(),
+        versiculoIndicacaoUseCase: indicacaoUseCase(),
+        versiculoReacaoUseCase: reacaoUseCase(),
+        versiculoIndicacaoUsuarioUseCase: indicadoUseCase(),
+        destino: LeituraDestino(versaId: _arc.versaId, livrId: _genesis.livrId, capiNumero: 2),
+      );
+      final router = GoRouter(
+        initialLocation: Routes.bibliaLeitura,
+        routes: [
+          GoRoute(
+            path: Routes.bibliaLeitura,
+            builder: (context, state) => BibliaLeituraView(viewModel: viewModel),
+          ),
+          GoRoute(
+            path: Routes.home,
+            builder: (context, state) => const Scaffold(body: Text('telaHome')),
+          ),
+        ],
+      );
+      await tester.pumpWidget(
+        MaterialApp.router(
+          routerConfig: router,
+          localizationsDelegates: const [_TestLocalizationsDelegate(), DefaultMaterialLocalizations.delegate],
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Gênesis 2 texto 1'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('home'));
+      await tester.pumpAndSettle();
+      expect(find.text('telaHome'), findsOneWidget);
+    });
+
     Future<BibliaLeituraViewmodel> montar(WidgetTester tester) async {
       final viewModel = BibliaLeituraViewmodel(
         bibliaLeituraUseCase: leituraUseCase(),
@@ -761,6 +1027,25 @@ void main() {
       return viewModel;
     }
 
+    testWidgets('capítulos em páginas: próximo e anterior viram a página, passando de livro', (tester) async {
+      await montar(tester);
+      await tester.tap(find.text('Gênesis'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(CapituloChip, '2'));
+      await tester.pumpAndSettle();
+      expect(find.byType(PageCurlView), findsOneWidget);
+      expect(find.text('Gênesis 2'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('proximoCapitulo'));
+      await tester.pumpAndSettle();
+      expect(find.text('João 1'), findsOneWidget);
+      expect(find.textContaining('João 1 texto 1'), findsWidgets);
+
+      await tester.tap(find.byTooltip('capituloAnterior'));
+      await tester.pumpAndSettle();
+      expect(find.text('Gênesis 2'), findsOneWidget);
+    });
+
     testWidgets('mostra os livros com o progresso e abre o capítulo tocado', (tester) async {
       await montar(tester);
       expect(find.text('leituraBiblica'), findsOneWidget);
@@ -777,12 +1062,17 @@ void main() {
       expect(find.textContaining('Gênesis 2 texto 1'), findsOneWidget);
       expect(find.text('1/2 versiculosLidos'), findsOneWidget);
 
+      // Marcar o capítulo fica nas opções de leitura (botão central da navegação); o sheet fecha ao marcar.
+      await tester.tap(find.byTooltip('opcoesLeitura'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('marcarCapituloLido'));
       await tester.pumpAndSettle();
+      expect(find.byType(OpcoesLeituraSheet), findsNothing);
       expect(find.text('capituloLido'), findsOneWidget);
-      expect(find.text('desmarcarCapituloLido'), findsOneWidget);
       expect(find.text('capituloMarcadoLido'), findsOneWidget);
 
+      await tester.tap(find.byTooltip('opcoesLeitura'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('desmarcarCapituloLido'));
       await tester.pumpAndSettle();
       expect(find.text('capituloDesmarcadoLido'), findsOneWidget);
@@ -811,6 +1101,432 @@ void main() {
       expect(find.byTooltip('versiculoComComentario'), findsNothing);
       // Navegação entre capítulos continua.
       expect(find.byTooltip('proximoCapitulo'), findsOneWidget);
+
+      // As opções de leitura abrem, mas sem marcar o capítulo.
+      await tester.tap(find.byTooltip('opcoesLeitura'));
+      await tester.pumpAndSettle();
+      expect(find.byType(OpcoesLeituraSheet), findsOneWidget);
+      expect(find.text('marcarCapituloLido'), findsNothing);
+      expect(find.text('tamanhoFonte'), findsOneWidget);
+    });
+
+    testWidgets('descer o texto encolhe a AppBar e esconde a navegação até a rolagem parar', (tester) async {
+      await montar(tester);
+      await tester.tap(find.text('Gênesis'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(CapituloChip, '1'));
+      await tester.pumpAndSettle();
+      // Tela baixa para o capítulo de teste (3 versículos) ter rolagem.
+      tester.view.physicalSize = const Size(400, 300);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpAndSettle();
+
+      double alturaBarra() => tester.getSize(find.byType(AppBar)).height;
+      double opacidadeNavegacao() => tester
+          .widget<AnimatedOpacity>(
+            // A mais externa é a da rolagem (a interna some o botão durante a virada).
+            find.ancestor(of: find.byTooltip('opcoesLeitura'), matching: find.byType(AnimatedOpacity)).last,
+          )
+          .opacity;
+      expect(alturaBarra(), 64);
+      expect(opacidadeNavegacao(), 1);
+
+      // Arrasta pelo alto do texto, longe da navegação flutuante (que fica embaixo e capturaria o toque).
+      final gesto = await tester.startGesture(tester.getBottomLeft(find.byType(AppBar)) + const Offset(24, 40));
+      await gesto.moveBy(const Offset(0, -20));
+      await gesto.moveBy(const Offset(0, -40));
+      await tester.pump();
+      expect(opacidadeNavegacao(), 0);
+      await gesto.up();
+      await tester.pumpAndSettle();
+      expect(alturaBarra(), 44);
+
+      // Parou de rolar: a navegação volta.
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pumpAndSettle();
+      expect(opacidadeNavegacao(), 1);
+
+      // Descer mais esconde a AppBar; fica a alça, que a reabre compacta.
+      await tester.dragFrom(tester.getBottomLeft(find.byType(AppBar)) + const Offset(24, 40), const Offset(0, -120));
+      await tester.pumpAndSettle();
+      expect(find.byType(AppBar), findsNothing);
+      await tester.tap(find.byTooltip('mostrarBarra'));
+      await tester.pumpAndSettle();
+      expect(alturaBarra(), 44);
+      await tester.pump(const Duration(seconds: 1));
+
+      // Subir o texto devolve a AppBar ao tamanho normal.
+      await tester.dragFrom(tester.getBottomLeft(find.byType(AppBar)) + const Offset(24, 40), const Offset(0, 200));
+      await tester.pumpAndSettle();
+      expect(alturaBarra(), 64);
+      await tester.pump(const Duration(seconds: 1));
+    });
+
+    /// Posição (global) dentro da palavra [palavra] do versículo que contém [versiculo].
+    Offset posicaoPalavra(WidgetTester tester, String versiculo, String palavra) {
+      final paragrafo = tester.renderObject<RenderParagraph>(find.textContaining(versiculo));
+      final indice = paragrafo.text.toPlainText().indexOf(palavra) + 2;
+      final caret = paragrafo.getOffsetForCaret(TextPosition(offset: indice), Rect.zero);
+      return paragrafo.localToGlobal(caret + const Offset(0, 8));
+    }
+
+    /// Toque longo na palavra [palavra] do versículo que contém [versiculo].
+    Future<void> tocarPalavra(WidgetTester tester, String versiculo, String palavra) async {
+      await tester.longPressAt(posicaoPalavra(tester, versiculo, palavra));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('segurar e arrastar seleciona várias palavras, até de outro versículo; abre o trecho', (tester) async {
+      await montar(tester);
+      await tester.tap(find.text('Gênesis'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(CapituloChip, '2'));
+      await tester.pumpAndSettle();
+
+      final gesto = await tester.startGesture(posicaoPalavra(tester, 'Gênesis 2 texto 1', 'texto'));
+      await tester.pump(kLongPressTimeout + const Duration(milliseconds: 50));
+      await gesto.moveTo(posicaoPalavra(tester, 'Gênesis 2 texto 2', 'Gênesis'));
+      await tester.pump();
+      await gesto.up();
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PalavraDicionarioSheet), findsNothing);
+      expect(dicionario.consultadas, isEmpty);
+      expect(find.text('Gênesis 2:1-2'), findsOneWidget);
+      expect(find.text('texto 1 Gênesis'), findsOneWidget);
+      expect(find.text('copiar'), findsOneWidget);
+
+      await tester.tap(find.text('ouvir'));
+      await tester.pumpAndSettle();
+      expect(voz.falados, ['texto 1 Gênesis']);
+    });
+
+    test('trecho e referência da seleção', () {
+      const versiculos = [
+        VersiculoTextoModel(
+          versId: 1,
+          versNumero: 1,
+          versTexto: 'No princípio criou Deus',
+          livrId: 1,
+          livrNome: 'Gênesis',
+          capiNumero: 1,
+        ),
+        VersiculoTextoModel(
+          versId: 2,
+          versNumero: 2,
+          versTexto: 'E a terra era sem forma',
+          livrId: 1,
+          livrNome: 'Gênesis',
+          capiNumero: 1,
+        ),
+      ];
+      expect(
+        BibliaLeituraUseCase.trecho(versiculos, (indice: 0, offset: 3), (indice: 1, offset: 10)),
+        'princípio criou Deus E a terra',
+      );
+      expect(BibliaLeituraUseCase.referenciaTrecho('Gênesis 1', 1, 2), 'Gênesis 1:1-2');
+      expect(BibliaLeituraUseCase.referenciaTrecho('Gênesis 1', 3, 3), 'Gênesis 1:3');
+    });
+
+    testWidgets('toque longo numa palavra abre o dicionário dela; a remissão consulta no próprio sheet', (
+      tester,
+    ) async {
+      await montar(tester);
+      await tester.tap(find.text('Gênesis'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(CapituloChip, '2'));
+      await tester.pumpAndSettle();
+
+      await tocarPalavra(tester, 'Gênesis 2 texto 1', 'texto');
+      expect(find.byType(PalavraDicionarioSheet), findsOneWidget);
+      expect(dicionario.consultadas, ['texto']);
+      // A palavra tocada fica marcada no texto enquanto o sheet está aberto.
+      TextSpan? marcada() {
+        final texto = tester.widget<Text>(find.textContaining('Gênesis 2 texto 1').first);
+        return (texto.textSpan! as TextSpan).children!.whereType<TextSpan>().where((t) {
+          return t.style?.backgroundColor != null;
+        }).firstOrNull;
+      }
+
+      expect(marcada()?.text, 'texto');
+      expect(find.text('Palavras de um autor.'), findsOneWidget);
+
+      await tester.tap(find.widgetWithText(ActionChip, 'letra'));
+      await tester.pumpAndSettle();
+      expect(dicionario.consultadas.last, 'letra');
+      expect(find.text('Sinal gráfico.'), findsOneWidget);
+
+      // Fechar o sheet tira a marcação.
+      Navigator.of(tester.element(find.text('Sinal gráfico.'))).pop();
+      await tester.pumpAndSettle();
+      expect(marcada(), isNull);
+    });
+
+    testWidgets('toque longo em palavra que não existe mostra as semelhantes', (tester) async {
+      await montar(tester);
+      await tester.tap(find.text('Gênesis'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(CapituloChip, '2'));
+      await tester.pumpAndSettle();
+
+      await tocarPalavra(tester, 'Gênesis 2 texto 1', 'Gênesis');
+      expect(dicionario.consultadas, ['gênesis']);
+      expect(find.text('palavraNaoEncontrada: "gênesis"'), findsOneWidget);
+      await tester.tap(find.widgetWithText(ActionChip, 'Texto'));
+      await tester.pumpAndSettle();
+      expect(find.text('Palavras de um autor.'), findsOneWidget);
+    });
+
+    testWidgets('sem login, o toque longo pede para entrar e não consulta o dicionário', (tester) async {
+      logado = false;
+      await montar(tester);
+      await tester.tap(find.text('Gênesis'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(CapituloChip, '2'));
+      await tester.pumpAndSettle();
+
+      await tocarPalavra(tester, 'Gênesis 2 texto 1', 'texto');
+      expect(find.text('entreParaConsultarDicionario'), findsOneWidget);
+      expect(dicionario.consultadas, isEmpty);
+    });
+
+    Future<BibliaLeituraViewmodel> abrirGenesis1(WidgetTester tester) async {
+      final viewModel = await montar(tester);
+      await tester.tap(find.text('Gênesis'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(CapituloChip, '1'));
+      await tester.pumpAndSettle();
+      return viewModel;
+    }
+
+    testWidgets('áudio: narra a partir do versículo destacado, marca o que está lendo e termina sozinho', (
+      tester,
+    ) async {
+      final viewModel = await abrirGenesis1(tester);
+      await tester.tap(find.textContaining('Gênesis 1 texto 2'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('ouvirCapitulo'));
+      await tester.pumpAndSettle();
+      expect(voz.falados, ['Gênesis 1 texto 2']);
+      expect(viewModel.versiculoNarrado, 1102);
+      expect(find.byTooltip('pararNarracao'), findsOneWidget);
+
+      voz.terminarFala();
+      await tester.pumpAndSettle();
+      expect(voz.falados.last, 'Gênesis 1 texto 3');
+      expect(viewModel.versiculoNarrado, 1103);
+
+      voz.terminarFala();
+      await tester.pumpAndSettle();
+      expect(viewModel.narrando, isFalse);
+      expect(find.byTooltip('ouvirCapitulo'), findsOneWidget);
+    });
+
+    testWidgets('áudio: usa a melhor voz em português e a velocidade padrão; a escolhida nas opções vale depois', (
+      tester,
+    ) async {
+      await abrirGenesis1(tester);
+      await tester.tap(find.byTooltip('ouvirCapitulo'));
+      await tester.pumpAndSettle();
+      expect(voz.ultimaVoz?.nome, 'pt-br-neural');
+      expect(voz.ultimaVelocidade, BibliaLeituraUseCase.velocidadePadrao);
+      await tester.tap(find.byTooltip('pararNarracao'));
+      await tester.pumpAndSettle();
+
+      leitura.vozNarracao = 'pt-br-comum';
+      leitura.velocidadeNarracao = 0.6;
+      await tester.tap(find.byTooltip('ouvirCapitulo'));
+      await tester.pumpAndSettle();
+      expect(voz.ultimaVoz?.nome, 'pt-br-comum');
+      expect(voz.ultimaVelocidade, 0.6);
+    });
+
+    testWidgets('áudio contínuo: ao terminar o capítulo, passa a página e continua no próximo', (tester) async {
+      leitura.narracaoContinua = true;
+      final viewModel = await abrirGenesis1(tester);
+      await tester.tap(find.byTooltip('ouvirCapitulo'));
+      await tester.pumpAndSettle();
+      for (var i = 0; i < 3; i++) {
+        voz.terminarFala();
+        await tester.pumpAndSettle();
+      }
+      expect(viewModel.capitulo, (livrId: _genesis.livrId, capiNumero: 2));
+      expect(voz.falados.last, 'Gênesis 2 texto 1');
+      expect(viewModel.narrando, isTrue);
+
+      // Parar cancela a continuação.
+      await tester.tap(find.byTooltip('pararNarracao'));
+      await tester.pumpAndSettle();
+      expect(viewModel.narrando, isFalse);
+    });
+
+    testWidgets('áudio: sem destaque começa do primeiro; parar interrompe; trocar de capítulo para', (tester) async {
+      final viewModel = await abrirGenesis1(tester);
+      await tester.tap(find.byTooltip('ouvirCapitulo'));
+      await tester.pumpAndSettle();
+      expect(voz.falados, ['Gênesis 1 texto 1']);
+      await tester.tap(find.byTooltip('pararNarracao'));
+      await tester.pumpAndSettle();
+      expect(voz.parou, isTrue);
+      expect(viewModel.narrando, isFalse);
+      expect(voz.falados, hasLength(1));
+
+      await tester.tap(find.byTooltip('ouvirCapitulo'));
+      await tester.pumpAndSettle();
+      voz.parou = false;
+      await tester.tap(find.byTooltip('proximoCapitulo'));
+      await tester.pumpAndSettle();
+      expect(voz.parou, isTrue);
+      expect(viewModel.narrando, isFalse);
+    });
+
+    Future<void> abrirGenesis2(WidgetTester tester) async {
+      await montar(tester);
+      await tester.tap(find.text('Gênesis'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(CapituloChip, '2'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('ao passar a página (perguntar): pergunta se marca o capítulo anterior; voltar não pergunta', (
+      tester,
+    ) async {
+      leitura.marcarAoPassar = MarcarAoPassar.perguntar;
+      await abrirGenesis2(tester);
+
+      await tester.tap(find.byTooltip('proximoCapitulo'));
+      await tester.pumpAndSettle();
+      expect(find.text('João 1'), findsWidgets);
+      expect(find.text('perguntaMarcarCapituloLido'), findsOneWidget);
+      expect(find.text('Gênesis 2'), findsOneWidget); // título da pergunta
+
+      await tester.tap(find.text('marcarCapituloLido'));
+      await tester.pumpAndSettle();
+      expect(repository.marcacoes, [(versaId: _arc.versaId, livrId: _genesis.livrId, capiNumero: 2, lido: true)]);
+      expect(find.text('capituloMarcadoLido'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('capituloAnterior'));
+      await tester.pumpAndSettle();
+      expect(find.text('perguntaMarcarCapituloLido'), findsNothing);
+    });
+
+    testWidgets('ao passar a página (perguntar): "agora não" não marca', (tester) async {
+      leitura.marcarAoPassar = MarcarAoPassar.perguntar;
+      await abrirGenesis2(tester);
+      await tester.tap(find.byTooltip('proximoCapitulo'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('agoraNao'));
+      await tester.pumpAndSettle();
+      expect(repository.marcacoes, isEmpty);
+    });
+
+    testWidgets('ao passar a página (marcar): marca o anterior sem perguntar', (tester) async {
+      leitura.marcarAoPassar = MarcarAoPassar.sempre;
+      await abrirGenesis2(tester);
+      await tester.tap(find.byTooltip('proximoCapitulo'));
+      await tester.pumpAndSettle();
+      expect(find.text('perguntaMarcarCapituloLido'), findsNothing);
+      expect(repository.marcacoes.single.capiNumero, 2);
+    });
+
+    testWidgets('ao passar a página: capítulo já completo ou sem login não pergunta', (tester) async {
+      leitura.marcarAoPassar = MarcarAoPassar.perguntar;
+      await montar(tester);
+      await tester.tap(find.text('Gênesis'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(CapituloChip, '1')); // Gênesis 1 já está lido (3/3)
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('proximoCapitulo'));
+      await tester.pumpAndSettle();
+      expect(find.text('perguntaMarcarCapituloLido'), findsNothing);
+    });
+
+    Future<BibliaLeituraViewmodel> abrirOpcoes(WidgetTester tester) async {
+      final viewModel = await montar(tester);
+      await tester.tap(find.text('Gênesis'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(CapituloChip, '2'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('opcoesLeitura'));
+      await tester.pumpAndSettle();
+      return viewModel;
+    }
+
+    testWidgets('opções de leitura: escolhe o que fazer ao passar a página', (tester) async {
+      await abrirOpcoes(tester);
+      expect(find.text('aoPassarPagina'), findsOneWidget);
+      await tester.tap(find.text('perguntar'));
+      await tester.pumpAndSettle();
+      expect(leitura.marcarAoPassar, MarcarAoPassar.perguntar);
+    });
+
+    testWidgets('opções de leitura: o tamanho da fonte aumenta o texto e é guardado', (tester) async {
+      await abrirOpcoes(tester);
+      double tamanhoTexto() {
+        final texto = tester.widget<Text>(find.textContaining('Gênesis 2 texto 1').first);
+        final spans = (texto.textSpan! as TextSpan).children!;
+        return spans.last.style!.fontSize!;
+      }
+
+      final antes = tamanhoTexto();
+      final slider = find.byKey(const ValueKey('tamanhoFonte'));
+      await tester.tapAt(tester.getTopRight(slider) - const Offset(8, -12));
+      await tester.pumpAndSettle();
+      expect(leitura.escalaFonte, BibliaLeituraUseCase.escalaFonteMaxima);
+      expect(tamanhoTexto(), greaterThan(antes));
+    });
+
+    testWidgets('opções de leitura: desligar as setas deixa só o botão de opções na navegação', (tester) async {
+      await abrirOpcoes(tester);
+      expect(find.byTooltip('proximoCapitulo'), findsOneWidget);
+
+      await tester.tap(find.text('mostrarSetasNavegacao'));
+      await tester.pumpAndSettle();
+      expect(leitura.mostrarSetas, isFalse);
+      expect(find.byTooltip('proximoCapitulo'), findsNothing);
+      expect(find.byTooltip('capituloAnterior'), findsNothing);
+      expect(find.byTooltip('opcoesLeitura'), findsOneWidget);
+    });
+
+    testWidgets('opções de leitura: o tema escolhido é guardado', (tester) async {
+      await abrirOpcoes(tester);
+      expect(find.text('sistema'), findsOneWidget);
+      await tester.ensureVisible(find.text('creme'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('creme'));
+      await tester.pumpAndSettle();
+      expect(leitura.tema, TemaApp.creme);
+
+      await tester.ensureVisible(find.text('escuro'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('escuro'));
+      await tester.pumpAndSettle();
+      expect(leitura.tema, TemaApp.escuro);
+    });
+
+    testWidgets('opções de leitura: o brilho muda a tela e volta ao do sistema ao sair', (tester) async {
+      final viewModel = await abrirOpcoes(tester);
+      final slider = find.byKey(const ValueKey('brilho'));
+      expect(slider, findsOneWidget);
+      expect(viewModel.brilho, 0.5);
+
+      await tester.tapAt(tester.getTopRight(slider) - const Offset(8, -12));
+      await tester.pumpAndSettle();
+      expect(brilho.definidos.last, greaterThan(0.9));
+
+      viewModel.dispose();
+      await tester.pump();
+      expect(brilho.restaurado, isTrue);
+      // Desmonta a tela antes do fim do teste: o viewmodel já foi descartado.
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('opções de leitura: sem suporte a brilho, o ajuste não aparece', (tester) async {
+      brilho = _FakeBrilhoTela(suportado: false);
+      await abrirOpcoes(tester);
+      expect(find.text('tamanhoFonte'), findsOneWidget);
+      expect(find.byKey(const ValueKey('brilho')), findsNothing);
     });
 
     testWidgets('a versão é escolhida no índice, acima dos testamentos, e não na AppBar', (tester) async {

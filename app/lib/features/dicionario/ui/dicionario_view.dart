@@ -9,9 +9,9 @@ import 'package:components/components.dart';
 import 'package:flutter/material.dart';
 
 import '../../../data/model/dicionario/dicionario_busca_model.dart';
-import '../../../data/model/dicionario/dicionario_verbete_model.dart';
 import '../use_case/dicionario_usecase.dart';
 import 'dicionario_viewmodel.dart';
+import 'widgets/dicionario_verbete_card.dart';
 
 /// Tela "Dicionário" (`Routes.dicionario`, tela própria, não é aba): busca de palavras com o resultado na mesma
 /// página.
@@ -359,7 +359,7 @@ class _DicionarioViewState extends State<DicionarioView> {
 
     return ListView(
       padding: const EdgeInsets.only(bottom: 8),
-      children: [for (final v in consulta.verbetes) _verbete(v, strings)],
+      children: [for (final v in consulta.verbetes) DicionarioVerbeteCard(verbete: v, onRemissao: _consultar)],
     );
   }
 
@@ -411,145 +411,6 @@ class _DicionarioViewState extends State<DicionarioView> {
         subtitle: resumo == null ? null : Text(resumo, maxLines: 2, overflow: TextOverflow.ellipsis),
         trailing: DicionarioView.icone(DicionarioView.iconeAbrir, Icons.chevron_right),
       ),
-    );
-  }
-
-  /// Texto com os trechos em itálico do original.
-  TextSpan _texto(String texto, {TextStyle? style}) => TextSpan(
-    style: style,
-    children: [
-      for (final t in _vm.trechos(texto))
-        TextSpan(
-          text: t.texto,
-          style: t.italico ? const TextStyle(fontStyle: FontStyle.italic) : null,
-        ),
-    ],
-  );
-
-  Widget _verbete(DicionarioVerbeteModel verbete, AppLocalizations strings) {
-    final scheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-    final secundario = textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant);
-    final acepcoes = _vm.acepcoes(verbete);
-
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Wrap(
-              crossAxisAlignment: WrapCrossAlignment.end,
-              spacing: 8,
-              children: [
-                Text(
-                  _vm.titulo(verbete.dverPalavra, verbete.dverHomonimo),
-                  style: textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: scheme.primary),
-                ),
-                if (verbete.dverPronuncia != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 3),
-                    child: Text('${strings.translate('pronuncia')}: ${verbete.dverPronuncia}', style: secundario),
-                  ),
-              ],
-            ),
-            if (verbete.dverEtimologia != null) ...[
-              const SizedBox(height: 6),
-              Text.rich(
-                TextSpan(
-                  children: [
-                    TextSpan(
-                      text: '${strings.translate('etimologia')}: ',
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    _texto(verbete.dverEtimologia!),
-                  ],
-                ),
-                style: secundario,
-              ),
-            ],
-            const Divider(height: 24),
-            for (final (index, acepcao) in acepcoes.indexed) ...[
-              if (index > 0) const SizedBox(height: 12),
-              _acepcao(acepcao, numerar: acepcoes.length > 1, strings: strings),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _acepcao(DicionarioAcepcaoModel acepcao, {required bool numerar, required AppLocalizations strings}) {
-    final scheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-    final usos = _vm.usos(acepcao);
-    final remissoes = _vm.remissoes(acepcao);
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (numerar)
-          SizedBox(
-            width: 28,
-            child: Text(
-              '${acepcao.daceSeq}.',
-              style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold, color: scheme.primary),
-            ),
-          ),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (acepcao.daceClasse != null || usos.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Wrap(
-                    spacing: 6,
-                    runSpacing: 4,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      if (acepcao.daceClasse != null)
-                        Text(
-                          acepcao.daceClasse!,
-                          style: textTheme.bodyMedium?.copyWith(fontStyle: FontStyle.italic, color: scheme.primary),
-                        ),
-                      for (final uso in usos)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: scheme.secondaryContainer,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(uso, style: textTheme.labelSmall?.copyWith(color: scheme.onSecondaryContainer)),
-                        ),
-                    ],
-                  ),
-                ),
-              Text.rich(_texto(acepcao.daceDefinicao), style: textTheme.bodyLarge),
-              if (remissoes.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Wrap(
-                    spacing: 6,
-                    runSpacing: 4,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      Text('${strings.translate('vejaTambem')}:', style: textTheme.bodySmall),
-                      for (final r in remissoes)
-                        ActionChip(
-                          visualDensity: VisualDensity.compact,
-                          avatar: DicionarioView.icone(DicionarioView.iconeRemissao, Icons.link, size: 16),
-                          label: Text(r.termo),
-                          onPressed: r.navegavel ? () => _consultar(r.termo) : null,
-                        ),
-                    ],
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

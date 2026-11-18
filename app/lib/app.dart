@@ -4,6 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
 import 'config/app_config.dart';
+import 'config/leitura_preferencia.dart';
 import 'config/providers.dart';
 import 'l10n/app_localizations.dart';
 import 'routing/router.dart';
@@ -21,7 +22,7 @@ class MyApp extends StatelessWidget {
         builder: (context, themeController, child) {
           return MaterialApp.router(
             // scrollBehavior: AppCustomScrollBehavior(),
-            theme: AppTheme.light,
+            theme: themeController.tema == TemaApp.creme ? AppTheme.creme : AppTheme.light,
             darkTheme: AppTheme.dark,
             themeMode: themeController.mode,
             locale: themeController.locale,

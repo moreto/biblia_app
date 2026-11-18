@@ -6,29 +6,45 @@
       "request": "launch",
       "type": "dart",
       "flutterMode": "debug",
-      "program": "app/lib/main.dart"
+      "program": "lib/main.dart",
+      "cwd": "app",
+      "toolArgs": [
+        "--dart-define-from-file=.env"
+      ]
     },
     {
       "name": "Biblia - Profile",
       "request": "launch",
       "type": "dart",
       "flutterMode": "profile",
-      "program": "app/lib/main.dart"
+      "program": "lib/main.dart",
+      "cwd": "app",
+      "toolArgs": [
+        "--dart-define-from-file=.env"
+      ]
     },
     {
       "name": "Biblia - Release",
       "request": "launch",
       "type": "dart",
       "flutterMode": "release",
-      "program": "app/lib/main.dart"
+      "program": "lib/main.dart",
+      "cwd": "app",
+      "toolArgs": [
+        "--dart-define-from-file=.env"
+      ]
     },
     {
       "name": "Biblia - Android",
       "request": "launch",
       "type": "dart",
       "flutterMode": "debug",
-      "program": "app/lib/main.dart",
-      "deviceId": "bafb9a06"
+      "program": "lib/main.dart",
+      "deviceId": "bafb9a06",
+      "cwd": "app",
+      "toolArgs": [
+        "--dart-define-from-file=.env"
+      ]
     }
   ]
 }
