@@ -54,5 +54,13 @@ WHERE trad_status = true
     'fonte',
     'requeridaNaoLocalizada',
     'salvando',
-    'salvarAlteracoes'
+    'salvarAlteracoes',
+
+    -- Repetição da agenda do grupo de leitura: itens que saíram da configuração agendaRepeticao (18/11/2026;
+    -- a lista vigente está em traducao_grupo_leitura.sql)
+    'naoRepete',
+    'diariamente',
+    'semanalmente',
+    'mensalmente',
+    'dia' -- trocado por diaInteiro
   );

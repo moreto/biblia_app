@@ -212,6 +212,10 @@ class IconsMap {
     'checkbox-marked-circle-outline': MdiIcons.checkboxMarkedCircleOutline,
     'checkbox-blank-circle-outline': MdiIcons.checkboxBlankCircleOutline,
     'exit-run': MdiIcons.exitRun,
+    // Agenda do grupo de leitura: repetição e fim da repetição (GrupoLeituraAgendaView.iconeRepeticao /
+    // iconeFimRepeticao); lembrete ('bell-outline') já mapeado.
+    'repeat': MdiIcons.repeat,
+    'calendar-end': MdiIcons.calendarEnd,
     // ...
   };
 }

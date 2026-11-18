@@ -2,15 +2,19 @@ import 'package:app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../../data/model/leitura/leitura_agenda_model.dart';
+import '../../use_case/grupo_leitura_agenda_usecase.dart';
 import '../../../../admin/configuracao/ui/widgets/configuracao_dialog_layout.dart';
 import '../../../grupo_leitura/ui/grupo_leitura_view.dart';
 import '../grupo_leitura_agenda_view.dart';
 import '../grupo_leitura_agenda_viewmodel.dart';
 
-/// Formulário de inclusão/alteração de item da agenda ([grupoNome] no topo): título, texto, data, hora e lembrete.
+/// Formulário de inclusão/alteração de item da agenda ([grupoNome] no topo): título, texto, data, hora, repetição,
+/// fim da repetição e lembrete.
 ///
-/// Data, hora e lembrete abrem os seletores do sistema e podem ser limpos; a hora só vale com data (a API grava data
-/// e hora num campo só). Ao salvar, `validar` do [viewModel] (regra do use case) devolve a chave do problema,
+/// Data e hora abrem os seletores do sistema e podem ser limpas; a hora só vale com data (a API grava data e hora num
+/// campo só). Repetição, fim da repetição e lembrete são listas com as opções das configurações `agendaRepeticao`,
+/// `agendaFimRepeticao` e `agendaLembrete` (rótulos traduzidos) mais "Não informado"; repetição e lembrete só com
+/// data, e o fim só com repetição. Ao salvar, `validar` do [viewModel] (regra do use case) devolve a chave do problema,
 /// mostrada no formulário; sem problema, retorna o [LeituraAgendaModel] preenchido (mantendo os campos que a tela
 /// não edita). `null` quando cancelado.
 class GrupoLeituraAgendaFormDialog extends StatefulWidget {
@@ -55,7 +59,9 @@ class _GrupoLeituraAgendaFormDialogState extends State<GrupoLeituraAgendaFormDia
     null => null,
     final d => (hora: d.hour, minuto: d.minute),
   };
-  late ({int hora, int minuto})? _lembrete = _vm.horaMinuto(widget.item?.lageLembrete);
+  late int? _repeticao = _existente(widget.item?.lageRepete, _vm.opcoes.repeticoes);
+  late int? _fimRepeticao = _existente(widget.item?.lageFimRepete, _vm.opcoes.fimRepeticoes);
+  late int? _lembrete = _existente(widget.item?.lageLembrete, _vm.opcoes.lembretes);
   String? _erro;
 
   @override
@@ -84,12 +90,14 @@ class _GrupoLeituraAgendaFormDialogState extends State<GrupoLeituraAgendaFormDia
     return escolhida == null ? null : (hora: escolhida.hour, minuto: escolhida.minute);
   }
 
+  /// A chave só vale como seleção inicial se estiver entre as opções (o dropdown exige).
+  static int? _existente(int? chave, List<AgendaOpcao> opcoes) => opcoes.any((o) => o.chave == chave) ? chave : null;
+
   String? _formatar(({int hora, int minuto})? hora) =>
       hora == null ? null : _vm.hora(_vm.horaApi(hora.hora, hora.minuto));
 
   void _confirmar() {
     final atual = widget.item;
-    final lembrete = _lembrete;
     final item = LeituraAgendaModel(
       lageId: atual?.lageId,
       leitId: widget.leitId,
@@ -97,9 +105,9 @@ class _GrupoLeituraAgendaFormDialogState extends State<GrupoLeituraAgendaFormDia
       lageTexto: _texto.text,
       lageDataHora: _vm.juntar(_data, _hora),
       lageHoraAtividade: atual?.lageHoraAtividade,
-      lageRepete: atual?.lageRepete,
-      lageFimRepete: atual?.lageFimRepete,
-      lageLembrete: lembrete == null ? null : _vm.horaApi(lembrete.hora, lembrete.minuto),
+      lageRepete: _repeticao,
+      lageFimRepete: _fimRepeticao,
+      lageLembrete: _lembrete,
     );
     final erro = _vm.validar(item);
     if (erro != null) {
@@ -133,6 +141,37 @@ class _GrupoLeituraAgendaFormDialogState extends State<GrupoLeituraAgendaFormDia
         ),
         child: Text(valor ?? ''),
       ),
+    );
+  }
+
+  /// Lista de opções de uma configuração da agenda, com "Não informado" (nulo) no topo.
+  Widget _opcoes({
+    required String rotulo,
+    required int? valor,
+    required List<AgendaOpcao> opcoes,
+    required String icone,
+    required IconData fallback,
+    required bool habilitado,
+    required ValueChanged<int?> onChanged,
+  }) {
+    final strings = AppLocalizations.of(context);
+    return DropdownButtonFormField<int?>(
+      key: ValueKey('$rotulo-$valor-$habilitado'),
+      initialValue: valor,
+      isExpanded: true,
+      decoration: InputDecoration(
+        labelText: strings.translate(rotulo),
+        prefixIcon: GrupoLeituraView.icone(icone, fallback),
+      ),
+      items: [
+        DropdownMenuItem<int?>(value: null, child: Text(strings.translate('naoInformado'))),
+        for (final opcao in opcoes)
+          DropdownMenuItem<int?>(
+            value: opcao.chave,
+            child: Text(strings.translate(opcao.rotulo), overflow: TextOverflow.ellipsis),
+          ),
+      ],
+      onChanged: habilitado ? onChanged : null,
     );
   }
 
@@ -176,6 +215,9 @@ class _GrupoLeituraAgendaFormDialogState extends State<GrupoLeituraAgendaFormDia
           onLimpar: () => setState(() {
             _data = null;
             _hora = null;
+            _repeticao = null;
+            _fimRepeticao = null;
+            _lembrete = null;
           }),
         ),
         _seletor(
@@ -191,16 +233,35 @@ class _GrupoLeituraAgendaFormDialogState extends State<GrupoLeituraAgendaFormDia
                 },
           onLimpar: () => setState(() => _hora = null),
         ),
-        _seletor(
+        _opcoes(
+          rotulo: 'repeticao',
+          valor: _repeticao,
+          opcoes: _vm.opcoes.repeticoes,
+          icone: GrupoLeituraAgendaView.iconeRepeticao,
+          fallback: Icons.repeat,
+          habilitado: _data != null,
+          onChanged: (valor) => setState(() {
+            _repeticao = valor;
+            if (valor == null) _fimRepeticao = null;
+          }),
+        ),
+        _opcoes(
+          rotulo: 'fimRepeticao',
+          valor: _fimRepeticao,
+          opcoes: _vm.opcoes.fimRepeticoes,
+          icone: GrupoLeituraAgendaView.iconeFimRepeticao,
+          fallback: Icons.event_busy_outlined,
+          habilitado: _repeticao != null,
+          onChanged: (valor) => setState(() => _fimRepeticao = valor),
+        ),
+        _opcoes(
           rotulo: 'lembrete',
-          valor: _formatar(_lembrete),
+          valor: _lembrete,
+          opcoes: _vm.opcoes.lembretes,
           icone: GrupoLeituraAgendaView.iconeLembrete,
           fallback: Icons.notifications_none,
-          onTap: () async {
-            final hora = await _escolherHora(_lembrete);
-            if (hora != null) setState(() => _lembrete = hora);
-          },
-          onLimpar: () => setState(() => _lembrete = null),
+          habilitado: _data != null,
+          onChanged: (valor) => setState(() => _lembrete = valor),
         ),
         if (erro != null) Text(strings.translate(erro), style: TextStyle(color: Theme.of(context).colorScheme.error)),
       ],

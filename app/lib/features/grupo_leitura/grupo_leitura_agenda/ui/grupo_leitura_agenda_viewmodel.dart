@@ -12,6 +12,7 @@ import '../use_case/grupo_leitura_agenda_usecase.dart';
 ///   aba é aberta e depois de [invalidar] (chamado quando os grupos mudam).
 /// - [selecionarCommand] troca o grupo; [selecionar] também serve antes do carregamento ("Agenda" no menu do grupo).
 /// - [salvarCommand] e [excluirCommand] gravam e recarregam a agenda; uma atualização que falha mantém a lista.
+/// - [opcoes] (repetição, fim da repetição e lembrete) carregam junto com a agenda.
 class GrupoLeituraAgendaViewmodel extends ChangeNotifier {
   GrupoLeituraAgendaViewmodel({required this.grupoLeituraAgendaUseCase}) {
     Log.print(super.runtimeType);
@@ -36,6 +37,19 @@ class GrupoLeituraAgendaViewmodel extends ChangeNotifier {
   List<LeituraAgendaModel> get agenda => _agenda;
 
   bool _desatualizado = true;
+
+  AgendaOpcoes _opcoes = const AgendaOpcoes();
+
+  /// Opções de repetição, fim da repetição e lembrete (das configurações da agenda).
+  AgendaOpcoes get opcoes => _opcoes;
+
+  /// Rótulos (chaves de tradução) da repetição, do fim da repetição e do lembrete do [item]; nulos sem valor.
+  String? rotuloRepeticao(LeituraAgendaModel item) =>
+      GrupoLeituraAgendaUseCase.rotulo(item.lageRepete, _opcoes.repeticoes);
+  String? rotuloFimRepeticao(LeituraAgendaModel item) =>
+      GrupoLeituraAgendaUseCase.rotulo(item.lageFimRepete, _opcoes.fimRepeticoes);
+  String? rotuloLembrete(LeituraAgendaModel item) =>
+      GrupoLeituraAgendaUseCase.rotulo(item.lageLembrete, _opcoes.lembretes);
 
   bool get ocupado =>
       carregarCommand.running || selecionarCommand.running || salvarCommand.running || excluirCommand.running;
@@ -70,7 +84,8 @@ class GrupoLeituraAgendaViewmodel extends ChangeNotifier {
 
   Future<Result<void>> _carregar() async {
     notifyListeners();
-    final result = await grupoLeituraAgendaUseCase.grupos();
+    final (result, opcoes) = await (grupoLeituraAgendaUseCase.grupos(), grupoLeituraAgendaUseCase.opcoes()).wait;
+    _opcoes = opcoes;
     switch (result) {
       case Ok<List<LeituraModel>>(value: final grupos):
         final selecionado = grupoLeituraAgendaUseCase.selecionado(grupos, _leitIdPedido ?? _selecionado?.leitId);

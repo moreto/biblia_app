@@ -1,4 +1,6 @@
 import 'package:app/data/model/biblia/livro_model.dart';
+import 'package:app/data/model/configuracao/configuracao_item_model.dart';
+import 'package:app/data/model/configuracao/configuracao_model.dart';
 import 'package:app/data/model/leitura/leitura_agenda_atividade_model.dart';
 import 'package:app/data/model/leitura/leitura_agenda_model.dart';
 import 'package:app/data/model/leitura/leitura_model.dart';
@@ -136,9 +138,35 @@ final leituraDia1 = LeituraAgendaModel(
   lageTitulo: 'Gênesis 1-3',
   lageTexto: 'Criação',
   lageDataHora: DateTime(2026, 11, 20, 19, 30),
-  lageLembrete: '19:00:00',
+  lageRepete: 3,
+  lageFimRepete: 1,
+  lageLembrete: 2,
 );
 const leituraSemData = LeituraAgendaModel(lageId: 21, leitId: 1, lageTitulo: 'Revisão');
+
+/// Configurações da agenda: repetição pelo código, lembrete só pelo nome (gravada sem código) e o fim da repetição.
+const configuracoesAgenda = [
+  ConfiguracaoModel(confId: 41, confCodigo: 'agendaRepeticao', confNome: 'Agenda - Repetição'),
+  ConfiguracaoModel(confId: 42, confCodigo: 'agendaFimRepeticao', confNome: 'Agenda - Fim Repetição'),
+  ConfiguracaoModel(confId: 43, confNome: 'Agenda - Lembrete'),
+];
+
+/// Itens por configuração: inativo e sem sequência para conferir o filtro e a ordem.
+const itensAgenda = <int, List<ConfiguracaoItemModel>>{
+  41: [
+    ConfiguracaoItemModel(citeId: 1, confId: 41, citeChave: '3', citeValor: 'segunda', citeSequencia: 3),
+    ConfiguracaoItemModel(citeId: 2, confId: 41, citeChave: '2', citeValor: 'diaInteiro', citeSequencia: 2),
+    ConfiguracaoItemModel(citeId: 3, confId: 41, citeChave: '9', citeValor: 'antigo', citeAtivo: false),
+  ],
+  42: [
+    ConfiguracaoItemModel(citeId: 4, confId: 42, citeChave: '1', citeValor: 'nunca', citeSequencia: 1),
+    ConfiguracaoItemModel(citeId: 5, confId: 42, citeChave: '2', citeValor: 'naData', citeSequencia: 2),
+  ],
+  43: [
+    ConfiguracaoItemModel(citeId: 6, confId: 43, citeChave: '1', citeValor: '5minutos', citeSequencia: 1),
+    ConfiguracaoItemModel(citeId: 7, confId: 43, citeChave: '2', citeValor: '15minutos', citeSequencia: 2),
+  ],
+};
 
 /// Agenda por grupo em memória.
 class FakeGrupoLeituraAgendaRepository implements GrupoLeituraAgendaRepository {
@@ -157,6 +185,18 @@ class FakeGrupoLeituraAgendaRepository implements GrupoLeituraAgendaRepository {
   final incluidos = <LeituraAgendaModel>[];
   final alterados = <LeituraAgendaModel>[];
   final excluidos = <int>[];
+  Exception? erroConfiguracoes;
+  int configuracoesConsultadas = 0;
+
+  @override
+  Future<Result<List<ConfiguracaoModel>>> configuracoes() async {
+    configuracoesConsultadas++;
+    final erro = erroConfiguracoes;
+    return erro != null ? Result.error(erro) : const Result.ok(configuracoesAgenda);
+  }
+
+  @override
+  Future<Result<List<ConfiguracaoItemModel>>> itens(int confId) async => Result.ok(itensAgenda[confId] ?? const []);
 
   @override
   Future<Result<List<LeituraAgendaModel>>> agenda(int leitId) async => Result.ok(List.of(porGrupo[leitId] ?? const []));

@@ -1,6 +1,8 @@
 import 'package:commons/commons.dart';
 import 'package:service/service.dart';
 
+import '../../../../data/model/configuracao/configuracao_item_model.dart';
+import '../../../../data/model/configuracao/configuracao_model.dart';
 import '../../../../data/model/leitura/leitura_agenda_model.dart';
 import '../../grupo_leitura/repository/leitura_resposta.dart';
 import 'grupo_leitura_agenda_repository.dart';
@@ -27,4 +29,14 @@ class GrupoLeituraAgendaRepositoryImpl implements GrupoLeituraAgendaRepository {
   @override
   Future<Result<void>> excluir(int lageId) =>
       LeituraResposta.excluir(DioProvider.of(ApiCore.leituraAgenda).request(verb: Verb.delete, pathParam: lageId));
+
+  @override
+  Future<Result<List<ConfiguracaoModel>>> configuracoes() =>
+      LeituraResposta.lista(DioProvider.of(ApiCore.configuracao).request(verb: Verb.get), ConfiguracaoModel.fromJson);
+
+  @override
+  Future<Result<List<ConfiguracaoItemModel>>> itens(int confId) => LeituraResposta.lista(
+    DioProvider.of(ApiCore.configuracaoItem).request(verb: Verb.get, pathParam: confId),
+    ConfiguracaoItemModel.fromJson,
+  );
 }

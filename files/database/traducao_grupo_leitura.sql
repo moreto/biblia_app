@@ -1,7 +1,11 @@
 -- Traduções da tela "Grupos de leitura" (rota /grupo-leitura; tela própria, com as abas "Meus grupos",
 -- "Participantes", "Agenda" e "Atividades"): grupos do usuário (GET /v1/leitura e POST/PUT/DELETE /v1/leitura),
 -- participantes (/v1/leitura-participante e busca em /v1/usuario/busca), agenda (/v1/leitura-agenda) e atividades
--- (/v1/leitura-agenda-atividade e livros em /v1/livro).
+-- (/v1/leitura-agenda-atividade e livros em /v1/livro). Repetição, fim da repetição e lembrete da agenda usam os
+-- itens das configurações agendaRepeticao, agendaFimRepeticao e agendaLembrete; o cite_valor de cada item é chave
+-- de tradução (rótulos abaixo, os do script leitura_agenda_configuracao.sql da API). Repetição: hora, diaInteiro,
+-- todosDiasSemana, sabadoDomingo, segunda a domingo, mes e ano; os rótulos antigos (naoRepete, diariamente,
+-- semanalmente, mensalmente e dia, trocado por diaInteiro) são inativados em traducao_inativar_nao_usadas.sql.
 -- Idempotente: só insere chaves inexistentes (conferidas em GET /v1/traducao em 18/11/2026).
 -- Chaves já existentes reutilizadas: acoes, atualizar, buscarUsuario, buscarUsuarioDica, cancelar, codigo,
 -- confirmarExclusao, descricao, editar, error, excluir, exibirAcoes, fechar, limpar, musica, nenhumUsuarioEncontrado,
@@ -67,6 +71,42 @@ FROM (VALUES
   ('marcarConcluida', 'Marcar como concluída', 'Marcar como completada', 'Mark as completed'),
   ('marcarPendente', 'Marcar como pendente', 'Marcar como pendiente', 'Mark as pending'),
   ('informeTextoOuLivro', 'Informe o texto ou escolha um livro', 'Ingrese el texto o elija un libro', 'Enter the text or choose a book'),
-  ('confirmarExclusaoAtividade', 'A atividade será excluída.', 'La actividad se eliminará.', 'The activity will be deleted.')
+  ('confirmarExclusaoAtividade', 'A atividade será excluída.', 'La actividad se eliminará.', 'The activity will be deleted.'),
+
+  -- agenda: repetição, fim da repetição e lembrete (configurações agendaRepeticao, agendaFimRepeticao e agendaLembrete)
+  ('repeticao', 'Repetição', 'Repetición', 'Repeat'),
+  ('fimRepeticao', 'Fim da repetição', 'Fin de la repetición', 'End of repeat'),
+  ('naoInformado', 'Não informado', 'No informado', 'Not set'),
+  ('repeticaoExigeData', 'Informe a data para definir a repetição', 'Ingrese la fecha para definir la repetición', 'Enter the date to set the repeat'),
+  ('lembreteExigeData', 'Informe a data para definir o lembrete', 'Ingrese la fecha para definir el recordatorio', 'Enter the date to set the reminder'),
+  ('opcaoAgendaInvalida', 'Opção não disponível. Atualize a agenda e escolha novamente', 'Opción no disponible. Actualice la agenda y elija de nuevo', 'Option not available. Refresh the schedule and choose again'),
+
+  -- rótulos dos itens das configurações (configuracao_item.cite_valor)
+  -- agendaRepeticao ('hora' já está na aba "Agenda" acima)
+  ('diaInteiro', 'Dia inteiro', 'Todo el día', 'All day'),
+  ('todosDiasSemana', 'Todos os dias da semana', 'Todos los días de la semana', 'Every weekday'),
+  ('sabadoDomingo', 'Sábado e domingo', 'Sábado y domingo', 'Saturday and Sunday'),
+  ('segunda', 'Segunda-feira', 'Lunes', 'Monday'),
+  ('terca', 'Terça-feira', 'Martes', 'Tuesday'),
+  ('quarta', 'Quarta-feira', 'Miércoles', 'Wednesday'),
+  ('quinta', 'Quinta-feira', 'Jueves', 'Thursday'),
+  ('sexta', 'Sexta-feira', 'Viernes', 'Friday'),
+  ('sabado', 'Sábado', 'Sábado', 'Saturday'),
+  ('domingo', 'Domingo', 'Domingo', 'Sunday'),
+  ('mes', 'Mês', 'Mes', 'Month'),
+  ('ano', 'Ano', 'Año', 'Year'),
+  -- agendaFimRepeticao
+  ('nunca', 'Nunca', 'Nunca', 'Never'),
+  ('naData', 'Na data', 'En la fecha', 'On date'),
+  -- agendaLembrete
+  ('5minutos', '5 minutos antes', '5 minutos antes', '5 minutes before'),
+  ('15minutos', '15 minutos antes', '15 minutos antes', '15 minutes before'),
+  ('30minutos', '30 minutos antes', '30 minutos antes', '30 minutes before'),
+  ('1hora', '1 hora antes', '1 hora antes', '1 hour before'),
+  ('2hora', '2 horas antes', '2 horas antes', '2 hours before'),
+  ('1dia', '1 dia antes', '1 día antes', '1 day before'),
+  ('2dia', '2 dias antes', '2 días antes', '2 days before'),
+  ('1semanas', '1 semana antes', '1 semana antes', '1 week before'),
+  ('2semanas', '2 semanas antes', '2 semanas antes', '2 weeks before')
 ) AS v (trad_chave, trad_pt_br, trad_es_es, trad_en_us)
 WHERE NOT EXISTS (SELECT 1 FROM public.traducao t WHERE t.trad_chave = v.trad_chave);

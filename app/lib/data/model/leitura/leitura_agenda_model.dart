@@ -4,8 +4,9 @@ import '../biblia/json_reader.dart';
 
 /// Item da agenda de um grupo de leitura (`biblia.leitura_agenda`; `/v1/leitura-agenda`).
 ///
-/// A API grava data e hora sem fuso: [lageDataHora] vai como `AAAA-MM-DDTHH:MM:SS` (hora local) e as horas
-/// ([lageHoraAtividade], [lageRepete], [lageFimRepete] e [lageLembrete]) como `HH:MM[:SS]`, guardadas como texto.
+/// A API grava data e hora sem fuso: [lageDataHora] vai como `AAAA-MM-DDTHH:MM:SS` (hora local) e
+/// [lageHoraAtividade] como `HH:MM[:SS]`, guardada como texto. [lageRepete], [lageFimRepete] e [lageLembrete] são o
+/// `cite_chave` de um item das configurações `agendaRepeticao`, `agendaFimRepeticao` e `agendaLembrete`.
 class LeituraAgendaModel {
   const LeituraAgendaModel({
     this.lageId,
@@ -26,9 +27,9 @@ class LeituraAgendaModel {
   final String? lageTexto;
   final DateTime? lageDataHora;
   final String? lageHoraAtividade;
-  final String? lageRepete;
-  final String? lageFimRepete;
-  final String? lageLembrete;
+  final int? lageRepete;
+  final int? lageFimRepete;
+  final int? lageLembrete;
 
   static final _formatoDataHora = DateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
@@ -39,9 +40,9 @@ class LeituraAgendaModel {
     lageTexto: JsonReader.textoOpcional(json, 'lageTexto', 'lage_texto'),
     lageDataHora: JsonReader.data(json, 'lageDataHora', 'lage_data_hora')?.toLocal(),
     lageHoraAtividade: JsonReader.textoOpcional(json, 'lageHoraAtividade', 'lage_hora_atividade'),
-    lageRepete: JsonReader.textoOpcional(json, 'lageRepete', 'lage_repete'),
-    lageFimRepete: JsonReader.textoOpcional(json, 'lageFimRepete', 'lage_fim_repete'),
-    lageLembrete: JsonReader.textoOpcional(json, 'lageLembrete', 'lage_lembrete'),
+    lageRepete: JsonReader.inteiroOpcional(json, 'lageRepete', 'lage_repete'),
+    lageFimRepete: JsonReader.inteiroOpcional(json, 'lageFimRepete', 'lage_fim_repete'),
+    lageLembrete: JsonReader.inteiroOpcional(json, 'lageLembrete', 'lage_lembrete'),
   );
 
   /// Corpo do POST/PUT ([lageId] só no PUT). Campos nulos são removidos pelo DioProvider e a API grava `null` no

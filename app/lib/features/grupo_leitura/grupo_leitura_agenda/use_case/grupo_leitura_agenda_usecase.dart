@@ -1,18 +1,39 @@
 import 'package:commons/commons.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../data/model/configuracao/configuracao_item_model.dart';
+import '../../../../data/model/configuracao/configuracao_model.dart';
 import '../../../../data/model/leitura/leitura_agenda_model.dart';
 import '../../../../data/model/leitura/leitura_model.dart';
 import '../../grupo_leitura/use_case/grupo_leitura_usecase.dart';
 import '../repository/grupo_leitura_agenda_repository.dart';
+
+/// Opção de uma configuração da agenda: [chave] (`cite_chave`, gravada no item) e [rotulo] (`cite_valor`, chave de
+/// tradução).
+typedef AgendaOpcao = ({int chave, String rotulo});
+
+/// Opções do formulário da agenda, vindas das configurações `agendaRepeticao`, `agendaFimRepeticao` e
+/// `agendaLembrete`.
+class AgendaOpcoes {
+  const AgendaOpcoes({this.repeticoes = const [], this.fimRepeticoes = const [], this.lembretes = const []});
+
+  final List<AgendaOpcao> repeticoes;
+  final List<AgendaOpcao> fimRepeticoes;
+  final List<AgendaOpcao> lembretes;
+}
 
 /// Regras da aba "Agenda" (itens da agenda do grupo selecionado):
 /// - os grupos selecionáveis são os de "Meus grupos" (via [GrupoLeituraUseCase]);
 /// - [agenda] vem de `/v1/leitura-agenda/:leitId`, por data e hora, os sem data por último, e por id ([ordenar]);
 ///   404 vira lista vazia;
 /// - gravação ([salvar]): só o dono; título obrigatório (sem espaços nas pontas, até [kTituloMax]) e texto opcional
-///   (até [kTextoMax]; vazio vira nulo) ([validar]); data e hora e lembrete opcionais. Sem `lageId` inclui, com
-///   `lageId` altera. Os campos que a tela não edita (hora da atividade, repetição e fim da repetição) são mantidos;
+///   (até [kTextoMax]; vazio vira nulo) ([validar]); data e hora opcionais. Sem `lageId` inclui, com `lageId`
+///   altera. A hora da atividade, que a tela não edita, é mantida;
+/// - repetição, fim da repetição e lembrete são opcionais e escolhidos entre os itens ativos das configurações
+///   `agendaRepeticao`, `agendaFimRepeticao` e `agendaLembrete` ([opcoes], em cache; achadas pelo `confCodigo` ou,
+///   se a API não o devolver, pelo nome). Valor fora das opções: `opcaoAgendaInvalida`. Repetição e lembrete exigem
+///   data (`repeticaoExigeData`, `lembreteExigeData`); sem repetição, o fim da repetição é descartado. Falha ao ler
+///   as configurações não impede a agenda: as opções ficam vazias;
 /// - [excluir] remove o item e, na API, as atividades dele; só o dono.
 class GrupoLeituraAgendaUseCase {
   GrupoLeituraAgendaUseCase({required this.grupoLeituraAgendaRepository, required this.grupoLeituraUseCase}) {
@@ -27,6 +48,15 @@ class GrupoLeituraAgendaUseCase {
   /// Tamanhos máximos de `lage_titulo` e `lage_texto` (também `laat_texto`).
   static const kTituloMax = 128;
   static const kTextoMax = 4000;
+
+  /// Configurações das opções, pelo código (e o nome, para as gravadas sem código).
+  static const kConfigRepeticao = (codigo: 'agendaRepeticao', nome: 'Agenda - Repetição');
+  static const kConfigFimRepeticao = (codigo: 'agendaFimRepeticao', nome: 'Agenda - Fim Repetição');
+  static const kConfigLembrete = (codigo: 'agendaLembrete', nome: 'Agenda - Lembrete');
+
+  static const kOpcaoInvalida = 'opcaoAgendaInvalida';
+
+  AgendaOpcoes? _opcoes;
 
   static final _data = DateFormat('dd/MM/yyyy');
   static final _dataHora = DateFormat('dd/MM/yyyy HH:mm');
@@ -49,6 +79,78 @@ class GrupoLeituraAgendaUseCase {
     }
   }
 
+  /// Opções de repetição, fim da repetição e lembrete (em cache depois da primeira leitura com sucesso). Falha
+  /// devolve opções vazias, sem guardar em cache.
+  Future<AgendaOpcoes> opcoes() async {
+    final cache = _opcoes;
+    if (cache != null) return cache;
+
+    final configuracoes = await grupoLeituraAgendaRepository.configuracoes();
+    final List<ConfiguracaoModel> lista;
+    switch (configuracoes) {
+      case Ok(value: final value):
+        lista = value;
+      case Error(error: final error):
+        Log.print(error.toString(), name: kApp, title: 'Erro');
+        return const AgendaOpcoes();
+    }
+
+    final (repeticoes, fimRepeticoes, lembretes) = await (
+      _itens(lista, kConfigRepeticao),
+      _itens(lista, kConfigFimRepeticao),
+      _itens(lista, kConfigLembrete),
+    ).wait;
+    if (repeticoes == null || fimRepeticoes == null || lembretes == null) return const AgendaOpcoes();
+    return _opcoes = AgendaOpcoes(repeticoes: repeticoes, fimRepeticoes: fimRepeticoes, lembretes: lembretes);
+  }
+
+  /// Itens ativos da configuração, em ordem; lista vazia se ela não existir; nulo se a consulta falhar.
+  Future<List<AgendaOpcao>?> _itens(
+    List<ConfiguracaoModel> configuracoes,
+    ({String codigo, String nome}) config,
+  ) async {
+    final confId = configuracao(configuracoes, codigo: config.codigo, nome: config.nome)?.confId;
+    if (confId == null) return const [];
+    switch (await grupoLeituraAgendaRepository.itens(confId)) {
+      case Ok(value: final itens):
+        return opcoesDe(itens);
+      case Error(error: final error):
+        if (GrupoLeituraUseCase.semRegistros(error)) return const [];
+        Log.print(error.toString(), name: kApp, title: 'Erro');
+        return null;
+    }
+  }
+
+  /// Configuração pelo [codigo]; se a API não devolver códigos, pelo [nome].
+  static ConfiguracaoModel? configuracao(
+    List<ConfiguracaoModel> configuracoes, {
+    required String codigo,
+    required String nome,
+  }) =>
+      configuracoes.where((c) => c.confCodigo == codigo).firstOrNull ??
+      configuracoes.where((c) => c.confCodigo == null && c.confNome.trim() == nome).firstOrNull;
+
+  /// Itens ativos com chave inteira e rótulo, na ordem de `cite_sequencia` (sem sequência por último).
+  static List<AgendaOpcao> opcoesDe(List<ConfiguracaoItemModel> itens) {
+    final ativos = [
+      for (final item in itens)
+        if (item.citeAtivo && int.tryParse(item.citeChave?.trim() ?? '') != null && (item.citeValor ?? '').trim() != '')
+          item,
+    ]..sort((a, b) => (a.citeSequencia ?? 1 << 30).compareTo(b.citeSequencia ?? 1 << 30));
+    return List.unmodifiable([
+      for (final i in ativos) (chave: int.parse(i.citeChave!.trim()), rotulo: i.citeValor!.trim()),
+    ]);
+  }
+
+  /// Rótulo (chave de tradução) da opção [chave] em [opcoes]; nulo sem chave ou se ela não estiver na lista.
+  static String? rotulo(int? chave, List<AgendaOpcao> opcoes) {
+    if (chave == null) return null;
+    for (final opcao in opcoes) {
+      if (opcao.chave == chave) return opcao.rotulo;
+    }
+    return null;
+  }
+
   /// Por data e hora (sem data por último) e id, como a API.
   static List<LeituraAgendaModel> ordenar(List<LeituraAgendaModel> lista) => List.unmodifiable(
     [...lista]..sort((a, b) {
@@ -67,6 +169,16 @@ class GrupoLeituraAgendaUseCase {
     if (titulo.isEmpty) return 'informeTituloAgenda';
     if (titulo.length > kTituloMax) return 'tituloAgendaMuitoLongo';
     if ((item.lageTexto?.trim().length ?? 0) > kTextoMax) return 'textoAgendaMuitoLongo';
+    if (item.lageDataHora == null && item.lageRepete != null) return 'repeticaoExigeData';
+    if (item.lageDataHora == null && item.lageLembrete != null) return 'lembreteExigeData';
+    final opcoes = _opcoes ?? const AgendaOpcoes();
+    for (final (chave, lista) in [
+      (item.lageRepete, opcoes.repeticoes),
+      (item.lageRepete == null ? null : item.lageFimRepete, opcoes.fimRepeticoes),
+      (item.lageLembrete, opcoes.lembretes),
+    ]) {
+      if (chave != null && rotulo(chave, lista) == null) return kOpcaoInvalida;
+    }
     return null;
   }
 
@@ -86,7 +198,7 @@ class GrupoLeituraAgendaUseCase {
       lageDataHora: item.lageDataHora,
       lageHoraAtividade: item.lageHoraAtividade,
       lageRepete: item.lageRepete,
-      lageFimRepete: item.lageFimRepete,
+      lageFimRepete: item.lageRepete == null ? null : item.lageFimRepete,
       lageLembrete: item.lageLembrete,
     );
     return registro.lageId == null

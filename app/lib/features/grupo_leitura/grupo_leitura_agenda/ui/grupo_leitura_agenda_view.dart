@@ -13,12 +13,14 @@ enum _Acao { atividades, editar, excluir }
 /// por data e hora (os sem data por último). "Agenda" no menu de um grupo abre a aba com ele selecionado.
 ///
 /// - Topo: seleção do grupo ([GrupoLeituraSelecao]).
-/// - Card: título, data e hora (ou "Sem data"), texto e lembrete. Tocar abre as atividades do item ([onAtividades]);
+/// - Card: título, data e hora (ou "Sem data"), texto, repetição (com o fim) e lembrete, com os rótulos das
+///   configurações da agenda traduzidos. Tocar abre as atividades do item ([onAtividades]);
 ///   para o dono, o menu tem também "Editar" ([onEditar]) e "Excluir" ([onExcluir], que confirma e remove as
 ///   atividades do item). A inclusão é pelo botão "Novo item" da parte inferior (só o dono).
 /// - Primeiro carregamento: progresso; se falhar, "Tentar novamente". Sem itens: `nenhumItemAgenda`.
 ///
-/// Ícones (em `IconsMap.mdiIcons`): [iconeData], [iconeSemData], [iconeLembrete] e os de [GrupoLeituraView].
+/// Ícones (em `IconsMap.mdiIcons`): [iconeData], [iconeSemData], [iconeLembrete], [iconeRepeticao],
+/// [iconeFimRepeticao] e os de [GrupoLeituraView].
 class GrupoLeituraAgendaView extends StatelessWidget {
   const GrupoLeituraAgendaView({
     super.key,
@@ -37,6 +39,8 @@ class GrupoLeituraAgendaView extends StatelessWidget {
   static const iconeSemData = 'calendar-blank-outline';
   static const iconeLembrete = 'bell-outline';
   static const iconeHora = 'clock-outline';
+  static const iconeRepeticao = 'repeat';
+  static const iconeFimRepeticao = 'calendar-end';
 
   @override
   Widget build(BuildContext context) =>
@@ -91,7 +95,9 @@ class GrupoLeituraAgendaView extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final dataHora = viewModel.dataHora(item.lageDataHora);
-    final lembrete = viewModel.hora(item.lageLembrete);
+    final repeticao = viewModel.rotuloRepeticao(item);
+    final fimRepeticao = viewModel.rotuloFimRepeticao(item);
+    final lembrete = viewModel.rotuloLembrete(item);
     final texto = item.lageTexto?.trim();
     final dono = viewModel.podeAlterar;
 
@@ -138,22 +144,30 @@ class GrupoLeituraAgendaView extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                    if (lembrete != null)
+                    if (repeticao != null || lembrete != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 6),
-                        child: Row(
+                        child: Wrap(
+                          spacing: 12,
+                          runSpacing: 2,
                           children: [
-                            GrupoLeituraView.icone(
-                              iconeLembrete,
-                              Icons.notifications_none,
-                              size: 16,
-                              color: scheme.onSurfaceVariant,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${strings.translate('lembrete')}: $lembrete',
-                              style: textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant),
-                            ),
+                            if (repeticao != null)
+                              _marcador(
+                                context,
+                                iconeRepeticao,
+                                Icons.repeat,
+                                [
+                                  strings.translate(repeticao),
+                                  if (fimRepeticao != null) strings.translate(fimRepeticao),
+                                ].join(' · '),
+                              ),
+                            if (lembrete != null)
+                              _marcador(
+                                context,
+                                iconeLembrete,
+                                Icons.notifications_none,
+                                '${strings.translate('lembrete')}: ${strings.translate(lembrete)}',
+                              ),
                           ],
                         ),
                       ),
@@ -193,6 +207,20 @@ class GrupoLeituraAgendaView extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _marcador(BuildContext context, String icone, IconData fallback, String texto) {
+    final scheme = Theme.of(context).colorScheme;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GrupoLeituraView.icone(icone, fallback, size: 16, color: scheme.onSurfaceVariant),
+        const SizedBox(width: 4),
+        Flexible(
+          child: Text(texto, style: Theme.of(context).textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant)),
+        ),
+      ],
     );
   }
 }

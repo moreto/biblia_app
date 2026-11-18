@@ -1,5 +1,7 @@
 import 'package:commons/commons.dart';
 
+import '../../../../data/model/configuracao/configuracao_item_model.dart';
+import '../../../../data/model/configuracao/configuracao_model.dart';
 import '../../../../data/model/leitura/leitura_agenda_model.dart';
 
 abstract class GrupoLeituraAgendaRepository {
@@ -14,4 +16,10 @@ abstract class GrupoLeituraAgendaRepository {
 
   /// Exclui o item e as atividades dele (`DELETE /v1/leitura-agenda/:lageId`).
   Future<Result<void>> excluir(int lageId);
+
+  /// Configurações (`GET /v1/configuracao`), para achar as de repetição, fim da repetição e lembrete.
+  Future<Result<List<ConfiguracaoModel>>> configuracoes();
+
+  /// Itens da configuração [confId] (`GET /v1/configuracao-item/:confId`).
+  Future<Result<List<ConfiguracaoItemModel>>> itens(int confId);
 }
