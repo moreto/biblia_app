@@ -4,7 +4,11 @@ import 'package:app/features/biblia/biblia_leitura/versiculo_indicacao/use_case/
 import 'package:go_router/go_router.dart';
 
 import '../../config/app_config.dart';
+import '../../config/brilho_tela.dart';
+import '../../config/narracao_voz.dart';
 import '../../config/dependencies.dart';
+import '../../features/dicionario/repository/dicionario_repository.dart';
+import '../../features/dicionario/use_case/dicionario_usecase.dart';
 import '../../features/biblia/biblia_leitura/repository/biblia_leitura_repository.dart';
 import '../../features/biblia/biblia_leitura/ui/biblia_leitura_viewmodel.dart';
 import '../../features/biblia/biblia_leitura/use_case/biblia_leitura_usecase.dart';
@@ -36,6 +40,11 @@ class BibliaRouter {
           bibliaLeituraUseCase: BibliaLeituraUseCase(
             bibliaLeituraRepository: locator<BibliaLeituraRepository>(),
             versaoPreferencia: locator<AppConfig>(),
+            ultimoCapituloPreferencia: locator<AppConfig>(),
+            leituraPreferencia: locator<AppConfig>(),
+            brilhoTela: const BrilhoTelaAparelho(),
+            dicionarioUseCase: DicionarioUseCase(dicionarioRepository: locator<DicionarioRepository>()),
+            narracaoVoz: NarracaoVozAparelho(),
           ),
           versiculoIndicacaoUseCase: VersiculoIndicacaoUseCase(
             versiculoIndicacaoRepository: locator<VersiculoIndicacaoRepository>(),

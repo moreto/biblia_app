@@ -1,3 +1,4 @@
+import '../config/ultimo_capitulo_preferencia.dart';
 import 'routes.dart';
 
 /// Rotas acessíveis sem login. Todas as demais exigem sessão
@@ -19,4 +20,29 @@ String? authRedirect({required String path, required bool isLogged}) {
     return Routes.dashboard;
   }
   return null;
+}
+
+/// Valor de `ROTA_INICIAL` que abre a leitura no último capítulo aberto ("Continuar de onde parou").
+const kRotaInicialContinuar = 'continuar';
+
+/// Rota em que o app abre a partir de [valor] (a `ROTA_INICIAL` do `.env`):
+/// - `continuar`: a leitura no [ultimoCapitulo] (versão, livro e capítulo); sem capítulo guardado, a `/home`;
+/// - uma rota começando com `/`: ela mesma;
+/// - vazia ou inválida: a `/home`.
+///
+/// O [authRedirect] continua valendo depois, então uma rota protegida sem login volta para a home.
+String rotaInicial(String valor, {UltimoCapitulo? ultimoCapitulo}) {
+  final rota = valor.trim();
+  if (rota == kRotaInicialContinuar) {
+    if (ultimoCapitulo == null) return Routes.home;
+    return Uri(
+      path: Routes.bibliaLeitura,
+      queryParameters: {
+        'versaId': '${ultimoCapitulo.versaId}',
+        'livrId': '${ultimoCapitulo.livrId}',
+        'capiNumero': '${ultimoCapitulo.capiNumero}',
+      },
+    ).toString();
+  }
+  return rota.startsWith('/') ? rota : Routes.home;
 }

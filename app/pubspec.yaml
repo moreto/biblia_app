@@ -37,6 +37,9 @@ dependencies:
 
   components:
     path: ../components
+  paper_curl: ^0.1.0
+  screen_brightness: ^2.1.11
+  flutter_tts: ^4.2.5
 
 
 dev_dependencies:

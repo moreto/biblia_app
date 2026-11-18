@@ -71,6 +71,19 @@ flutter analyze
 flutter test
 ```
 
+## Variáveis do `.env`
+
+O app lê `app/.env` no build com `--dart-define-from-file=.env`, já configurado em todas as entradas do [`.vscode/launch.json`](../../.vscode/launch.json). No terminal, rode de dentro de `app/`: `flutter run --dart-define-from-file=.env`.
+
+1. Copie [`app/.env.example`](../../app/.env.example) para `app/.env`. O `.env` fica fora do git; o `.env.example` documenta as variáveis.
+2. Preencha só o que precisar e reinicie o app. O hot reload não relê o `.env`.
+
+| Variável | Uso |
+|---|---|
+| `ROTA_INICIAL` | Rota em que o app abre no lugar da `/home` (ex.: `/biblia-leitura`, `/dashboard`, `/biblia-leitura?versaId=1&livrId=43&capiNumero=3`). `continuar` abre a leitura no último capítulo aberto ("Continuar de onde parou"; sem capítulo guardado, a home). Quando a leitura é a primeira tela, voltar vai para a `/home` em vez de fechar o app. Vazia, ou sem `/` no começo, abre a home. O guard continua valendo: rota da área logada sem login volta para a `/home`. Lida em [`config/env.dart`](../../app/lib/config/env.dart) e aplicada por `rotaInicial` em [`routing/auth_guard.dart`](../../app/lib/routing/auth_guard.dart). |
+
+Sem o arquivo `app/.env`, o `flutter run` pelo `launch.json` falha. Crie-o a partir do `.env.example`, mesmo vazio.
+
 ## Scripts
 
 | Script | Função |

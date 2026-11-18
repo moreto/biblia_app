@@ -99,6 +99,36 @@ abstract final class AppColors {
     highlightPink: Color(0xFFDCC6CC),
   );
 
+  /// Tema creme: papel creme, tinta marrom-escura, azul-marinho da marca e dourado nos destaques. Mais quente que
+  /// o [light], para leituras longas.
+  static const AppPalette creme = AppPalette(
+    primary: Color(0xFF1B2C4E),
+    onPrimary: Color(0xFFFFF8E8),
+    primaryContainer: Color(0xFFDCE2EE),
+    onPrimaryContainer: Color(0xFF1B2C4E),
+    secondary: Color(0xFF7A5210),
+    onSecondary: Color(0xFFFFF8E8),
+    secondaryContainer: Color(0xFFFFE7A3),
+    onSecondaryContainer: Color(0xFF3F2A05),
+    surface: Color(0xFFFFF8E8),
+    onSurface: Color(0xFF2B2418),
+    onSurfaceVariant: Color(0xFF6B5D45),
+    surfaceContainerLow: Color(0xFFFBF1DC),
+    surfaceContainer: Color(0xFFF6EAD0),
+    surfaceContainerHigh: Color(0xFFF1E3C5),
+    outline: Color(0xFF9A8B70),
+    outlineVariant: Color(0xFFEFDDB9),
+    error: Color(0xFFB3261E),
+    onError: Color(0xFFFFFFFF),
+    verseNumber: Color(0xFF1B2C4E),
+    wordsOfJesus: Color(0xFF8E2B2B),
+    sectionTitle: Color(0xFF2B2418),
+    highlightYellow: Color(0xFFFFE7A3),
+    highlightGreen: Color(0xFFD9E5C8),
+    highlightBlue: Color(0xFFD3DDEB),
+    highlightPink: Color(0xFFF0D3D6),
+  );
+
   static const AppPalette dark = AppPalette(
     primary: Color(0xFFC2924A),
     onPrimary: Color(0xFF2A1C00),

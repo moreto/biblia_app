@@ -1,3 +1,6 @@
+import 'package:app/config/app_config.dart';
+import 'package:app/config/dependencies.dart';
+import 'package:app/config/env.dart';
 import 'package:app/routing/router/common_router.dart';
 import 'package:commons/commons.dart';
 import 'package:flutter/cupertino.dart';
@@ -13,10 +16,11 @@ import 'router/configuracao_router.dart';
 import 'router/log_router.dart';
 import 'router/menu_router.dart';
 import 'router/notificacao_router.dart';
-import 'routes.dart';
 
 GoRouter router() => GoRouter(
-  initialLocation: Routes.home,
+  // ROTA_INICIAL do app/.env, se preenchida; senão a home. `continuar` usa o último capítulo, já lido pelo
+  // AppConfig.load() no main (o router só é criado depois, no MyApp).
+  initialLocation: rotaInicial(Env.rotaInicial, ultimoCapitulo: locator<AppConfig>().ultimoCapitulo),
   // debugLogDiagnostics: true,
   redirect: (BuildContext context, GoRouterState state) {
     Log.print(state.uri.toString(), title: 'Route', name: kApp);

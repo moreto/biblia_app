@@ -1,6 +1,9 @@
 import 'package:go_router/go_router.dart';
 
+import '../../config/app_config.dart';
 import '../../config/dependencies.dart';
+import '../../features/biblia/biblia_leitura/repository/biblia_leitura_repository.dart';
+import '../../features/biblia/biblia_leitura/use_case/biblia_leitura_usecase.dart';
 import '../../features/access/configuracao_app/repository/configuracao_app_repository.dart';
 import '../../features/access/configuracao_app/use_case/configuracao_app_usecase.dart';
 import '../../features/access/home/ui/home_view.dart';
@@ -27,7 +30,18 @@ abstract final class AccessRouter {
   static List<GoRoute> get routes => [
     GoRoute(
       path: Routes.home,
-      builder: (context, state) => HomeView(viewModel: HomeViewmodel(homeUseCase: HomeUseCase())),
+      builder: (context, state) {
+        final viewModel = HomeViewmodel(
+          homeUseCase: HomeUseCase(
+            bibliaLeituraUseCase: BibliaLeituraUseCase(
+              bibliaLeituraRepository: locator<BibliaLeituraRepository>(),
+              versaoPreferencia: locator<AppConfig>(),
+            ),
+            ultimoCapituloPreferencia: locator<AppConfig>(),
+          ),
+        );
+        return HomeView(viewModel: viewModel);
+      },
     ),
 
     GoRoute(

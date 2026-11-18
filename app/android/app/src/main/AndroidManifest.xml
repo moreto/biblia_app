@@ -53,6 +53,10 @@
             <action android:name="android.intent.action.VIEW"/>
             <data android:scheme="https"/>
         </intent>
+        <!-- flutter_tts: motor de leitura em voz alta (narração da leitura da Bíblia). -->
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE"/>
+        </intent>
         <!-- speech_to_text: serviço de reconhecimento de fala do aparelho. -->
         <intent>
             <action android:name="android.speech.RecognitionService"/>
