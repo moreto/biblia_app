@@ -5,7 +5,12 @@
 abstract final class Routes {
   // access
   static const splash = '/';
+
+  /// Tela de entrada: menu hambúrguer e botão "Bíblia".
   static const home = '/home';
+
+  /// Home anterior (atalhos de tema, idioma e login e o card de funcionalidades).
+  static const homeOld = '/home-old';
   static const login = '/login';
   static const registro = '/registro';
 

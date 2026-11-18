@@ -10,6 +10,10 @@ void main() {
       }
     });
 
+    test('a leitura da Bíblia é pública', () {
+      expect(authRedirect(path: Routes.bibliaLeitura, isLogged: false), isNull);
+    });
+
     test('/ (sem tela própria) vai para a home', () {
       expect(authRedirect(path: Routes.splash, isLogged: false), Routes.home);
     });
@@ -22,7 +26,6 @@ void main() {
         Routes.log,
         Routes.configuracao,
         Routes.menu,
-        Routes.bibliaLeitura,
       ]) {
         expect(authRedirect(path: path, isLogged: false), Routes.home, reason: path);
       }
@@ -37,8 +40,38 @@ void main() {
 
     test('home e login vão para a dashboard', () {
       expect(authRedirect(path: Routes.home, isLogged: true), Routes.dashboard);
+      expect(authRedirect(path: Routes.homeOld, isLogged: true), Routes.dashboard);
       expect(authRedirect(path: Routes.login, isLogged: true), Routes.dashboard);
       expect(authRedirect(path: Routes.splash, isLogged: true), Routes.dashboard);
+    });
+  });
+
+  group('rotaInicial (ROTA_INICIAL do .env)', () {
+    test('vazia ou só espaços abre a home', () {
+      expect(rotaInicial(''), Routes.home);
+      expect(rotaInicial('   '), Routes.home);
+    });
+
+    test('rota preenchida abre direto nela, com query string', () {
+      expect(rotaInicial('/dashboard'), Routes.dashboard);
+      expect(rotaInicial(' /biblia-leitura?livrId=43&capiNumero=3 '), '/biblia-leitura?livrId=43&capiNumero=3');
+    });
+
+    test('valor sem barra no começo é ignorado', () {
+      expect(rotaInicial('dashboard'), Routes.home);
+    });
+  });
+
+  group('rotaInicial continuar', () {
+    test('abre a leitura no último capítulo aberto', () {
+      expect(
+        rotaInicial('continuar', ultimoCapitulo: (versaId: 1, livrId: 43, capiNumero: 3)),
+        '/biblia-leitura?versaId=1&livrId=43&capiNumero=3',
+      );
+    });
+
+    test('sem capítulo guardado abre a home', () {
+      expect(rotaInicial(' continuar '), Routes.home);
     });
   });
 }

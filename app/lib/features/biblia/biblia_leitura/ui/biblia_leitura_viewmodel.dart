@@ -1,4 +1,8 @@
+import 'dart:async';
+
 import 'package:app/config/command.dart';
+import 'package:app/config/leitura_preferencia.dart';
+import 'package:app/config/narracao_voz.dart';
 import 'package:commons/commons.dart';
 import 'package:flutter/material.dart';
 
@@ -13,6 +17,7 @@ import '../../../../data/model/biblia/versiculo_texto_model.dart';
 import '../../../../data/model/usuario/usuario_resumo_model.dart';
 import '../../../../data/model/versiculo/versiculo_reacao_model.dart';
 import '../../../dashboard/widgets/versiculo_reacao/use_case/versiculo_reacao_usecase.dart';
+import '../../../dicionario/use_case/dicionario_usecase.dart';
 import '../use_case/biblia_leitura_usecase.dart';
 import '../versiculo_indicacao/use_case/versiculo_indicacao_usecase.dart';
 import '../versiculo_indicacao/use_case/versiculo_indicacao_usuario_usecase.dart';
@@ -59,6 +64,192 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
 
   /// A tela foi aberta direto num capítulo: voltar sai da tela em vez de ir ao índice.
   bool get abertaPorDestino => destino != null;
+
+  /// Há usuário logado. Sem login a leitura é pública: sem progresso, marcações, histórico e indicações.
+  bool get logado => bibliaLeituraUseCase.logado;
+
+  /// Multiplicador da fonte dos versículos (opções de leitura).
+  double get escalaFonte => bibliaLeituraUseCase.escalaFonte;
+
+  void setEscalaFonte(double escala) {
+    bibliaLeituraUseCase.salvarEscalaFonte(escala);
+    notifyListeners();
+  }
+
+  /// Tema do app (opções de leitura).
+  /// A narração está disponível (há voz no aparelho).
+  bool get narracaoDisponivel => bibliaLeituraUseCase.narracaoDisponivel;
+
+  int? _versiculoNarrado;
+
+  /// Versículo sendo lido em voz alta; nulo quando a narração está parada.
+  int? get versiculoNarrado => _versiculoNarrado;
+
+  bool get narrando => _versiculoNarrado != null;
+
+  /// Incrementada ao iniciar ou parar a narração: um laço de narração antigo para ao perceber a troca.
+  int _narracaoSequencia = 0;
+
+  /// Inicia a narração (do versículo destacado ou do primeiro) ou, se já estiver narrando, para.
+  void alternarNarracao() => narrando ? pararNarracao() : unawaited(_narrar());
+
+  /// Narração contínua (opções de leitura): ao terminar o capítulo, passa a página e continua lendo.
+  bool get narracaoContinua => bibliaLeituraUseCase.narracaoContinua;
+
+  void setNarracaoContinua(bool continua) {
+    bibliaLeituraUseCase.salvarNarracaoContinua(continua);
+    notifyListeners();
+  }
+
+  /// Próximo capítulo para a view virar a página (narração contínua); lido uma vez com [consumirPassagemAutomatica].
+  CapituloRef? _passagemAutomatica;
+
+  CapituloRef? consumirPassagemAutomatica() {
+    final destino = _passagemAutomatica;
+    _passagemAutomatica = null;
+    return destino;
+  }
+
+  /// A página foi passada pela narração contínua: ao abrir o capítulo, a narração recomeça nele.
+  bool _narrarAoAbrir = false;
+
+  Future<void> _narrar() async {
+    final versiculos = _versiculos;
+    if (versiculos == null) return;
+    final sequencia = ++_narracaoSequencia;
+    var completou = true;
+    for (final versiculo in BibliaLeituraUseCase.versiculosANarrar(versiculos, _versiculoDestacado)) {
+      if (sequencia != _narracaoSequencia) return;
+      _versiculoNarrado = versiculo.versId;
+      notifyListeners();
+      final falou = await bibliaLeituraUseCase.narrar(versiculo.versTexto);
+      if (!falou) {
+        completou = false;
+        break;
+      }
+    }
+    if (sequencia != _narracaoSequencia) return;
+    _versiculoNarrado = null;
+    final proximo = this.proximo;
+    if (completou && narracaoContinua && proximo != null) {
+      _narrarAoAbrir = true;
+      _passagemAutomatica = proximo;
+    }
+    notifyListeners();
+  }
+
+  /// Vozes em português do aparelho para o seletor das opções de leitura.
+  late final Command0<List<VozNarracao>> vozesCommand = Command0(() async {
+    return Result.ok(await bibliaLeituraUseCase.vozesNarracao());
+  });
+
+  List<VozNarracao> get vozes => switch (vozesCommand.result) {
+    Ok(value: final vozes) => vozes,
+    _ => const [],
+  };
+
+  /// Voz usada na narração (a escolhida ou a melhor).
+  VozNarracao? get vozNarracao => bibliaLeituraUseCase.vozEscolhida(vozes);
+
+  void setVozNarracao(VozNarracao voz) {
+    bibliaLeituraUseCase.salvarVozNarracao(voz);
+    notifyListeners();
+    ouvirExemplo();
+  }
+
+  double get velocidadeNarracao => bibliaLeituraUseCase.velocidadeNarracao;
+
+  void setVelocidadeNarracao(double velocidade) {
+    bibliaLeituraUseCase.salvarVelocidadeNarracao(velocidade);
+    notifyListeners();
+  }
+
+  /// Narra só o trecho selecionado (interrompe a narração do capítulo, se houver).
+  void ouvirTrecho(String texto) {
+    pararNarracao();
+    unawaited(bibliaLeituraUseCase.narrar(texto));
+  }
+
+  /// Fala a frase de exemplo com a voz e a velocidade atuais (para a narração do capítulo, se estiver lendo).
+  void ouvirExemplo() {
+    pararNarracao();
+    unawaited(bibliaLeituraUseCase.narrar(BibliaLeituraUseCase.exemploNarracao));
+  }
+
+  /// Para a narração (também ao trocar ou fechar o capítulo e ao sair da tela).
+  void pararNarracao() {
+    _narrarAoAbrir = false;
+    _passagemAutomatica = null;
+    _interromperNarracao();
+  }
+
+  /// Interrompe a fala sem cancelar a narração contínua (troca de capítulo).
+  void _interromperNarracao() {
+    _narracaoSequencia++;
+    final narrava = narrando;
+    _versiculoNarrado = null;
+    unawaited(bibliaLeituraUseCase.pararNarracao());
+    if (narrava) notifyListeners();
+  }
+
+  /// Consulta no dicionário da palavra tocada (toque longo) e das remissões abertas no sheet da palavra.
+  late final Command1<DicionarioConsulta, String> consultarPalavraCommand = Command1(
+    bibliaLeituraUseCase.consultarPalavra,
+  );
+
+  /// Palavra do versículo na posição tocada; nula se não houver.
+  String? palavraEm(String texto, int offset) => BibliaLeituraUseCase.palavraEm(texto, offset);
+
+  /// Início e fim da palavra na posição tocada, para marcá-la no texto; nulo se não houver.
+  ({int inicio, int fim})? intervaloPalavraEm(String texto, int offset) =>
+      BibliaLeituraUseCase.intervaloPalavraEm(texto, offset);
+
+  /// O que fazer com o capítulo ao passar para o próximo (opções de leitura).
+  MarcarAoPassar get marcarAoPassar => bibliaLeituraUseCase.marcarAoPassar;
+
+  void setMarcarAoPassar(MarcarAoPassar valor) {
+    bibliaLeituraUseCase.salvarMarcarAoPassar(valor);
+    notifyListeners();
+  }
+
+  /// O que fazer com o capítulo [de] ao passar para [para].
+  MarcarAoPassar acaoAoPassar(CapituloRef de, CapituloRef para) =>
+      bibliaLeituraUseCase.acaoAoPassar(sequencia, de, para, lidoDe(de.livrId, de.capiNumero));
+
+  /// Setas anterior/próximo na navegação flutuante (opções de leitura).
+  bool get mostrarSetas => bibliaLeituraUseCase.mostrarSetas;
+
+  void setMostrarSetas(bool mostrar) {
+    bibliaLeituraUseCase.salvarMostrarSetas(mostrar);
+    notifyListeners();
+  }
+
+  TemaApp get tema => bibliaLeituraUseCase.tema;
+
+  void setTema(TemaApp tema) {
+    bibliaLeituraUseCase.salvarTema(tema);
+    notifyListeners();
+  }
+
+  double? _brilho;
+  bool _brilhoAlterado = false;
+
+  /// Brilho da tela (0 a 1) no ajuste das opções de leitura; nulo enquanto não lido ou sem suporte.
+  double? get brilho => _brilho;
+
+  /// Lê o brilho atual para posicionar o ajuste.
+  Future<void> carregarBrilho() async {
+    if (_brilho != null) return;
+    _brilho = await bibliaLeituraUseCase.brilhoAtual();
+    notifyListeners();
+  }
+
+  void setBrilho(double valor) {
+    _brilho = valor;
+    _brilhoAlterado = true;
+    notifyListeners();
+    unawaited(bibliaLeituraUseCase.definirBrilho(valor));
+  }
 
   int? _versiculoAlvo;
 
@@ -120,7 +311,10 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
   late final Command0<void> carregarCommand = Command0(_carregar);
   late final Command1<void, VersaoModel> versaoCommand = Command1(_trocarVersao);
   late final Command1<List<VersiculoTextoModel>, CapituloRef> abrirCapituloCommand = Command1(_abrirCapitulo);
-  late final Command0<CapituloLidoModel?> marcarLidoCommand = Command0(_marcarLido);
+  late final Command0<CapituloLidoModel?> marcarLidoCommand = Command0(() => _alternarCapitulo(_capitulo));
+
+  /// Marca o capítulo que ficou para trás ao passar a página (ver [acaoAoPassar]).
+  late final Command1<CapituloLidoModel?, CapituloRef> marcarAoPassarCommand = Command1(_alternarCapitulo);
   late final Command1<IndicacoesVersiculo, VersiculoTextoModel> indicacoesCommand = Command1(_carregarIndicacoes);
 
   /// Argumento: comentário opcional da indicação.
@@ -234,6 +428,36 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
     null => null,
   };
 
+  /// Capítulos da versão em ordem: as páginas da leitura (uma por capítulo).
+  List<CapituloRef> _sequencia = const [];
+  List<CapituloRef> get sequencia => _sequencia;
+
+  /// Texto dos capítulos já carregados na versão atual, para mostrar as páginas vizinhas enquanto a página vira e
+  /// abrir o capítulo sem esperar a API de novo. Limpo ao trocar de versão.
+  final Map<CapituloRef, List<VersiculoTextoModel>> _textos = {};
+  final Set<CapituloRef> _carregandoTextos = {};
+
+  /// Texto de [ref]: o do capítulo aberto ou o do cache; nulo enquanto não foi carregado.
+  List<VersiculoTextoModel>? textoDe(CapituloRef ref) => ref == _capitulo ? _versiculos ?? _textos[ref] : _textos[ref];
+
+  /// Carrega só o texto de [ref] (sem reações nem indicações), para a página vizinha já estar pronta quando a
+  /// página virar. Não faz nada se já está no cache ou carregando; falha só vai para o log.
+  Future<void> precarregar(CapituloRef ref) async {
+    final versao = _versao;
+    if (versao == null || _textos.containsKey(ref) || !_carregandoTextos.add(ref)) return;
+    final result = await bibliaLeituraUseCase.capitulo(versao.versaId, ref);
+    _carregandoTextos.remove(ref);
+    // Ignora se a versão mudou enquanto carregava.
+    if (versao.versaId != _versao?.versaId) return;
+    switch (result) {
+      case Ok<List<VersiculoTextoModel>>(value: final versiculos):
+        _textos[ref] = versiculos;
+        notifyListeners();
+      case Error<List<VersiculoTextoModel>>(error: final error):
+        Log.print(error.toString(), name: kApp, title: 'Erro');
+    }
+  }
+
   CapituloRef? get anterior => _vizinho(-1);
   CapituloRef? get proximo => _vizinho(1);
 
@@ -251,6 +475,7 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
   }
 
   void fecharCapitulo() {
+    pararNarracao();
     _capitulo = null;
     _versiculos = null;
     _reacoes = const {};
@@ -378,15 +603,20 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
 
   /// Carrega índice e progresso da [versao]. Falha no progresso não impede a leitura: o índice aparece sem lidos.
   Future<Result<void>> _carregarVersao(VersaoModel versao) async {
+    // Sem login não há progresso: nem chama a API (que exigiria o token do usuário).
     final (indice, lidos) = await (
       bibliaLeituraUseCase.indice(versao.versaId),
-      bibliaLeituraUseCase.lidos(versao.versaId),
+      logado
+          ? bibliaLeituraUseCase.lidos(versao.versaId)
+          : Future.value(const Result<Map<String, CapituloLidoModel>>.ok({})),
     ).wait;
 
     switch (indice) {
       case Ok<Map<int, List<IndiceCapituloModel>>>(value: final value):
+        if (_versao?.versaId != versao.versaId) _textos.clear();
         _versao = versao;
         _indice = value;
+        _sequencia = bibliaLeituraUseCase.sequencia(value, _livros);
       case Error<Map<int, List<IndiceCapituloModel>>>(error: final error):
         Log.print(error.toString(), name: kApp, title: 'Erro');
         return Result.error(error);
@@ -444,24 +674,41 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
     if (versao == null) {
       return Result.error(HandledException(message: 'nenhumaVersaoDisponivel'));
     }
+    if (_capitulo != ref) _interromperNarracao();
     _capitulo = ref;
-    _versiculos = null;
+    // Com o texto no cache (página vizinha já carregada), o capítulo aparece na hora; reações e indicações chegam
+    // em seguida.
+    _versiculos = _textos[ref];
     _reacoes = const {};
     _indicacoesCapitulo = const {};
     _versiculoDestacado = null;
     _limparVersiculo();
     notifyListeners();
 
+    // Sem login só o texto: reações e indicações são do usuário.
     final (result, reacoes, indicacoes) = await (
       bibliaLeituraUseCase.capitulo(versao.versaId, ref),
-      bibliaLeituraUseCase.reacoesCapitulo(versao.versaId, ref),
-      versiculoIndicacaoUseCase.indicacoesCapitulo(versao.versaId, ref.livrId, ref.capiNumero),
+      logado
+          ? bibliaLeituraUseCase.reacoesCapitulo(versao.versaId, ref)
+          : Future.value(const Result<Map<int, VersiculoReacaoModel>>.ok({})),
+      logado
+          ? versiculoIndicacaoUseCase.indicacoesCapitulo(versao.versaId, ref.livrId, ref.capiNumero)
+          : Future.value(const Result<Map<int, VersiculoIndicacaoModel>>.ok({})),
     ).wait;
     // Ignora a resposta se outro capítulo foi aberto enquanto este carregava.
     final atual = _capitulo == ref;
     switch (result) {
       case Ok<List<VersiculoTextoModel>>(value: final versiculos):
-        if (atual) _versiculos = versiculos;
+        _textos[ref] = versiculos;
+        if (atual) {
+          _versiculos = versiculos;
+          bibliaLeituraUseCase.salvarUltimoCapitulo(versao.versaId, ref);
+          // Narração contínua: o capítulo novo começa a ser lido assim que o texto chega.
+          if (_narrarAoAbrir) {
+            _narrarAoAbrir = false;
+            unawaited(_narrar());
+          }
+        }
       case Error<List<VersiculoTextoModel>>(error: final error):
         Log.print(error.toString(), name: kApp, title: 'Erro');
     }
@@ -535,9 +782,9 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
     return result;
   }
 
-  Future<Result<CapituloLidoModel?>> _marcarLido() async {
+  /// Marca o capítulo [ref] como lido, ou desmarca se ele já estava completo.
+  Future<Result<CapituloLidoModel?>> _alternarCapitulo(CapituloRef? ref) async {
     final versao = _versao;
-    final ref = _capitulo;
     final capitulo = ref == null
         ? null
         : capitulosDo(ref.livrId).where((c) => c.capiNumero == ref.capiNumero).firstOrNull;
@@ -648,6 +895,11 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
     removerIndicacaoCommand.dispose();
     adicionarIndicadoCommand.dispose();
     removerIndicadoCommand.dispose();
+    consultarPalavraCommand.dispose();
+    marcarAoPassarCommand.dispose();
+    vozesCommand.dispose();
+    if (narrando) unawaited(bibliaLeituraUseCase.pararNarracao());
+    if (_brilhoAlterado) unawaited(bibliaLeituraUseCase.restaurarBrilho());
     super.dispose();
   }
 }

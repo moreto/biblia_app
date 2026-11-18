@@ -5,9 +5,10 @@ import 'app_spacing.dart';
 import 'app_typography.dart';
 import 'reading_colors.dart';
 
-/// Temas do app. O `MaterialApp` usa [light] e [dark] com `ThemeMode.system`.
+/// Temas do app. O `MaterialApp` usa [light] (ou [creme], se escolhido) e [dark], conforme o `ThemeMode`.
 abstract final class AppTheme {
   static final ThemeData light = _build(AppColors.light, Brightness.light);
+  static final ThemeData creme = _build(AppColors.creme, Brightness.light);
   static final ThemeData dark = _build(AppColors.dark, Brightness.dark);
 
   static ThemeData _build(AppPalette p, Brightness brightness) {
