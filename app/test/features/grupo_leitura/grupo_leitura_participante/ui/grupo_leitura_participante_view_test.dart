@@ -58,7 +58,7 @@ void main() {
 
       final ok = await useCase.adicionar(grupoMeu, carla, const [ana]);
       expect((ok as Ok<LeituraParticipanteModel>).value.udetNome, 'Carla Dias');
-      expect(repository.incluidos.single.toJson(), {'leitId': 1, 'usuaId': 5});
+      expect(repository.incluidos.single.toJson(), {'lparId': null, 'leitId': 1, 'usuaId': 5});
     });
 
     test('dono remove qualquer um; participante só a si mesmo', () async {
