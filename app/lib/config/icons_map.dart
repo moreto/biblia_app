@@ -198,6 +198,20 @@ class IconsMap {
     'undo': MdiIcons.undo,
     'information-outline': MdiIcons.informationOutline,
     'email-fast-outline': MdiIcons.emailFastOutline,
+    // Grupos de leitura (GrupoLeituraView.icone*, GrupoLeituraAba e as abas de participantes, agenda e atividades);
+    // 'book-account-outline' também é func_icone/menu_icone de /grupo-leitura. Participantes
+    // ('account-multiple-outline', 'account-plus-outline', 'account-remove-outline', 'account-search-outline'),
+    // dono ('account-star-outline'), lembrete ('bell-outline'), hora ('clock-outline'), livro ('book-open-variant'),
+    // música ('music-note'), oração ('hands-pray'), adicionar ('plus'), editar ('pencil-outline'), excluir
+    // ('delete-outline'), ações ('dots-vertical') e atualizar ('refresh') já mapeados acima.
+    'book-account-outline': MdiIcons.bookAccountOutline,
+    'calendar-month-outline': MdiIcons.calendarMonthOutline,
+    'calendar-clock-outline': MdiIcons.calendarClockOutline,
+    'calendar-blank-outline': MdiIcons.calendarBlankOutline,
+    'format-list-checks': MdiIcons.formatListChecks,
+    'checkbox-marked-circle-outline': MdiIcons.checkboxMarkedCircleOutline,
+    'checkbox-blank-circle-outline': MdiIcons.checkboxBlankCircleOutline,
+    'exit-run': MdiIcons.exitRun,
     // ...
   };
 }

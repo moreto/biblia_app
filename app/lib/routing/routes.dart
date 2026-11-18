@@ -53,6 +53,11 @@ abstract final class Routes {
   /// Meus dados: dados do cadastro (nome, usuário), senha e configurações do usuário (tela própria, com abas).
   static const usuario = '/usuario';
 
+  // grupo de leitura
+  /// Grupos de leitura do usuário (dono ou participante), com as abas de participantes, agenda e atividades (tela
+  /// própria, com abas).
+  static const grupoLeitura = '/grupo-leitura';
+
   // comunidade
   static const comunidade = '/comunidade';
 

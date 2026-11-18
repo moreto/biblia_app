@@ -58,6 +58,11 @@ enum ApiCore {
   // Atendimento do Fale Conosco: a API pode recusar o acesso (403 acessoNegado).
   faleConoscoInteracao('/v1/fale-conosco-interacao', kDesHost, kPrdHost, HeaderType.loggedUser),
   faleConoscoInteracaoSolicitante('/v1/fale-conosco-interacao/solicitante', kDesHost, kPrdHost, HeaderType.loggedUser),
+  // Grupos de leitura: GET sem id lista os grupos do usuário do token (dono ou participante).
+  leitura('/v1/leitura', kDesHost, kPrdHost, HeaderType.loggedArea),
+  leituraParticipante('/v1/leitura-participante', kDesHost, kPrdHost, HeaderType.loggedArea),
+  leituraAgenda('/v1/leitura-agenda', kDesHost, kPrdHost, HeaderType.loggedArea),
+  leituraAgendaAtividade('/v1/leitura-agenda-atividade', kDesHost, kPrdHost, HeaderType.loggedArea),
   livro('/v1/livro', kDesHost, kPrdHost, HeaderType.loggedArea),
   log('/v1/log', kDesHost, kPrdHost, HeaderType.loggedArea),
   menu('/v1/menu', kDesHost, kPrdHost, HeaderType.loggedArea),

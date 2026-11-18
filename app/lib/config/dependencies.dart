@@ -47,6 +47,14 @@ import '../features/fale_conosco/repository/fale_conosco_repository.dart';
 import '../features/fale_conosco/repository/fale_conosco_repository_impl.dart';
 import '../features/fale_conosco_atendimento/repository/fale_conosco_atendimento_repository.dart';
 import '../features/fale_conosco_atendimento/repository/fale_conosco_atendimento_repository_impl.dart';
+import '../features/grupo_leitura/grupo_leitura/repository/grupo_leitura_repository.dart';
+import '../features/grupo_leitura/grupo_leitura/repository/grupo_leitura_repository_impl.dart';
+import '../features/grupo_leitura/grupo_leitura_agenda/repository/grupo_leitura_agenda_repository.dart';
+import '../features/grupo_leitura/grupo_leitura_agenda/repository/grupo_leitura_agenda_repository_impl.dart';
+import '../features/grupo_leitura/grupo_leitura_atividade/repository/grupo_leitura_atividade_repository.dart';
+import '../features/grupo_leitura/grupo_leitura_atividade/repository/grupo_leitura_atividade_repository_impl.dart';
+import '../features/grupo_leitura/grupo_leitura_participante/repository/grupo_leitura_participante_repository.dart';
+import '../features/grupo_leitura/grupo_leitura_participante/repository/grupo_leitura_participante_repository_impl.dart';
 import '../features/lgpd/usuario_consentimento/repository/usuario_consentimento_repository.dart';
 import '../features/lgpd/usuario_consentimento/repository/usuario_consentimento_repository_impl.dart';
 import '../features/mensagem/mensagem_envio/repository/mensagem_envio_repository.dart';
@@ -102,4 +110,8 @@ void configDependencies() {
   locator.registerLazySingleton<FaleConoscoRepository>(() => FaleConoscoRepositoryImpl());
   locator.registerLazySingleton<FaleConoscoAtendimentoRepository>(() => FaleConoscoAtendimentoRepositoryImpl());
   locator.registerLazySingleton<UsuarioRepository>(() => UsuarioRepositoryImpl());
+  locator.registerLazySingleton<GrupoLeituraRepository>(() => GrupoLeituraRepositoryImpl());
+  locator.registerLazySingleton<GrupoLeituraParticipanteRepository>(() => GrupoLeituraParticipanteRepositoryImpl());
+  locator.registerLazySingleton<GrupoLeituraAgendaRepository>(() => GrupoLeituraAgendaRepositoryImpl());
+  locator.registerLazySingleton<GrupoLeituraAtividadeRepository>(() => GrupoLeituraAtividadeRepositoryImpl());
 }
