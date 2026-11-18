@@ -9,6 +9,7 @@ class DioProvider {
   final Dio _dio = Dio();
   final Set<CancelToken> _activeCancelTokens = {};
   final Map<String, dynamic> bytes = {};
+  // ignore: unused_field
   final ApiCore _apiCore;
   final Map<String, String> _header;
 
@@ -99,7 +100,7 @@ class DioProvider {
       _activeCancelTokens.remove(cancelToken);
       stopWatch.stop();
       Log.print(
-        '${_apiCore.endpoint}, s: ${stopWatch.elapsed.inSeconds}, '
+        '$_url - '
         'ms: ${stopWatch.elapsed.inMilliseconds}',
         title: '${verb.name.toUpperCase()} $status',
         name: kApi,
