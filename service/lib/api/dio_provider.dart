@@ -41,13 +41,19 @@ class DioProvider {
     _activeCancelTokens.add(cancelToken);
     bytes.clear();
     var status = 500;
+    final metodo = verb.name.toUpperCase();
+    Uri? uri;
+    // Identifica a API em todos os logs e erros: `GET http://.../v1/recurso/1`.
+    String api() => '${uri ?? _url}';
 
     try {
       if (verb == Verb.put && body == null) {
+        Log.print('${api()} - corpoRequisicaoObrigatorio', title: 'ERRO $metodo', name: kApi);
         return Result.error(
           HttpServiceException(
             exception: Exception('corpoRequisicaoObrigatorio'),
             message: 'corpoRequisicaoObrigatorio',
+            api: api(),
           ),
         );
       }
@@ -64,7 +70,7 @@ class DioProvider {
         receiveDataWhenStatusError: true,
         receiveTimeout: duration,
       );
-      final uri = _buildUri(pathParam, queryParam);
+      uri = _buildUri(pathParam, queryParam);
       final response = await _dio.requestUri<dynamic>(
         uri,
         cancelToken: cancelToken,
@@ -76,19 +82,27 @@ class DioProvider {
       status = response.statusCode ?? 500;
       return Result.ok(response.data);
     } on DioException catch (e) {
-      Log.print(e, name: kApi);
       final response = e.response;
       status = response?.statusCode ?? 500;
       final responseData = response?.data;
       final responseModel = responseData is Map
           ? HttpServiceExceptionModel.fromJson(Map<String, dynamic>.from(responseData))
           : null;
+      final message = responseModel?.message ?? _messageForException(e.type);
+
+      Log.print(
+        '${api()} - tipo: ${e.type.name}, mensagem: $message'
+        '${responseData == null ? '' : ', resposta: $responseData'}',
+        title: 'ERRO $metodo ${response?.statusCode ?? '-'}',
+        name: kApi,
+      );
 
       return Result.error(
         HttpServiceException(
           code: response?.statusCode,
           exception: e,
-          message: responseModel?.message ?? _messageForException(e.type),
+          api: api(),
+          message: message,
           debugMessage: responseData == null
               ? null
               : responseData is Map
@@ -99,12 +113,7 @@ class DioProvider {
     } finally {
       _activeCancelTokens.remove(cancelToken);
       stopWatch.stop();
-      Log.print(
-        '$_url - '
-        'ms: ${stopWatch.elapsed.inMilliseconds}',
-        title: '${verb.name.toUpperCase()} $status',
-        name: kApi,
-      );
+      Log.print(api(), title: '$metodo $status ms: ${stopWatch.elapsed.inMilliseconds}', name: kApi);
     }
   }
 
