@@ -78,3 +78,33 @@ subistituir os valores abaixo pelo que vem da api
 const String kCryptKey = 'MmT3xh0';
 const String kCryptKeyB64 = '5oAaa+hIOTQzGUxHYn8o6mHfQqEi9PXb4kBGpCQ+fn0=';
 const String kAccessTokenId = '56ce516cb9f3a0095e069b0610db7017';
+
+
+
+
+Preciso de um App para organizar minhas coisas
+tudo o q estiver dentro de algum lugar, como por exemplo uma casa
+tudo o que estiver dentro desse lugar, como por exemplo um quarto ou uma dispensa, ou uma oficina
+dentro dessa dispensa podem ter armários, dentro dos armarios podem ter caixas, dentro das caixas os itens que preciso catalogar.
+ou por exemplo uma escrivaninha que pode ter gavetas, ou portas que contenham caixas, ou até coisas soltas nessa escrivaninha.
+
+fica entendido então que eu vou precisar de um modelo de dados que seja auto relacionado, inicialmente criar somente a estrutura para essa função
+basicamente então vou precisar de uma feature para mostrar essa hierarquia, podendo ser em forma de arvore ou da forma q ficar melhor disposta, e um crud para cadastrar os itens dentro dessa hierarquia escolhida.
+vou poder adicionar imagens comprimidas para não ocupar espaço, de cada um dos grupos de organização e dos itens adicionados
+essas imagens podem estar dentro de um atributo do banco de dados comprimidas
+
+vou precisar de uma api para consumir e fazer a ligação com o banco de dados.
+
+sugira um thema que combine com esse tipo de aplicativo
+esse thema pode variar de dark ou light
+
+para desenvolver esse projeto olhe na arquiterura do biblia_api e biblia_app, preiciso q seja aderente a ela.
+
+projeto flutter - orgnzr_app:
+mesma estrutura de biblia_api, com os pacotes de commons, service, components
+
+projeto nodejs - orgnzr_api
+mesma estrutura do projeto biblia_app
+banco de dados, esta no mesmo servidor e ja foi criado: orgnzr
+
+deixar as configurações do projeto dentro de cada um deles, estou abrindo todos somente para visibilidade
