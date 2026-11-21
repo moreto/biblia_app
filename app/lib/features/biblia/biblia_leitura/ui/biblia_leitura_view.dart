@@ -1,10 +1,12 @@
 import 'dart:async';
 
+import 'package:app/config/anotacao_leitura.dart';
 import 'package:app/config/command.dart';
 import 'package:app/config/dialog_sheet.dart';
+import 'package:app/config/ditado_sistema.dart';
 import 'package:app/config/icons_map.dart';
 import 'package:app/config/leitura_preferencia.dart';
-import 'package:app/config/orientation_button.dart';
+import 'package:app/config/marca_texto.dart';
 import 'package:app/l10n/app_localizations.dart';
 import 'package:app/routing/routes.dart';
 import 'package:commons/commons.dart';
@@ -21,9 +23,13 @@ import '../../../../data/model/biblia/versiculo_texto_model.dart';
 import '../use_case/biblia_leitura_usecase.dart';
 import '../versiculo_indicacao/use_case/versiculo_indicacao_usecase.dart';
 import 'biblia_leitura_viewmodel.dart';
+import 'widgets/anotacao_trecho_sheet.dart';
 import 'widgets/capitulo_chip.dart';
+import 'widgets/compartilhar_trecho_sheet.dart';
 import 'widgets/historico_leitura_sheet.dart';
+import 'widgets/login_necessario_sheet.dart';
 import 'widgets/opcoes_leitura_sheet.dart';
+import 'widgets/tags_trecho.dart';
 import 'widgets/palavra_dicionario_sheet.dart';
 import 'widgets/versiculo_indicacao_sheet.dart';
 
@@ -41,21 +47,27 @@ import 'widgets/versiculo_indicacao_sheet.dart';
 ///   (`/v1/versiculo-indicacao`), onde o usuário indica, altera o comentário, remove a indicação e escolhe usuários
 ///   para recebê-la (`/v1/versiculo-indicacao-usuario` e `/v1/usuario/busca`).
 /// - Versão (`/v1/versao`): seleção no topo do índice, acima do filtro de testamentos.
-/// - AppBar: histórico de leitura, orientação da tela e tema.
+/// - AppBar: histórico de leitura e a Configurações de leitura (orientação da tela).
 /// - Aberta com destino (`/biblia-leitura?versaId=&livrId=&capiNumero=&versNumero=`, ex.: versículo de um renomado):
 ///   abre direto no capítulo, na versão do destino, rola até o versículo e o destaca; voltar sai da tela.
 ///
 /// Ícones (em [IconsMap.mdiIcons]): [iconeLeitura], [iconeHistorico], [iconeVersao], [iconeAnterior],
 /// [iconeProximo], [iconeLido], [iconeNaoLido], [iconeParcial], [iconeComentarIndicar], [iconeIndicadoSemComentario],
 /// [iconeComentado], [iconeIndicar],
-/// [iconeIndicado], [iconeRemover] e [iconeTentarNovamente].
-class BibliaLeituraView extends StatefulWidget {
-  const BibliaLeituraView({super.key, required this.viewModel});
+/// [iconeIndicado], [iconeRemover], [iconeTentarNovamente] e [iconeConfiguracoes] (livro com engrenagem).
+class BibliaLeituraView extends StatelessWidget {
+  const BibliaLeituraView({super.key, required this.viewModel, this.ditado = const DitadoSistemaAparelho()});
 
   final BibliaLeituraViewmodel viewModel;
 
+  /// Atalho do microfone na anotação de um trecho.
+  final DitadoSistema ditado;
+
   /// Ícone do menu da leitura e do índice vazio.
   static const iconeLeitura = 'book-open-variant';
+
+  /// Configurações de leitura (AppBar e sheet de opções): livro com engrenagem.
+  static const iconeConfiguracoes = 'book-cog-outline';
 
   /// Botão do histórico de leitura.
   static const iconeHistorico = 'history';
@@ -106,11 +118,36 @@ class BibliaLeituraView extends StatefulWidget {
     return kDefaultAppError;
   }
 
+  /// O tema escolhido nas Configurações de leitura vale só aqui (e nos sheets abertos daqui); "sistema" usa o do
+  /// app. Fica por fora da tela, para todo `Theme.of(context)` dela já pegar o tema escolhido.
   @override
-  State<BibliaLeituraView> createState() => _BibliaLeituraViewState();
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: viewModel,
+    builder: (context, child) {
+      final tema = switch (viewModel.tema) {
+        TemaApp.sistema => null as ThemeData?,
+        TemaApp.claro => AppTheme.light,
+        TemaApp.creme => AppTheme.creme,
+        TemaApp.escuro => AppTheme.dark,
+      };
+      // Sempre um Theme (com o do app em "sistema"), para trocar o tema sem recriar a tela.
+      return Theme(data: tema ?? Theme.of(context), child: child!);
+    },
+    child: _BibliaLeitura(viewModel: viewModel, ditado: ditado),
+  );
 }
 
-class _BibliaLeituraViewState extends State<BibliaLeituraView> {
+class _BibliaLeitura extends StatefulWidget {
+  const _BibliaLeitura({required this.viewModel, required this.ditado});
+
+  final BibliaLeituraViewmodel viewModel;
+  final DitadoSistema ditado;
+
+  @override
+  State<_BibliaLeitura> createState() => _BibliaLeituraViewState();
+}
+
+class _BibliaLeituraViewState extends State<_BibliaLeitura> {
   BibliaLeituraViewmodel get _vm => widget.viewModel;
 
   /// Versículo do destino para onde rolar depois de montar a lista, e a chave da linha dele.
@@ -236,10 +273,32 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
     for (final command in _comandos(_vm)) {
       command.addListener(_onResult);
     }
+    // Brilho e orientação da leitura valem só aqui: aplicados ao abrir, soltos ao sair (dispose).
+    unawaited(_vm.entrarNaLeitura());
+  }
+
+  /// A leitura é a tela de cima (sem sheet, menu ou outra página por cima).
+  bool _rotaAtual = true;
+
+  /// Sheet aberto pela própria narração (a pergunta de marcar ao passar a página): não para o áudio.
+  bool _manterAudio = false;
+
+  /// Abriu um sheet, menu ou outra página por cima da leitura: o áudio para.
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final atual = ModalRoute.of(context)?.isCurrent ?? true;
+    if (_rotaAtual && !atual && !_manterAudio) {
+      // Depois do frame: parar avisa os ouvintes, o que não pode acontecer durante o build.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _vm.pararNarracao();
+      });
+    }
+    _rotaAtual = atual;
   }
 
   @override
-  void didUpdateWidget(covariant BibliaLeituraView oldWidget) {
+  void didUpdateWidget(covariant _BibliaLeitura oldWidget) {
     super.didUpdateWidget(oldWidget);
     for (final command in _comandos(oldWidget.viewModel)) {
       command.removeListener(_onResult);
@@ -256,6 +315,8 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
     }
     _paginas?.dispose();
     _mostrarNavegacao?.cancel();
+    _vm.pararNarracaoAoSair();
+    unawaited(_vm.sairDaLeitura());
     super.dispose();
   }
 
@@ -328,7 +389,75 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
   bool get _semTelaAnterior => GoRouter.maybeOf(context) != null && !Navigator.of(context).canPop();
 
   /// Sair da leitura (índice, ou capítulo aberto por destino) quando ela é a primeira tela.
-  void _irParaHome() => context.go(Routes.home);
+  void _irParaHome() {
+    _vm.pararNarracao();
+    unawaited(_vm.sairDaLeitura());
+    context.go(Routes.home);
+  }
+
+  /// Configurações de leitura; ao voltar, reaplica a orientação (que lá pode ter mudado).
+  Future<void> _abrirConfiguracao() async {
+    await context.push(Routes.configuracoesLeitura, extra: _vm);
+    if (mounted) unawaited(_vm.entrarNaLeitura());
+  }
+
+  /// Sheet de baixo para escolher entre as Configurações de leitura e as do app.
+  Future<void> _escolherConfiguracao() async {
+    final strings = AppLocalizations.of(context);
+    final abrir = await DialogSheet.show<VoidCallback>(
+      context,
+      titulo: strings.translate('configuracoes'),
+      conteudo: Builder(
+        builder: (sheetContext) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: BibliaLeituraView.icone(BibliaLeituraView.iconeConfiguracoes, Icons.settings_outlined),
+              title: Text(strings.translate('configuracoesLeitura')),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.of(sheetContext).pop<VoidCallback>(_abrirConfiguracao),
+            ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.settings_outlined),
+              title: Text(strings.translate('configuracoesApp')),
+              subtitle: _vm.logado ? null : Text(strings.translate('entreParaAcessar')),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.of(sheetContext).pop<VoidCallback>(_abrirConfiguracaoApp),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (abrir != null && mounted) abrir();
+  }
+
+  /// Configurações do app (`/configuracao`, a página que já existia). Ela exige login: sem login, um sheet
+  /// explica que é restrita a quem está logado e oferece "Voltar" ou "Continuar para o login".
+  Future<void> _abrirConfiguracaoApp() async {
+    if (_vm.logado) {
+      await _foraDaLeitura(Routes.configuracao);
+      return;
+    }
+    final strings = AppLocalizations.of(context);
+    final entrar = await LoginNecessarioSheet.perguntar(
+      context,
+      titulo: strings.translate('configuracoesApp'),
+      mensagem: 'funcionalidadeRestritaLogin',
+    );
+    if (entrar && mounted) await _foraDaLeitura(Routes.login);
+  }
+
+  /// Abre uma tela que não é da leitura: brilho e orientação voltam aos do sistema enquanto ela está aberta e
+  /// são reaplicados ao voltar.
+  Future<void> _foraDaLeitura(String rota) async {
+    await _vm.sairDaLeitura();
+    if (!mounted) return;
+    await context.push(rota);
+    if (mounted) await _vm.entrarNaLeitura();
+  }
 
   /// AppBar que encolhe (altura, título e ícones) quando compacta e, oculta, vira só uma alça que a reabre compacta.
   Widget _appBarAnimada(AppLocalizations strings) {
@@ -413,13 +542,51 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
             onPressed: _vm.indice == null ? null : _abrirHistorico,
             icon: BibliaLeituraView.icone(BibliaLeituraView.iconeHistorico, Icons.history),
           ),
-        const OrientationButton(),
+        // Livro com engrenagem: sheet com as Configurações de leitura e as do app.
+        IconButton(
+          tooltip: strings.translate('configuracoes'),
+          onPressed: _escolherConfiguracao,
+          icon: BibliaLeituraView.icone(BibliaLeituraView.iconeConfiguracoes, Icons.settings_outlined),
+        ),
       ],
     );
   }
 
   /// Seleção da versão (`/v1/versao`), no topo do índice, logo acima do filtro de testamentos.
+  /// Sem login, trocar a versão é restrito: o campo mostra a versão atual e tocar pede o login.
+  Future<void> _versaoSemLogin() async {
+    final strings = AppLocalizations.of(context);
+    final entrar = await LoginNecessarioSheet.perguntar(
+      context,
+      titulo: strings.translate('versaoBiblia'),
+      mensagem: 'selecaoVersaoRestritaLogin',
+    );
+    if (entrar && mounted) await _foraDaLeitura(Routes.login);
+  }
+
   Widget _versaoSelecao(AppLocalizations strings) {
+    if (!_vm.logado) {
+      final versao = _vm.versao;
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+        child: InkWell(
+          key: const ValueKey('versaoSemLogin'),
+          borderRadius: BorderRadius.circular(4),
+          onTap: _versaoSemLogin,
+          child: InputDecorator(
+            decoration: InputDecoration(
+              labelText: strings.translate('versao'),
+              prefixIcon: BibliaLeituraView.icone(BibliaLeituraView.iconeVersao, Icons.library_books_outlined),
+              suffixIcon: const Icon(Icons.lock_outline),
+            ),
+            child: Text(
+              versao == null ? '—' : '${versao.versaCodigo} · ${versao.versaNome}',
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ),
+      );
+    }
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       child: DropdownButtonFormField<int>(
@@ -659,6 +826,8 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
                     padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
                     // Toque longo seleciona a palavra (e abre o dicionário); arrastar sem soltar seleciona mais.
                     child: GestureDetector(
+                      // Tocar num trecho marcado mostra o trecho; fora de marcação, destaca o versículo.
+                      onTapUp: (detalhes) => _tocarTexto(versiculo, detalhes.globalPosition),
                       onLongPressStart: (detalhes) => _iniciarSelecao(detalhes.globalPosition),
                       onLongPressMoveUpdate: (detalhes) => _estenderSelecao(detalhes.globalPosition),
                       onLongPressEnd: (_) => _concluirSelecao(),
@@ -673,7 +842,13 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            ..._textoComSelecao(index - 1, versiculo, _estiloVersiculo(textTheme)),
+                            ..._textoMarcado(
+                              versiculo,
+                              _estiloVersiculo(textTheme),
+                              _vm.marcasDe(_vm.capitulo!),
+                              indice: index - 1,
+                              anotados: _vm.trechosAnotados(_vm.capitulo!, index - 1),
+                            ),
                           ],
                         ),
                       ),
@@ -851,25 +1026,135 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
     return ((indice: primeira.indice, offset: primeira.inicio), (indice: ultima.indice, offset: ultima.fim));
   }
 
-  /// Texto do versículo [indice] com a parte selecionada destacada.
-  List<TextSpan> _textoComSelecao(int indice, VersiculoTextoModel versiculo, TextStyle? estilo) {
+  /// Texto do versículo com as marcações do marca-texto ([marcas]), as partes com anotação ([anotados], pintadas
+  /// na cor da anotação) e, na página atual ([indice] é a posição dele na lista), a seleção em andamento por
+  /// cima.
+  List<TextSpan> _textoMarcado(
+    VersiculoTextoModel versiculo,
+    TextStyle? estilo,
+    List<MarcaTexto> marcas, {
+    int? indice,
+    List<({int inicio, int fim, CorTag? cor})> anotados = const [],
+  }) {
     final texto = versiculo.versTexto;
+    final doVersiculo = [
+      for (final m in marcas)
+        if (m.versId == versiculo.versId && m.inicio < texto.length) m,
+    ];
+
+    ({int inicio, int fim})? selecionado;
     final selecao = _selecao;
-    if (selecao == null) return [TextSpan(text: texto, style: estilo)];
-    final (inicio, fim) = selecao;
-    if (indice < inicio.indice || indice > fim.indice) return [TextSpan(text: texto, style: estilo)];
-    final de = indice == inicio.indice ? inicio.offset.clamp(0, texto.length) : 0;
-    final ate = indice == fim.indice ? fim.offset.clamp(de, texto.length) : texto.length;
-    final destaque = estilo?.copyWith(backgroundColor: _corDestaque()) ?? TextStyle(backgroundColor: _corDestaque());
+    if (indice != null && selecao != null) {
+      final (inicio, fim) = selecao;
+      if (indice >= inicio.indice && indice <= fim.indice) {
+        final de = indice == inicio.indice ? inicio.offset.clamp(0, texto.length) : 0;
+        final ate = indice == fim.indice ? fim.offset.clamp(de, texto.length) : texto.length;
+        if (ate > de) selecionado = (inicio: de, fim: ate);
+      }
+    }
+    if (doVersiculo.isEmpty && selecionado == null && anotados.isEmpty) return [TextSpan(text: texto, style: estilo)];
+
+    final cores = Theme.of(context).extension<ReadingColors>();
+    final corSelecao = Theme.of(context).colorScheme.primary.withValues(alpha: 0.28);
+    final limites = <int>{0, texto.length};
+    for (final m in doVersiculo) {
+      limites
+        ..add(m.inicio)
+        ..add(m.fim.clamp(0, texto.length));
+    }
+    if (selecionado != null) {
+      limites
+        ..add(selecionado.inicio)
+        ..add(selecionado.fim);
+    }
+    for (final a in anotados) {
+      limites
+        ..add(a.inicio)
+        ..add(a.fim);
+    }
+    final corAnotacao = Theme.of(context).colorScheme.primary;
+    final pontos = limites.toList()..sort();
+
     return [
-      TextSpan(text: texto.substring(0, de), style: estilo),
-      TextSpan(text: texto.substring(de, ate), style: destaque),
-      TextSpan(text: texto.substring(ate), style: estilo),
+      for (var k = 0; k + 1 < pontos.length; k++)
+        if (pontos[k + 1] > pontos[k])
+          () {
+            final (de, ate) = (pontos[k], pontos[k + 1]);
+            final naSelecao = selecionado != null && de >= selecionado.inicio && ate <= selecionado.fim;
+            final marca = doVersiculo.lastWhere((m) => de >= m.inicio && ate <= m.fim, orElse: () => _semMarca);
+            final marcado = !identical(marca, _semMarca);
+            final anotacao = anotados.where((a) => de >= a.inicio && ate <= a.fim).lastOrNull;
+            final corTag = anotacao?.cor?.cor;
+            // Com tag, o trecho fica na cor da tag (por cima do marca-texto). Sem tag: o marca-texto, se houver,
+            // com a anotação num sublinhado; senão, a anotação pintada na cor do tema.
+            final fundo = naSelecao
+                ? corSelecao
+                : corTag != null
+                ? corTag.withValues(alpha: 0.28)
+                : marcado
+                ? cores?.highlight(marca.cor) ?? Theme.of(context).colorScheme.secondaryContainer
+                : anotacao != null
+                ? corAnotacao.withValues(alpha: 0.28)
+                : null;
+            final sublinhar = anotacao != null && corTag == null && marcado && !naSelecao;
+            return TextSpan(
+              text: texto.substring(de, ate),
+              style: fundo == null
+                  ? estilo
+                  : (estilo ?? const TextStyle()).copyWith(
+                      backgroundColor: fundo,
+                      decoration: sublinhar ? TextDecoration.underline : null,
+                      decorationStyle: sublinhar ? TextDecorationStyle.dotted : null,
+                      decorationColor: sublinhar ? corAnotacao : null,
+                      decorationThickness: sublinhar ? 2 : null,
+                    ),
+            );
+          }(),
     ];
   }
 
-  /// Palavra sob [posicaoGlobal] no texto de um versículo visível; nula fora do texto ou sem letra ali.
-  ({int indice, int inicio, int fim})? _palavraEm(Offset posicaoGlobal) {
+  static const MarcaTexto _semMarca = (versId: -1, inicio: 0, fim: 0, cor: HighlightColor.amarelo);
+
+  /// Marca-texto do trecho: "Desmarcar texto" se ele estiver marcado, senão "Marcar texto" na cor das
+  /// Configurações de leitura. No sheet do trecho alterna sem fechar; no do dicionário ([fechar]) fecha o sheet.
+  Widget _seletorMarcaTexto(
+    BuildContext sheetContext,
+    ({int indice, int offset}) inicio,
+    ({int indice, int offset}) fim, {
+    bool fechar = false,
+  }) {
+    final strings = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final marcado = _vm.trechoMarcado(inicio, fim);
+    final cor = Theme.of(context).extension<ReadingColors>()?.highlight(_vm.corMarcaTexto);
+    return OutlinedButton.icon(
+      key: const ValueKey('alternarMarcaTexto'),
+      style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(DialogSheet.alturaAcao)),
+      onPressed: () {
+        if (marcado) {
+          _vm.desmarcarTrecho(inicio, fim);
+        } else {
+          _vm.marcarTrecho(inicio, fim, _vm.corMarcaTexto);
+        }
+        if (fechar) Navigator.of(sheetContext).pop();
+      },
+      icon: marcado
+          ? const Icon(Icons.format_color_reset_outlined)
+          : Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                color: cor,
+                shape: BoxShape.circle,
+                border: Border.all(color: scheme.outlineVariant),
+              ),
+            ),
+      label: Text(strings.translate(marcado ? 'desmarcarTexto' : 'marcarTexto')),
+    );
+  }
+
+  /// Posição (versículo e caractere no texto dele) sob [posicaoGlobal]; nula fora do texto de um versículo.
+  ({int indice, int offset})? _posicaoEm(Offset posicaoGlobal) {
     final versiculos = _vm.versiculos;
     if (versiculos == null) return null;
     for (final (indice, versiculo) in versiculos.indexed) {
@@ -879,16 +1164,109 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
       if (paragrafo == null || !paragrafo.attached) continue;
       final local = paragrafo.globalToLocal(posicaoGlobal);
       if (local.dy < 0 || local.dy > paragrafo.size.height) continue;
-
-      final textoCompleto = paragrafo.text.toPlainText();
-      final posicao = paragrafo.getPositionForOffset(local);
-      final intervalo = _vm.intervaloPalavraEm(textoCompleto, posicao.offset);
-      // O parágrafo começa com o número do versículo: o intervalo é relativo só ao texto.
-      final prefixo = textoCompleto.length - versiculo.versTexto.length;
-      if (intervalo == null || intervalo.inicio < prefixo) return null;
-      return (indice: indice, inicio: intervalo.inicio - prefixo, fim: intervalo.fim - prefixo);
+      final prefixo = paragrafo.text.toPlainText().length - versiculo.versTexto.length;
+      final offset = paragrafo.getPositionForOffset(local).offset - prefixo;
+      if (offset < 0) return null;
+      return (indice: indice, offset: offset);
     }
     return null;
+  }
+
+  /// Toque no texto: dentro de um trecho anotado ou marcado, abre o trecho (destacado enquanto o sheet estiver
+  /// aberto), com a anotação se houver; senão, destaca o versículo.
+  Future<void> _tocarTexto(VersiculoTextoModel versiculo, Offset posicaoGlobal) async {
+    final posicao = _posicaoEm(posicaoGlobal);
+    final trecho = posicao == null
+        ? null
+        : _vm.trechoDaAnotacaoEm(posicao.indice, posicao.offset) ?? _vm.trechoDaMarcaEm(posicao.indice, posicao.offset);
+    if (trecho == null) {
+      _vm.destacarVersiculo(versiculo.versId);
+      return;
+    }
+    final (inicio, fim) = trecho;
+    setState(() {
+      _selecaoAncora = (indice: inicio.indice, inicio: inicio.offset, fim: inicio.offset);
+      _selecaoFoco = (indice: fim.indice, inicio: fim.offset, fim: fim.offset);
+    });
+    await _mostrarTrecho(inicio, fim);
+    _limparSelecao();
+  }
+
+  void _limparSelecao() {
+    if (!mounted) return;
+    setState(() {
+      _selecaoAncora = null;
+      _selecaoFoco = null;
+    });
+  }
+
+  /// Sheet do trecho de [inicio] a [fim] do capítulo aberto, com a referência.
+  Future<void> _mostrarTrecho(({int indice, int offset}) inicio, ({int indice, int offset}) fim) async {
+    final versiculos = _vm.versiculos;
+    final ref = _vm.capitulo;
+    if (versiculos == null || ref == null) return;
+    final referencia = BibliaLeituraUseCase.referenciaTrecho(
+      _tituloCapitulo(ref),
+      versiculos[inicio.indice].versNumero,
+      versiculos[fim.indice].versNumero,
+    );
+    final texto = BibliaLeituraUseCase.trecho(versiculos, inicio, fim);
+    final acao = await _abrirTrecho(texto, referencia, inicio, fim);
+    if (!mounted) return;
+    switch (acao) {
+      case _AcaoTrecho.compartilhar:
+        await _abrirCompartilhar(texto, referencia);
+      case _AcaoTrecho.anotar:
+        await _abrirAnotacao(referencia, inicio, fim);
+      case null:
+        break;
+    }
+  }
+
+  /// Sheet da mensagem opcional e, ao confirmar, o compartilhamento do sistema.
+  Future<void> _abrirCompartilhar(String texto, String referencia) => DialogSheet.show<void>(
+    context,
+    titulo: AppLocalizations.of(context).translate('compartilhar'),
+    conteudo: CompartilharTrechoSheet(
+      texto: texto,
+      referencia: referencia,
+      onCompartilhar: (mensagem) => _vm.compartilharTrecho(texto, referencia, mensagem: mensagem),
+    ),
+  );
+
+  /// Sheet da anotação do trecho (nova ou a existente, para editar ou excluir o texto; as tags do trecho ficam).
+  Future<void> _abrirAnotacao(String referencia, ({int indice, int offset}) inicio, ({int indice, int offset}) fim) {
+    final atual = _vm.anotacaoDoTrecho(inicio, fim);
+    final anotacao = atual != null && atual.texto.isNotEmpty ? atual : null;
+    return DialogSheet.show<void>(
+      context,
+      titulo: referencia,
+      isDismissible: false,
+      conteudo: AnotacaoTrechoSheet(
+        ditado: widget.ditado,
+        anotacao: anotacao,
+        onSalvar: (texto) {
+          _vm.salvarAnotacao(inicio, fim, texto: texto);
+          _mostrarMensagem('anotacaoSalva');
+        },
+        onExcluir: anotacao == null
+            ? null
+            : () {
+                _vm.excluirAnotacao(inicio, fim);
+                _mostrarMensagem('anotacaoExcluida');
+              },
+      ),
+    );
+  }
+
+  /// Palavra sob [posicaoGlobal] no texto de um versículo visível; nula fora do texto ou sem letra ali.
+  ({int indice, int inicio, int fim})? _palavraEm(Offset posicaoGlobal) {
+    final posicao = _posicaoEm(posicaoGlobal);
+    final versiculos = _vm.versiculos;
+    if (posicao == null || versiculos == null) return null;
+    final intervalo = _vm.intervaloPalavraEm(versiculos[posicao.indice].versTexto, posicao.offset);
+    if (intervalo == null) return null;
+    return (indice: posicao.indice, inicio: intervalo.inicio, fim: intervalo.fim);
   }
 
   void _iniciarSelecao(Offset posicaoGlobal) {
@@ -913,65 +1291,181 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
   Future<void> _concluirSelecao() async {
     final selecao = _selecao;
     final versiculos = _vm.versiculos;
-    final ref = _vm.capitulo;
-    if (selecao == null || versiculos == null || ref == null) return;
+    if (selecao == null || versiculos == null) return;
     final (inicio, fim) = selecao;
-    final texto = BibliaLeituraUseCase.trecho(versiculos, inicio, fim);
 
     if (_selecaoAncora == _selecaoFoco) {
-      await _abrirPalavra(texto);
+      await _abrirPalavra(BibliaLeituraUseCase.trecho(versiculos, inicio, fim), selecao: selecao);
     } else {
-      final referencia = BibliaLeituraUseCase.referenciaTrecho(
-        _tituloCapitulo(ref),
-        versiculos[inicio.indice].versNumero,
-        versiculos[fim.indice].versNumero,
-      );
-      await _abrirTrecho(texto, referencia);
+      // Selecionou um trecho: já fica marcado na cor das Configurações de leitura ("Desmarcar texto" desfaz).
+      if (_vm.marcaTextoDisponivel && !_vm.trechoMarcado(inicio, fim)) {
+        _vm.marcarTrecho(inicio, fim, _vm.corMarcaTexto);
+      }
+      await _mostrarTrecho(inicio, fim);
     }
-    if (mounted) {
-      setState(() {
-        _selecaoAncora = null;
-        _selecaoFoco = null;
-      });
-    }
+    _limparSelecao();
   }
 
-  /// Sheet do trecho selecionado: o texto com a referência, "Copiar" (texto e referência) e "Ouvir".
-  Future<void> _abrirTrecho(String texto, String referencia) async {
+  /// Sheet do trecho selecionado, de cima para baixo: o texto (em destaque, na cor da marcação) e a anotação, se
+  /// houver; as tags; "Desmarcar texto"/"Marcar texto"; e as ações Copiar (texto e referência), Compartilhar,
+  /// Anotar e Ouvir numa linha. Compartilhar e Anotar fecham o sheet e devolvem a ação, para o sheet seguinte abrir
+  /// com o trecho ainda selecionado.
+  Future<_AcaoTrecho?> _abrirTrecho(
+    String texto,
+    String referencia,
+    ({int indice, int offset}) inicio,
+    ({int indice, int offset}) fim,
+  ) async {
     final strings = AppLocalizations.of(context);
-    await DialogSheet.show<void>(
+    return DialogSheet.show<_AcaoTrecho>(
       context,
       titulo: referencia,
-      conteudo: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.4),
-            child: SingleChildScrollView(child: Text(texto, style: _estiloVersiculo(Theme.of(context).textTheme))),
-          ),
-          Builder(
-            builder: (sheetContext) => DialogSheet.acoes([
-              OutlinedButton.icon(
-                onPressed: () async {
-                  await Clipboard.setData(ClipboardData(text: '"$texto" ($referencia)'));
-                  if (sheetContext.mounted) Navigator.of(sheetContext).pop();
-                  _mostrarMensagem('trechoCopiado');
-                },
-                icon: const Icon(Icons.copy),
-                label: Text(strings.translate('copiar')),
-              ),
-              if (_vm.narracaoDisponivel)
-                FilledButton.icon(
-                  onPressed: () {
-                    Navigator.of(sheetContext).pop();
-                    _vm.ouvirTrecho(texto);
-                  },
-                  icon: const Icon(Icons.volume_up_outlined),
-                  label: Text(strings.translate('ouvir')),
+      conteudo: Builder(
+        builder: (sheetContext) => ListenableBuilder(
+          listenable: _vm,
+          builder: (sheetContext, _) {
+            // Só conta como anotação o trecho com texto (um trecho pode ter só tags).
+            final registro = _vm.anotacaoDisponivel ? _vm.anotacaoDoTrecho(inicio, fim) : null;
+            final anotacao = registro != null && registro.texto.isNotEmpty ? registro : null;
+            final acoes = <Widget>[
+              _acaoTrecho(Icons.copy, strings.translate('copiar'), () async {
+                await Clipboard.setData(ClipboardData(text: '"$texto" ($referencia)'));
+                if (sheetContext.mounted) Navigator.of(sheetContext).pop();
+                _mostrarMensagem('trechoCopiado');
+              }),
+              if (_vm.compartilhamentoDisponivel)
+                _acaoTrecho(
+                  Icons.share_outlined,
+                  strings.translate('compartilhar'),
+                  () => Navigator.of(sheetContext).pop(_AcaoTrecho.compartilhar),
                 ),
-            ]),
+              if (_vm.anotacaoDisponivel)
+                _acaoTrecho(
+                  anotacao == null ? Icons.edit_note : Icons.edit_outlined,
+                  strings.translate(anotacao == null ? 'anotar' : 'editarAnotacao'),
+                  () => Navigator.of(sheetContext).pop(_AcaoTrecho.anotar),
+                ),
+              if (_vm.narracaoDisponivel)
+                _acaoTrecho(Icons.volume_up_outlined, strings.translate('ouvir'), () {
+                  Navigator.of(sheetContext).pop();
+                  _vm.ouvirTrecho(texto);
+                }),
+            ];
+            return SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _textoDoTrecho(texto, inicio, fim),
+                  if (anotacao != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: _anotacaoCard(anotacao, () => Navigator.of(sheetContext).pop(_AcaoTrecho.anotar)),
+                    ),
+                  const SizedBox(height: 16),
+                  if (_vm.anotacaoDisponivel) TagsTrecho(viewModel: _vm, inicio: inicio, fim: fim),
+                  if (_vm.marcaTextoDisponivel) _seletorMarcaTexto(sheetContext, inicio, fim),
+                  const SizedBox(height: 16),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (final (i, acao) in acoes.indexed) ...[
+                        if (i > 0) const SizedBox(width: 8),
+                        Expanded(child: acao),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  /// O texto selecionado em destaque: fundo na cor da marcação (se marcado) e uma barra à esquerda.
+  Widget _textoDoTrecho(String texto, ({int indice, int offset}) inicio, ({int indice, int offset}) fim) {
+    final scheme = Theme.of(context).colorScheme;
+    final marca = _vm.marcaTextoDisponivel && _vm.trechoMarcado(inicio, fim)
+        ? Theme.of(context).extension<ReadingColors>()?.highlight(_vm.corDaMarcaDoTrecho(inicio, fim))
+        : null;
+    return Container(
+      key: const ValueKey('textoTrecho'),
+      constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.3),
+      decoration: BoxDecoration(
+        color: marca ?? scheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(12),
+        border: Border(left: BorderSide(color: scheme.primary, width: 4)),
+      ),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      child: SingleChildScrollView(child: Text(texto, style: _estiloVersiculo(Theme.of(context).textTheme))),
+    );
+  }
+
+  /// Ação do trecho: ícone num círculo e o rótulo embaixo.
+  Widget _acaoTrecho(IconData icone, String rotulo, VoidCallback onTap) {
+    final scheme = Theme.of(context).colorScheme;
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Column(
+          children: [
+            CircleAvatar(
+              radius: 24,
+              backgroundColor: scheme.secondaryContainer,
+              foregroundColor: scheme.onSecondaryContainer,
+              child: Icon(icone),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              rotulo,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelMedium,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// A anotação do trecho, com as tags; tocar abre a edição.
+  Widget _anotacaoCard(AnotacaoTrecho anotacao, VoidCallback onTap) {
+    final scheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    // O card tem a cor do trecho (a da primeira tag dele): no ícone e na borda.
+    final cor = _vm.corDaAnotacao(anotacao)?.cor;
+    return Card(
+      key: const ValueKey('anotacaoTrecho'),
+      margin: const EdgeInsets.only(bottom: 12),
+      color: cor == null ? scheme.surfaceContainerHigh : Color.alphaBlend(cor.withValues(alpha: 0.1), scheme.surface),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: cor == null ? BorderSide.none : BorderSide(color: cor.withValues(alpha: 0.6)),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.sticky_note_2_outlined, size: 18, color: cor ?? scheme.primary),
+                  const SizedBox(width: 6),
+                  Text(AppLocalizations.of(context).translate('anotacao'), style: textTheme.labelLarge),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(anotacao.texto, style: textTheme.bodyMedium),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -985,12 +1479,27 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
   }
 
   /// Sheet com os verbetes da [palavra] no dicionário.
-  Future<void> _abrirPalavra(String palavra) async {
+  /// Sheet com os verbetes da [palavra] no dicionário; com a [selecao] da palavra, mostra o marca-texto em cima.
+  Future<void> _abrirPalavra(
+    String palavra, {
+    (({int indice, int offset}), ({int indice, int offset}))? selecao,
+  }) async {
     unawaited(HapticFeedback.selectionClick());
     await DialogSheet.show<void>(
       context,
       titulo: palavra,
-      conteudo: PalavraDicionarioSheet(viewModel: _vm, palavra: palavra),
+      conteudo: PalavraDicionarioSheet(
+        viewModel: _vm,
+        palavra: palavra,
+        cabecalho: selecao == null || !_vm.marcaTextoDisponivel
+            ? null
+            : Builder(
+                builder: (sheetContext) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _seletorMarcaTexto(sheetContext, selecao.$1, selecao.$2, fechar: true),
+                ),
+              ),
+      ),
     );
   }
 
@@ -999,7 +1508,11 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
     await DialogSheet.show<void>(
       context,
       titulo: AppLocalizations.of(context).translate('opcoesLeitura'),
-      conteudo: OpcoesLeituraSheet(viewModel: _vm),
+      conteudo: OpcoesLeituraSheet(
+        viewModel: _vm,
+        onConfiguracoes: _abrirConfiguracao,
+        onConfiguracoesApp: _abrirConfiguracaoApp,
+      ),
     );
   }
 
@@ -1034,6 +1547,8 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
   /// Pergunta se marca como lido o capítulo [ref], que ficou para trás.
   Future<void> _perguntarMarcar(CapituloRef ref) async {
     final strings = AppLocalizations.of(context);
+    // Na narração contínua a pergunta aparece ao virar a página: o áudio segue.
+    _manterAudio = true;
     final marcar = await DialogSheet.show<bool>(
       context,
       titulo: _tituloCapitulo(ref),
@@ -1056,6 +1571,7 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
         ],
       ),
     );
+    _manterAudio = false;
     if (marcar == true && mounted) _vm.marcarAoPassarCommand.execute(ref);
   }
 
@@ -1123,7 +1639,12 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
                   text: '${versiculo.versNumero}  ',
                   style: textTheme.labelMedium?.copyWith(color: scheme.primary, fontWeight: FontWeight.bold),
                 ),
-                TextSpan(text: versiculo.versTexto, style: _estiloVersiculo(textTheme)),
+                ..._textoMarcado(
+                  versiculo,
+                  _estiloVersiculo(textTheme),
+                  _vm.marcasDe(ref),
+                  anotados: _vm.trechosAnotados(ref, index - 1),
+                ),
               ],
             ),
           ),
@@ -1167,7 +1688,12 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
     return PopScope(
       canPop: saiDaTela && !semTelaAnterior,
       onPopInvokedWithResult: (didPop, _) {
-        if (didPop) return;
+        // Saiu da leitura: o brilho volta ao do sistema já, sem esperar a animação de saída.
+        if (didPop) {
+          _vm.pararNarracaoAoSair();
+          unawaited(_vm.sairDaLeitura());
+          return;
+        }
         if (saiDaTela) {
           _irParaHome();
         } else {
@@ -1220,3 +1746,6 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
 
 /// AppBar da leitura: normal, compacta (desceu o texto) ou oculta (desceu mais; fica só a alça).
 enum _EstadoBarra { normal, compacta, oculta }
+
+/// Ação escolhida no sheet do trecho que abre outro sheet.
+enum _AcaoTrecho { compartilhar, anotar }

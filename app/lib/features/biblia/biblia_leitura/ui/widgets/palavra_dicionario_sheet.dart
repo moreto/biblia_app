@@ -12,10 +12,13 @@ import '../biblia_leitura_viewmodel.dart';
 /// semelhantes (quando a palavra não existe) consultam o termo no próprio sheet. Sem login, mostra o aviso para
 /// entrar.
 class PalavraDicionarioSheet extends StatefulWidget {
-  const PalavraDicionarioSheet({super.key, required this.viewModel, required this.palavra});
+  const PalavraDicionarioSheet({super.key, required this.viewModel, required this.palavra, this.cabecalho});
 
   final BibliaLeituraViewmodel viewModel;
   final String palavra;
+
+  /// Mostrado acima dos verbetes (o marca-texto da palavra selecionada).
+  final Widget? cabecalho;
 
   @override
   State<PalavraDicionarioSheet> createState() => _PalavraDicionarioSheetState();
@@ -36,7 +39,8 @@ class _PalavraDicionarioSheetState extends State<PalavraDicionarioSheet> {
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
     final command = _vm.consultarPalavraCommand;
-    return ConstrainedBox(
+    final cabecalho = widget.cabecalho;
+    final conteudo = ConstrainedBox(
       constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.6),
       child: ListenableBuilder(
         listenable: command,
@@ -54,6 +58,15 @@ class _PalavraDicionarioSheetState extends State<PalavraDicionarioSheet> {
           };
         },
       ),
+    );
+    if (cabecalho == null) return conteudo;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        cabecalho,
+        Flexible(child: conteudo),
+      ],
     );
   }
 

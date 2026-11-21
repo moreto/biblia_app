@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:commons/commons.dart';
+import 'package:components/components.dart' show HighlightColor;
 import 'package:flutter/material.dart';
 
 import 'leitura_preferencia.dart';
@@ -18,6 +19,7 @@ class AppConfig extends ChangeNotifier implements VersaoPreferencia, UltimoCapit
   final BBSecureStorage _storage;
 
   TemaApp _tema = TemaApp.sistema;
+  TemaApp _temaLeitura = TemaApp.sistema;
   Locale? _locale;
   int? _versaoId;
   UltimoCapitulo? _ultimoCapitulo;
@@ -27,9 +29,24 @@ class AppConfig extends ChangeNotifier implements VersaoPreferencia, UltimoCapit
   String? _vozNarracao;
   double? _velocidadeNarracao;
   bool _narracaoContinua = false;
+  OrientacaoLeitura _orientacao = OrientacaoLeitura.automatica;
+  double? _brilhoLeitura;
+  HighlightColor _corMarcaTexto = HighlightColor.amarelo;
+
+  /// Tema do app inteiro.
+  TemaApp get tema => _tema;
 
   @override
-  TemaApp get tema => _tema;
+  TemaApp get temaLeitura => _temaLeitura;
+
+  @override
+  void setTemaLeitura(TemaApp tema) {
+    if (_temaLeitura == tema) return;
+    _temaLeitura = tema;
+    notifyListeners();
+
+    unawaited(_storage.writeSecureData(SecureStorageModel(kReadingTheme, tema.name)));
+  }
 
   /// Modo do `MaterialApp`; o tema claro é o creme quando [tema] é [TemaApp.creme].
   ThemeMode get mode => _tema.mode;
@@ -65,6 +82,9 @@ class AppConfig extends ChangeNotifier implements VersaoPreferencia, UltimoCapit
     final storedMode = await _storage.readSecureData(kColorScheme);
     _tema = parseTema(storedMode);
 
+    final storedTemaLeitura = await _storage.readSecureData(kReadingTheme);
+    _temaLeitura = TemaApp.values.where((t) => t.name == storedTemaLeitura).firstOrNull ?? TemaApp.sistema;
+
     final storedLocale = await _storage.readSecureData(kSelectedLanguage);
     _locale = _parseLocale(storedLocale);
 
@@ -82,6 +102,13 @@ class AppConfig extends ChangeNotifier implements VersaoPreferencia, UltimoCapit
     _velocidadeNarracao = double.tryParse(await _storage.readSecureData(kReadingSpeechRate) ?? '');
     _narracaoContinua = await _storage.readSecureData(kReadingAutoTurn) == 'true';
 
+    _brilhoLeitura = double.tryParse(await _storage.readSecureData(kReadingBrightness) ?? '');
+    final storedCor = await _storage.readSecureData(kReadingHighlightColor);
+    _corMarcaTexto = HighlightColor.values.where((c) => c.name == storedCor).firstOrNull ?? _corMarcaTexto;
+
+    final storedOrientacao = await _storage.readSecureData(kReadingOrientation);
+    _orientacao = OrientacaoLeitura.values.where((o) => o.name == storedOrientacao).firstOrNull ?? _orientacao;
+
     final storedMarcar = await _storage.readSecureData(kReadingMarkOnTurn);
     _marcarAoPassar = MarcarAoPassar.values.where((m) => m.name == storedMarcar).firstOrNull ?? _marcarAoPassar;
 
@@ -91,7 +118,6 @@ class AppConfig extends ChangeNotifier implements VersaoPreferencia, UltimoCapit
   /// Troca para sistema, claro ou escuro (sai do creme).
   void setMode(ThemeMode mode) => setTema(TemaApp.values.firstWhere((t) => t != TemaApp.creme && t.mode == mode));
 
-  @override
   void setTema(TemaApp tema) {
     if (_tema == tema) return;
     _tema = tema;
@@ -161,6 +187,46 @@ class AppConfig extends ChangeNotifier implements VersaoPreferencia, UltimoCapit
     notifyListeners();
 
     unawaited(_storage.writeSecureData(SecureStorageModel(kReadingAutoTurn, '$continua')));
+  }
+
+  @override
+  HighlightColor get corMarcaTexto => _corMarcaTexto;
+
+  @override
+  void setCorMarcaTexto(HighlightColor cor) {
+    if (_corMarcaTexto == cor) return;
+    _corMarcaTexto = cor;
+    notifyListeners();
+
+    unawaited(_storage.writeSecureData(SecureStorageModel(kReadingHighlightColor, cor.name)));
+  }
+
+  @override
+  double? get brilhoLeitura => _brilhoLeitura;
+
+  @override
+  void setBrilhoLeitura(double? brilho) {
+    if (_brilhoLeitura == brilho) return;
+    _brilhoLeitura = brilho;
+    notifyListeners();
+
+    if (brilho == null) {
+      unawaited(_storage.deleteSecureDataByKey(kReadingBrightness));
+    } else {
+      unawaited(_storage.writeSecureData(SecureStorageModel(kReadingBrightness, '$brilho')));
+    }
+  }
+
+  @override
+  OrientacaoLeitura get orientacao => _orientacao;
+
+  @override
+  void setOrientacao(OrientacaoLeitura orientacao) {
+    if (_orientacao == orientacao) return;
+    _orientacao = orientacao;
+    notifyListeners();
+
+    unawaited(_storage.writeSecureData(SecureStorageModel(kReadingOrientation, orientacao.name)));
   }
 
   @override

@@ -4,8 +4,18 @@ import 'routes.dart';
 /// Rotas acessíveis sem login. Todas as demais exigem sessão
 /// (as APIs `loggedArea` falham com `headerInvalido` sem token).
 /// `/` (splash) não tem tela própria: fica fora daqui para ir à home (ou à dashboard, se logado).
-/// `/biblia-leitura` é pública: sem login, a leitura funciona sem progresso, marcações e indicações.
-const Set<String> kPublicRoutes = {Routes.home, Routes.homeOld, Routes.login, Routes.registro, Routes.bibliaLeitura};
+/// `/biblia-leitura` é pública: sem login, a leitura funciona sem progresso, marcações e indicações. As
+/// Configurações de leitura (`/configuracoes-leitura`) e a escolha da voz (`/voz-narracao`) também, por serem da
+/// leitura e só guardarem no aparelho. Trocar a versão (`/versao-biblia`) é só com login.
+const Set<String> kPublicRoutes = {
+  Routes.home,
+  Routes.homeOld,
+  Routes.login,
+  Routes.registro,
+  Routes.bibliaLeitura,
+  Routes.configuracoesLeitura,
+  Routes.vozNarracao,
+};
 
 /// Rotas de acesso que não fazem sentido para quem já está logado.
 const Set<String> _accessRoutes = {Routes.splash, Routes.home, Routes.homeOld, Routes.login};

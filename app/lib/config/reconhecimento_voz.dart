@@ -1,3 +1,4 @@
+import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
@@ -44,12 +45,19 @@ class SpeechToTextReconhecimentoVoz implements ReconhecimentoVoz {
   @override
   Future<bool> iniciar() async {
     try {
-      return await _speech.initialize(
-        onStatus: (status) {
-          if (status == SpeechToText.doneStatus) _terminar(null);
-        },
-        onError: (erro) => _terminar(erro.errorMsg),
-      );
+      void onStatus(String status) {
+        if (status == SpeechToText.doneStatus) _terminar(null);
+      }
+
+      void onErro(SpeechRecognitionError erro) => _terminar(erro.errorMsg);
+
+      final disponivel = await _speech.initialize(onStatus: onStatus, onError: onErro);
+      // O `SpeechToText` do plugin é um só no app e o `initialize` só registra os callbacks na primeira vez: sem
+      // repor os ouvintes, o fim da escuta e os erros iriam para a instância de outra tela.
+      _speech
+        ..statusListener = onStatus
+        ..errorListener = onErro;
+      return disponivel;
     } catch (_) {
       return false;
     }

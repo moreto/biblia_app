@@ -11,6 +11,7 @@ class VozNarracao {
     this.qualidade,
     this.online = false,
     this.identificador,
+    this.instalada = true,
   });
 
   final String nome;
@@ -23,6 +24,10 @@ class VozNarracao {
   /// Identificador da voz no iOS.
   final String? identificador;
 
+  /// Falso quando o motor lista a voz mas ela não está baixada (no Android, a característica `notInstalled`): ao
+  /// escolhê-la, o motor fala com a voz padrão, então ela fica fora da lista.
+  final bool instalada;
+
   /// Voz a partir do mapa devolvido pelo `flutter_tts` (`getVoices`); nula se faltar nome ou idioma.
   static VozNarracao? fromMap(Map<dynamic, dynamic> mapa) {
     final nome = mapa['name']?.toString();
@@ -34,6 +39,7 @@ class VozNarracao {
       qualidade: mapa['quality']?.toString(),
       online: mapa['network_required']?.toString() == '1',
       identificador: mapa['identifier']?.toString(),
+      instalada: !(mapa['features']?.toString().contains('notInstalled') ?? false),
     );
   }
 
@@ -62,7 +68,6 @@ class NarracaoVozAparelho implements NarracaoVoz {
   final FlutterTts _tts;
   bool _preparado = false;
   String? _idioma;
-  String? _voz;
   double? _velocidade;
 
   @override
@@ -71,7 +76,8 @@ class NarracaoVozAparelho implements NarracaoVoz {
     if (lista is! List) return const [];
     return [
       for (final item in lista)
-        if (item is Map) ?VozNarracao.fromMap(item),
+        if (item is Map)
+          if (VozNarracao.fromMap(item) case final voz? when voz.instalada) voz,
     ];
   }
 
@@ -84,12 +90,10 @@ class NarracaoVozAparelho implements NarracaoVoz {
     if (_idioma != idioma) {
       await _tts.setLanguage(idioma);
       _idioma = idioma;
-      _voz = null;
     }
-    if (voz != null && _voz != voz.nome) {
-      await _tts.setVoice(voz.toMap());
-      _voz = voz.nome;
-    }
+    // A voz vai a cada fala: o motor pode voltar à padrão (ao reconectar ou ao trocar o idioma), e guardar a última
+    // aqui fazia a troca de voz não valer.
+    if (voz != null) await _tts.setVoice(voz.toMap());
     if (_velocidade != velocidade) {
       await _tts.setSpeechRate(velocidade);
       _velocidade = velocidade;

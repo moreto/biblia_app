@@ -1,3 +1,4 @@
+import 'package:components/components.dart' show HighlightColor;
 import 'package:flutter/material.dart';
 
 /// Tema escolhido pelo usuário. [creme] é um tema claro com papel creme; os demais seguem o `ThemeMode`.
@@ -11,6 +12,18 @@ enum TemaApp {
 
   /// Modo usado pelo `MaterialApp`.
   final ThemeMode mode;
+}
+
+/// Orientação da tela na leitura.
+enum OrientacaoLeitura {
+  /// Segue o aparelho (gira com ele).
+  automatica,
+
+  /// Fica sempre em pé.
+  retrato,
+
+  /// Fica sempre deitada.
+  paisagem,
 }
 
 /// O que fazer com o capítulo que fica para trás ao passar para o próximo.
@@ -63,9 +76,23 @@ abstract interface class LeituraPreferencia {
 
   void setNarracaoContinua(bool continua);
 
-  /// Tema do app: sistema, claro, creme ou escuro.
-  TemaApp get tema;
+  /// Orientação da tela na leitura.
+  OrientacaoLeitura get orientacao;
 
-  /// Grava o tema do app.
-  void setTema(TemaApp tema);
+  void setOrientacao(OrientacaoLeitura orientacao);
+
+  /// Tema só da tela de leitura: [TemaApp.sistema] usa o mesmo do app; claro, creme ou escuro valem só ali.
+  TemaApp get temaLeitura;
+
+  void setTemaLeitura(TemaApp tema);
+
+  /// Brilho da tela só na leitura (0 a 1); nulo usa o do sistema.
+  double? get brilhoLeitura;
+
+  void setBrilhoLeitura(double? brilho);
+
+  /// Cor do marca-texto: "Marcar texto" no sheet do trecho usa ela (a escolha da cor fica só nas configurações).
+  HighlightColor get corMarcaTexto;
+
+  void setCorMarcaTexto(HighlightColor cor);
 }

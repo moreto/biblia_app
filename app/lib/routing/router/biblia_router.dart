@@ -3,9 +3,18 @@ import 'package:app/features/biblia/biblia_leitura/versiculo_indicacao/use_case/
 import 'package:app/features/biblia/biblia_leitura/versiculo_indicacao/use_case/versiculo_indicacao_usuario_usecase.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../config/anotacao_leitura.dart';
 import '../../config/app_config.dart';
 import '../../config/brilho_tela.dart';
+import '../../config/compartilhamento.dart';
+import '../../config/marca_texto.dart';
 import '../../config/narracao_voz.dart';
+import '../../config/orientacao_tela.dart';
+import '../../features/biblia/configuracao_leitura/ui/configuracao_leitura_view.dart';
+import '../../features/biblia/configuracao_leitura/ui/configuracao_leitura_viewmodel.dart';
+import '../../features/biblia/configuracao_leitura/ui/versao_biblia_view.dart';
+import '../../features/biblia/configuracao_leitura/ui/voz_narracao_view.dart';
+import '../../features/biblia/configuracao_leitura/use_case/configuracao_leitura_usecase.dart';
 import '../../config/dependencies.dart';
 import '../../features/dicionario/repository/dicionario_repository.dart';
 import '../../features/dicionario/use_case/dicionario_usecase.dart';
@@ -45,6 +54,10 @@ class BibliaRouter {
             brilhoTela: const BrilhoTelaAparelho(),
             dicionarioUseCase: DicionarioUseCase(dicionarioRepository: locator<DicionarioRepository>()),
             narracaoVoz: NarracaoVozAparelho(),
+            marcaTextoArmazenamento: MarcaTextoArmazenamentoLocal(),
+            anotacaoArmazenamento: AnotacaoArmazenamentoLocal(),
+            compartilhamento: const CompartilhamentoSistema(),
+            orientacaoTela: const OrientacaoTelaSistema(),
           ),
           versiculoIndicacaoUseCase: VersiculoIndicacaoUseCase(
             versiculoIndicacaoRepository: locator<VersiculoIndicacaoRepository>(),
@@ -60,6 +73,30 @@ class BibliaRouter {
         );
         return BibliaLeituraView(viewModel: viewModel);
       },
+    ),
+    GoRoute(
+      path: Routes.configuracoesLeitura,
+      // Abre por cima da leitura, com o viewmodel dela no `extra`; sem ele (link direto), vai para a leitura.
+      redirect: (context, state) => state.extra is BibliaLeituraViewmodel ? null : Routes.bibliaLeitura,
+      builder: (context, state) => ConfiguracaoLeituraView(
+        leitura: state.extra! as BibliaLeituraViewmodel,
+        viewModel: ConfiguracaoLeituraViewmodel(
+          configuracaoLeituraUseCase: ConfiguracaoLeituraUseCase(
+            leituraPreferencia: locator<AppConfig>(),
+            orientacaoTela: const OrientacaoTelaSistema(),
+          ),
+        ),
+      ),
+    ),
+    GoRoute(
+      path: Routes.versaoBiblia,
+      redirect: (context, state) => state.extra is BibliaLeituraViewmodel ? null : Routes.bibliaLeitura,
+      builder: (context, state) => VersaoBibliaView(leitura: state.extra! as BibliaLeituraViewmodel),
+    ),
+    GoRoute(
+      path: Routes.vozNarracao,
+      redirect: (context, state) => state.extra is BibliaLeituraViewmodel ? null : Routes.bibliaLeitura,
+      builder: (context, state) => VozNarracaoView(leitura: state.extra! as BibliaLeituraViewmodel),
     ),
     GoRoute(
       path: Routes.renomado,

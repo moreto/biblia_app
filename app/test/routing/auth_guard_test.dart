@@ -14,6 +14,13 @@ void main() {
       expect(authRedirect(path: Routes.bibliaLeitura, isLogged: false), isNull);
     });
 
+    test('as configurações de leitura são públicas, como a leitura', () {
+      expect(authRedirect(path: Routes.configuracoesLeitura, isLogged: false), isNull);
+      expect(authRedirect(path: Routes.configuracoesLeitura, isLogged: true), isNull);
+      expect(authRedirect(path: Routes.versaoBiblia, isLogged: false), Routes.home);
+      expect(authRedirect(path: Routes.vozNarracao, isLogged: false), isNull);
+    });
+
     test('/ (sem tela própria) vai para a home', () {
       expect(authRedirect(path: Routes.splash, isLogged: false), Routes.home);
     });

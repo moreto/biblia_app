@@ -28,6 +28,15 @@ abstract final class Routes {
   static const bibliaLeitura = '/biblia-leitura';
   static const renomado = '/renomado';
 
+  /// Configurações de leitura, abertas pela AppBar da leitura (o viewmodel da leitura vai no `extra`).
+  static const configuracoesLeitura = '/configuracoes-leitura';
+
+  /// Escolha da versão da Bíblia, aberta pelas Configurações de leitura (viewmodel da leitura no `extra`).
+  static const versaoBiblia = '/versao-biblia';
+
+  /// Escolha da voz da narração (idioma → país → voz), aberta pelas Configurações de leitura.
+  static const vozNarracao = '/voz-narracao';
+
   /// Versículos de um renomado: `/versiculo-renomado/:renoId` (o `RenomadoModel` pode ir no `extra`).
   static const versiculoRenomado = '/versiculo-renomado';
 

@@ -28,6 +28,23 @@ const String kReadingSpeechRate = 'readingSpeechRate';
 /// Narração contínua: ao terminar o capítulo, passa a página e continua lendo (`true`/`false`).
 const String kReadingAutoTurn = 'readingAutoTurn';
 
+/// Prefixo das marcações do marca-texto da leitura, uma chave por capítulo (`prefixo:versaId:livrId:capiNumero`).
+const String kReadingHighlights = 'readingHighlights';
+
+/// Tema só da leitura: `sistema` (o mesmo do app), `claro`, `creme` ou `escuro`.
+const String kReadingTheme = 'readingTheme';
+const String kReadingBrightness = 'readingBrightness';
+const String kReadingHighlightColor = 'readingHighlightColor';
+
+/// Orientação da tela na leitura: `automatica`, `retrato` ou `paisagem`.
+const String kReadingOrientation = 'readingOrientation';
+
+/// Prefixo das anotações da leitura, uma chave por capítulo (`prefixo:versaId:livrId:capiNumero`).
+const String kReadingNotes = 'readingNotes';
+
+/// Tags das anotações da leitura (lista em JSON).
+const String kReadingTags = 'readingTags';
+
 // log values
 const String kApp = 'Bbl App';
 const String kApi = 'Bbl Api';

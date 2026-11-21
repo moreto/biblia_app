@@ -2,8 +2,11 @@ import 'dart:async';
 
 import 'package:app/config/command.dart';
 import 'package:app/config/leitura_preferencia.dart';
+import 'package:app/config/anotacao_leitura.dart';
+import 'package:app/config/marca_texto.dart';
 import 'package:app/config/narracao_voz.dart';
 import 'package:commons/commons.dart';
+import 'package:components/components.dart' show HighlightColor;
 import 'package:flutter/material.dart';
 
 import '../../../../data/model/biblia/capitulo_lido_model.dart';
@@ -57,6 +60,13 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
     carregarCommand.execute();
   }
 
+  /// A tela de leitura está à vista: aplica a orientação e o brilho da leitura (também ao voltar de outra tela).
+  Future<void> entrarNaLeitura() => bibliaLeituraUseCase.aplicarAjustesLeitura();
+
+  /// A tela de leitura saiu (voltar, home ou uma tela que não é dela): orientação e brilho voltam aos do sistema.
+  /// Sempre solta, sem depender de quem aplicou: o GoRouter pode recriar o viewmodel ao reconstruir a rota.
+  Future<void> sairDaLeitura() => bibliaLeituraUseCase.soltarAjustesLeitura();
+
   final VersiculoReacaoUseCase versiculoReacaoUseCase;
 
   /// Onde a leitura abre direto; nulo abre no índice.
@@ -76,7 +86,7 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Tema do app (opções de leitura).
+  /// Tema só da leitura (Configurações de leitura); [TemaApp.sistema] usa o do app.
   /// A narração está disponível (há voz no aparelho).
   bool get narracaoDisponivel => bibliaLeituraUseCase.narracaoDisponivel;
 
@@ -170,6 +180,12 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
     unawaited(bibliaLeituraUseCase.narrar(texto));
   }
 
+  /// Fala a frase de exemplo na [voz] (sem escolhê-la), na velocidade atual.
+  void ouvirVoz(VozNarracao voz) {
+    pararNarracao();
+    unawaited(bibliaLeituraUseCase.narrar(BibliaLeituraUseCase.exemploNarracao, voz: voz));
+  }
+
   /// Fala a frase de exemplo com a voz e a velocidade atuais (para a narração do capítulo, se estiver lendo).
   void ouvirExemplo() {
     pararNarracao();
@@ -181,6 +197,15 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
     _narrarAoAbrir = false;
     _passagemAutomatica = null;
     _interromperNarracao();
+  }
+
+  /// Para a narração ao sair da tela, sem avisar os ouvintes (a tela está sendo desmontada).
+  void pararNarracaoAoSair() {
+    _narrarAoAbrir = false;
+    _passagemAutomatica = null;
+    _narracaoSequencia++;
+    _versiculoNarrado = null;
+    unawaited(bibliaLeituraUseCase.pararNarracao());
   }
 
   /// Interrompe a fala sem cancelar a narração contínua (troca de capítulo).
@@ -226,29 +251,46 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
 
   TemaApp get tema => bibliaLeituraUseCase.tema;
 
+  /// Cor do marca-texto (escolhida nas Configurações de leitura): "Marcar texto" no sheet do trecho usa ela.
+  HighlightColor get corMarcaTexto => bibliaLeituraUseCase.corMarcaTexto;
+
+  void setCorMarcaTexto(HighlightColor cor) {
+    bibliaLeituraUseCase.salvarCorMarcaTexto(cor);
+    notifyListeners();
+  }
+
   void setTema(TemaApp tema) {
     bibliaLeituraUseCase.salvarTema(tema);
     notifyListeners();
   }
 
   double? _brilho;
-  bool _brilhoAlterado = false;
 
   /// Brilho da tela (0 a 1) no ajuste das opções de leitura; nulo enquanto não lido ou sem suporte.
   double? get brilho => _brilho;
 
-  /// Lê o brilho atual para posicionar o ajuste.
+  /// Posiciona o ajuste: o brilho guardado da leitura ou, sem ele, o atual (nulo sem suporte a brilho).
   Future<void> carregarBrilho() async {
     if (_brilho != null) return;
-    _brilho = await bibliaLeituraUseCase.brilhoAtual();
+    final atual = await bibliaLeituraUseCase.brilhoAtual();
+    _brilho = atual == null ? null : bibliaLeituraUseCase.brilhoLeitura ?? atual;
     notifyListeners();
   }
 
+  /// Guarda e aplica o brilho, que passa a valer sempre que a leitura abrir.
   void setBrilho(double valor) {
     _brilho = valor;
-    _brilhoAlterado = true;
     notifyListeners();
-    unawaited(bibliaLeituraUseCase.definirBrilho(valor));
+    unawaited(bibliaLeituraUseCase.salvarBrilho(valor));
+  }
+
+  /// Volta as configurações da leitura ao padrão ([BibliaLeituraUseCase.restaurarPadrao]) e relê o brilho, já
+  /// devolvido ao do sistema.
+  Future<void> restaurarPadrao() async {
+    pararNarracao();
+    await bibliaLeituraUseCase.restaurarPadrao();
+    _brilho = await bibliaLeituraUseCase.brilhoAtual();
+    notifyListeners();
   }
 
   int? _versiculoAlvo;
@@ -442,7 +484,244 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
 
   /// Carrega só o texto de [ref] (sem reações nem indicações), para a página vizinha já estar pronta quando a
   /// página virar. Não faz nada se já está no cache ou carregando; falha só vai para o log.
+  /// Marcações do marca-texto por capítulo (da versão atual).
+  final Map<CapituloRef, List<MarcaTexto>> _marcas = {};
+
+  bool get marcaTextoDisponivel => bibliaLeituraUseCase.marcaTextoDisponivel;
+
+  /// Marcações do capítulo [ref]; vazia enquanto não carregadas.
+  List<MarcaTexto> marcasDe(CapituloRef ref) => _marcas[ref] ?? const [];
+
+  Future<void> _carregarMarcas(CapituloRef ref) async {
+    final versao = _versao;
+    if (versao == null || _marcas.containsKey(ref) || !marcaTextoDisponivel) return;
+    final marcas = await bibliaLeituraUseCase.marcasDoCapitulo(versao.versaId, ref);
+    if (versao.versaId != _versao?.versaId) return;
+    _marcas[ref] = marcas;
+    notifyListeners();
+  }
+
+  /// Trecho marcado sob a posição [offset] do versículo [indice] do capítulo aberto; nulo se ali não há marcação.
+  (({int indice, int offset}), ({int indice, int offset}))? trechoDaMarcaEm(int indice, int offset) {
+    final ref = _capitulo;
+    final versiculos = _versiculos;
+    if (ref == null || versiculos == null) return null;
+    return BibliaLeituraUseCase.trechoDaMarcaEm(marcasDe(ref), versiculos, indice, offset);
+  }
+
+  /// O trecho selecionado no capítulo aberto já tem marcação.
+  bool trechoMarcado(({int indice, int offset}) inicio, ({int indice, int offset}) fim) {
+    final ref = _capitulo;
+    final versiculos = _versiculos;
+    if (ref == null || versiculos == null) return false;
+    return BibliaLeituraUseCase.trechoMarcado(marcasDe(ref), versiculos, inicio, fim);
+  }
+
+  /// Cor da marcação do trecho (a primeira que o toca); sem marcação, a do marca-texto das configurações.
+  HighlightColor corDaMarcaDoTrecho(({int indice, int offset}) inicio, ({int indice, int offset}) fim) {
+    final ref = _capitulo;
+    final versiculos = _versiculos;
+    if (ref == null || versiculos == null) return corMarcaTexto;
+    return BibliaLeituraUseCase.corDaMarcaNoTrecho(marcasDe(ref), versiculos, inicio, fim) ?? corMarcaTexto;
+  }
+
+  /// Pinta o trecho selecionado do capítulo aberto com [cor] e salva.
+  void marcarTrecho(({int indice, int offset}) inicio, ({int indice, int offset}) fim, HighlightColor cor) =>
+      _alterarMarcas((marcas, versiculos) => BibliaLeituraUseCase.marcar(marcas, versiculos, inicio, fim, cor));
+
+  /// Apaga a marcação do trecho selecionado do capítulo aberto e salva.
+  void desmarcarTrecho(({int indice, int offset}) inicio, ({int indice, int offset}) fim) =>
+      _alterarMarcas((marcas, versiculos) => BibliaLeituraUseCase.desmarcar(marcas, versiculos, inicio, fim));
+
+  void _alterarMarcas(List<MarcaTexto> Function(List<MarcaTexto>, List<VersiculoTextoModel>) alterar) {
+    final versao = _versao;
+    final ref = _capitulo;
+    final versiculos = _versiculos;
+    if (versao == null || ref == null || versiculos == null) return;
+    final marcas = alterar(marcasDe(ref), versiculos);
+    _marcas[ref] = marcas;
+    notifyListeners();
+    unawaited(bibliaLeituraUseCase.salvarMarcas(versao.versaId, ref, marcas));
+  }
+
+  /// Anotações por capítulo (da versão atual).
+  final Map<CapituloRef, List<AnotacaoTrecho>> _anotacoes = {};
+
+  List<TagLeitura> _tags = const [];
+  bool _tagsCarregadas = false;
+
+  bool get anotacaoDisponivel => bibliaLeituraUseCase.anotacaoDisponivel;
+
+  bool get compartilhamentoDisponivel => bibliaLeituraUseCase.compartilhamentoDisponivel;
+
+  /// Tags do usuário, em ordem alfabética.
+  List<TagLeitura> get tags => _tags;
+
+  /// Anotações do capítulo [ref]; vazia enquanto não carregadas.
+  List<AnotacaoTrecho> anotacoesDe(CapituloRef ref) => _anotacoes[ref] ?? const [];
+
+  Future<void> _carregarAnotacoes(CapituloRef ref) async {
+    final versao = _versao;
+    if (versao == null || _anotacoes.containsKey(ref) || !anotacaoDisponivel) return;
+    unawaited(carregarTags());
+    final anotacoes = await bibliaLeituraUseCase.anotacoesDoCapitulo(versao.versaId, ref);
+    if (versao.versaId != _versao?.versaId) return;
+    _anotacoes[ref] = anotacoes;
+    notifyListeners();
+  }
+
+  /// Carrega as tags (uma vez só).
+  Future<void> carregarTags() async {
+    if (_tagsCarregadas || !anotacaoDisponivel) return;
+    _tagsCarregadas = true;
+    _tags = await bibliaLeituraUseCase.tagsLeitura();
+    notifyListeners();
+  }
+
+  /// Partes do versículo [indice] do capítulo [ref] que têm anotação, com a cor da anotação (nula sem tag).
+  List<({int inicio, int fim, CorTag? cor})> trechosAnotados(CapituloRef ref, int indice) {
+    final versiculos = textoDe(ref);
+    final anotacoes = anotacoesDe(ref);
+    if (versiculos == null || anotacoes.isEmpty || indice >= versiculos.length) return const [];
+    return [
+      for (final t in BibliaLeituraUseCase.trechosAnotados(anotacoes, versiculos, indice))
+        (inicio: t.inicio, fim: t.fim, cor: corDaAnotacao(t.anotacao)),
+    ];
+  }
+
+  /// Cor da anotação [a]: a da primeira tag dela; nula sem tag.
+  CorTag? corDaAnotacao(AnotacaoTrecho a) => BibliaLeituraUseCase.corDaAnotacao(a, _tags);
+
+  /// Cor sugerida para a próxima tag.
+  CorTag get corSugerida => BibliaLeituraUseCase.proximaCor(_tags);
+
+  /// Anotação feita exatamente no trecho selecionado do capítulo aberto; nula se não houver.
+  AnotacaoTrecho? anotacaoDoTrecho(({int indice, int offset}) inicio, ({int indice, int offset}) fim) {
+    final ref = _capitulo;
+    final versiculos = _versiculos;
+    if (ref == null || versiculos == null) return null;
+    return BibliaLeituraUseCase.anotacaoDoTrecho(anotacoesDe(ref), versiculos, inicio, fim);
+  }
+
+  /// Trecho da anotação sob a posição [offset] do versículo [indice] do capítulo aberto; nulo se ali não há
+  /// anotação.
+  (({int indice, int offset}), ({int indice, int offset}))? trechoDaAnotacaoEm(int indice, int offset) {
+    final ref = _capitulo;
+    final versiculos = _versiculos;
+    if (ref == null || versiculos == null) return null;
+    final anotacao = BibliaLeituraUseCase.anotacaoEm(anotacoesDe(ref), versiculos, indice, offset);
+    return anotacao == null ? null : BibliaLeituraUseCase.posicaoDaAnotacao(anotacao, versiculos);
+  }
+
+  /// Tags (ids) do trecho selecionado do capítulo aberto, na ordem em que foram marcadas.
+  List<String> tagsDoTrecho(({int indice, int offset}) inicio, ({int indice, int offset}) fim) =>
+      anotacaoDoTrecho(inicio, fim)?.tags ?? const [];
+
+  /// Marca a tag [tagId] no trecho selecionado (ou desmarca, se já estava), mantendo o texto da anotação. A
+  /// primeira tag dá a cor do trecho.
+  void alternarTagTrecho(({int indice, int offset}) inicio, ({int indice, int offset}) fim, String tagId) {
+    final atuais = tagsDoTrecho(inicio, fim);
+    _gravarTrecho(
+      inicio,
+      fim,
+      tags: atuais.contains(tagId)
+          ? [
+              for (final t in atuais)
+                if (t != tagId) t,
+            ]
+          : [...atuais, tagId],
+    );
+  }
+
+  /// Grava o texto da anotação do trecho selecionado, mantendo as tags dele; texto vazio sem tags apaga o trecho.
+  void salvarAnotacao(({int indice, int offset}) inicio, ({int indice, int offset}) fim, {required String texto}) =>
+      _gravarTrecho(inicio, fim, texto: texto);
+
+  /// Apaga o texto da anotação do trecho selecionado (as tags dele ficam).
+  void excluirAnotacao(({int indice, int offset}) inicio, ({int indice, int offset}) fim) =>
+      _gravarTrecho(inicio, fim, texto: '');
+
+  /// Grava texto e/ou tags do trecho selecionado (o que não vier, fica como estava).
+  void _gravarTrecho(
+    ({int indice, int offset}) inicio,
+    ({int indice, int offset}) fim, {
+    String? texto,
+    List<String>? tags,
+  }) {
+    final atual = anotacaoDoTrecho(inicio, fim);
+    _alterarAnotacoes(
+      (anotacoes, versiculos) => BibliaLeituraUseCase.comAnotacao(
+        anotacoes,
+        versiculos,
+        inicio,
+        fim,
+        id: atual?.id,
+        texto: texto ?? atual?.texto ?? '',
+        tags: tags ?? atual?.tags ?? const [],
+        agora: DateTime.now(),
+      ),
+    );
+  }
+
+  void _alterarAnotacoes(List<AnotacaoTrecho> Function(List<AnotacaoTrecho>, List<VersiculoTextoModel>) alterar) {
+    final versao = _versao;
+    final ref = _capitulo;
+    final versiculos = _versiculos;
+    if (versao == null || ref == null || versiculos == null) return;
+    final anotacoes = alterar(anotacoesDe(ref), versiculos);
+    _anotacoes[ref] = anotacoes;
+    notifyListeners();
+    unawaited(bibliaLeituraUseCase.salvarAnotacoes(versao.versaId, ref, anotacoes));
+  }
+
+  /// Chave do erro do nome de tag [nome]; nulo se serve. [exceto] é a tag sendo renomeada.
+  String? validarTag(String nome, {String? exceto}) => BibliaLeituraUseCase.validarTag(nome, _tags, exceto: exceto);
+
+  /// Cria a tag [nome] (já validado com [validarTag]) na [cor] (sem ela, a [corSugerida]) e a devolve.
+  TagLeitura criarTag(String nome, {CorTag? cor}) {
+    final tag = (id: BibliaLeituraUseCase.novoId(DateTime.now()), nome: nome.trim(), cor: cor ?? corSugerida);
+    _salvarTags([..._tags, tag]);
+    return tag;
+  }
+
+  /// Renomeia a tag [id] para [nome] (já validado com [validarTag]).
+  void renomearTag(String id, String nome) =>
+      _salvarTags([for (final t in _tags) t.id == id ? (id: id, nome: nome.trim(), cor: t.cor) : t]);
+
+  /// Troca a cor da tag [id].
+  void mudarCorTag(String id, CorTag cor) =>
+      _salvarTags([for (final t in _tags) t.id == id ? (id: id, nome: t.nome, cor: cor) : t]);
+
+  /// Apaga a tag [id] e a tira das anotações carregadas (nas outras, a tag apagada é ignorada).
+  void excluirTag(String id) {
+    _salvarTags([
+      for (final t in _tags)
+        if (t.id != id) t,
+    ]);
+    final versao = _versao;
+    if (versao == null) return;
+    for (final MapEntry(key: ref, value: anotacoes) in _anotacoes.entries.toList()) {
+      if (!anotacoes.any((a) => a.tags.contains(id))) continue;
+      final novas = BibliaLeituraUseCase.semTag(anotacoes, id);
+      _anotacoes[ref] = novas;
+      unawaited(bibliaLeituraUseCase.salvarAnotacoes(versao.versaId, ref, novas));
+    }
+    notifyListeners();
+  }
+
+  void _salvarTags(List<TagLeitura> tags) {
+    _tags = BibliaLeituraUseCase.ordenarTags(tags);
+    notifyListeners();
+    unawaited(bibliaLeituraUseCase.salvarTags(_tags));
+  }
+
+  /// Compartilha o trecho com a referência e a [mensagem] opcional.
+  Future<void> compartilharTrecho(String texto, String referencia, {String? mensagem}) =>
+      bibliaLeituraUseCase.compartilhar(BibliaLeituraUseCase.textoCompartilhado(texto, referencia, mensagem: mensagem));
+
   Future<void> precarregar(CapituloRef ref) async {
+    unawaited(_carregarMarcas(ref));
+    unawaited(_carregarAnotacoes(ref));
     final versao = _versao;
     if (versao == null || _textos.containsKey(ref) || !_carregandoTextos.add(ref)) return;
     final result = await bibliaLeituraUseCase.capitulo(versao.versaId, ref);
@@ -613,7 +892,11 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
 
     switch (indice) {
       case Ok<Map<int, List<IndiceCapituloModel>>>(value: final value):
-        if (_versao?.versaId != versao.versaId) _textos.clear();
+        if (_versao?.versaId != versao.versaId) {
+          _textos.clear();
+          _marcas.clear();
+          _anotacoes.clear();
+        }
         _versao = versao;
         _indice = value;
         _sequencia = bibliaLeituraUseCase.sequencia(value, _livros);
@@ -679,6 +962,8 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
     // Com o texto no cache (página vizinha já carregada), o capítulo aparece na hora; reações e indicações chegam
     // em seguida.
     _versiculos = _textos[ref];
+    unawaited(_carregarMarcas(ref));
+    unawaited(_carregarAnotacoes(ref));
     _reacoes = const {};
     _indicacoesCapitulo = const {};
     _versiculoDestacado = null;
@@ -899,7 +1184,7 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
     marcarAoPassarCommand.dispose();
     vozesCommand.dispose();
     if (narrando) unawaited(bibliaLeituraUseCase.pararNarracao());
-    if (_brilhoAlterado) unawaited(bibliaLeituraUseCase.restaurarBrilho());
+    unawaited(sairDaLeitura());
     super.dispose();
   }
 }

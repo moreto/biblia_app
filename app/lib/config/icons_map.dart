@@ -28,6 +28,11 @@ class IconsMap {
     // Leitura da Bíblia (BibliaLeituraView.icone*); 'book-open-variant' também serve de menu_icone da leitura.
     'book-open-variant': MdiIcons.bookOpenVariant,
     'history': MdiIcons.history,
+    // Configurações de leitura (BibliaLeituraView.iconeConfiguracoes): livro com engrenagem.
+    'book-cog-outline': MdiIcons.bookCogOutline,
+    // Configurações de leitura: versão da Bíblia e voz da narração.
+    'book-multiple-outline': MdiIcons.bookMultipleOutline,
+    'account-voice': MdiIcons.accountVoice,
     'book-multiple': MdiIcons.bookMultiple,
     'chevron-left': MdiIcons.chevronLeft,
     'chevron-right': MdiIcons.chevronRight,

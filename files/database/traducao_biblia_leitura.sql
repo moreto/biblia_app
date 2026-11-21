@@ -70,6 +70,47 @@ FROM (VALUES
   ('copiar', 'Copiar', 'Copiar', 'Copy'),
   ('ouvir', 'Ouvir', 'Escuchar', 'Listen'),
   ('trechoCopiado', 'Trecho copiado', 'Fragmento copiado', 'Passage copied'),
+  ('marcaTexto', 'Marca-texto', 'Resaltador', 'Highlighter'),
+  ('marcaTexto_amarelo', 'Marcar de amarelo', 'Resaltar en amarillo', 'Highlight yellow'),
+  ('marcaTexto_verde', 'Marcar de verde', 'Resaltar en verde', 'Highlight green'),
+  ('marcaTexto_azul', 'Marcar de azul', 'Resaltar en azul', 'Highlight blue'),
+  ('marcaTexto_rosa', 'Marcar de rosa', 'Resaltar en rosa', 'Highlight pink'),
+  ('removerMarcaTexto', 'Remover marcação', 'Quitar resaltado', 'Remove highlight'),
+  ('configuracoesLeitura', 'Configurações de leitura', 'Ajustes de lectura', 'Reading settings'),
+  ('temaDoApp', 'Do app', 'De la app', 'App'),
+  ('orientacaoTela', 'Orientação da tela', 'Orientación de la pantalla', 'Screen orientation'),
+  ('orientacaoAutomatica', 'Automática (gira com o aparelho)', 'Automática (gira con el dispositivo)', 'Automatic (rotates with the device)'),
+  ('retrato', 'Retrato (em pé)', 'Vertical', 'Portrait'),
+  ('paisagem', 'Paisagem (deitada)', 'Horizontal', 'Landscape'),
+  ('compartilhar', 'Compartilhar', 'Compartir', 'Share'),
+  ('mensagemOpcional', 'Mensagem (opcional)', 'Mensaje (opcional)', 'Message (optional)'),
+  ('dicaDitadoTeclado', 'Para falar em vez de digitar, toque no microfone do teclado', 'Para hablar en lugar de escribir, toca el micrófono del teclado', 'To speak instead of typing, tap the keyboard microphone'),
+  ('ditar', 'Falar (ditado)', 'Hablar (dictado)', 'Speak (dictation)'),
+  ('faleAnotacao', 'Fale a sua anotação', 'Di tu nota', 'Say your note'),
+  ('corTag', 'Cor da tag', 'Color de la etiqueta', 'Tag color'),
+  ('corTag_azul', 'Azul', 'Azul', 'Blue'),
+  ('corTag_verde', 'Verde', 'Verde', 'Green'),
+  ('corTag_amarelo', 'Amarelo', 'Amarillo', 'Yellow'),
+  ('corTag_laranja', 'Laranja', 'Naranja', 'Orange'),
+  ('corTag_vermelho', 'Vermelho', 'Rojo', 'Red'),
+  ('corTag_rosa', 'Rosa', 'Rosa', 'Pink'),
+  ('corTag_roxo', 'Roxo', 'Morado', 'Purple'),
+  ('corTag_cinza', 'Cinza', 'Gris', 'Gray'),
+  ('anotar', 'Anotar', 'Anotar', 'Add note'),
+  ('editarAnotacao', 'Editar anotação', 'Editar nota', 'Edit note'),
+  ('anotacao', 'Anotação', 'Nota', 'Note'),
+  ('anotacaoSalva', 'Anotação salva', 'Nota guardada', 'Note saved'),
+  ('anotacaoExcluida', 'Anotação excluída', 'Nota eliminada', 'Note deleted'),
+  ('tags', 'Tags', 'Etiquetas', 'Tags'),
+  ('novaTag', 'Nova tag', 'Nueva etiqueta', 'New tag'),
+  ('criarTag', 'Criar tag', 'Crear etiqueta', 'Create tag'),
+  ('gerenciarTags', 'Gerenciar tags', 'Gestionar etiquetas', 'Manage tags'),
+  ('renomearTag', 'Renomear tag', 'Renombrar etiqueta', 'Rename tag'),
+  ('excluirTag', 'Excluir tag', 'Eliminar etiqueta', 'Delete tag'),
+  ('nenhumaTag', 'Nenhuma tag criada ainda', 'Aún no hay etiquetas', 'No tags yet'),
+  ('tagNomeVazio', 'Digite o nome da tag', 'Escribe el nombre de la etiqueta', 'Type the tag name'),
+  ('tagNomeLongo', 'Use no máximo 30 caracteres', 'Usa como máximo 30 caracteres', 'Use at most 30 characters'),
+  ('tagRepetida', 'Já existe uma tag com esse nome', 'Ya existe una etiqueta con ese nombre', 'A tag with this name already exists'),
   ('entreParaConsultarDicionario', 'Entre na sua conta para consultar o dicionário', 'Inicia sesión para consultar el diccionario', 'Sign in to look up the dictionary'),
   ('tamanhoFonte', 'Tamanho da fonte', 'Tamaño de la fuente', 'Font size'),
   ('brilho', 'Brilho', 'Brillo', 'Brightness'),
@@ -79,5 +120,166 @@ FROM (VALUES
   ('claro', 'Claro', 'Claro', 'Light'),
   ('creme', 'Creme', 'Crema', 'Cream'),
   ('escuro', 'Escuro', 'Oscuro', 'Dark')
+) AS v (trad_chave, trad_pt_br, trad_es_es, trad_en_us)
+WHERE NOT EXISTS (SELECT 1 FROM public.traducao t WHERE t.trad_chave = v.trad_chave);
+
+-- Configurações de leitura em grupos, escolha da versão e da voz (idioma → país → voz, com nomes amigáveis)
+INSERT INTO public.traducao (trad_chave, trad_pt_br, trad_es_es, trad_en_us)
+SELECT v.trad_chave, v.trad_pt_br, v.trad_es_es, v.trad_en_us
+FROM (VALUES
+  ('aparencia', 'Aparência', 'Apariencia', 'Appearance'),
+  ('anotacoes', 'Anotações', 'Notas', 'Notes'),
+  ('versaoBiblia', 'Versão da Bíblia', 'Versión de la Biblia', 'Bible version'),
+  ('velocidadeNarracao', 'Velocidade', 'Velocidad', 'Speed'),
+  ('vozNarracao', 'Voz da narração', 'Voz de la narración', 'Narration voice'),
+  ('vozes', 'Vozes', 'Voces', 'Voices'),
+  ('nenhumaVoz', 'Nenhuma voz disponível neste aparelho', 'Ninguna voz disponible en este dispositivo', 'No voice available on this device'),
+  ('ouvirVoz', 'Ouvir esta voz', 'Escuchar esta voz', 'Listen to this voice'),
+  ('idioma', 'Idioma', 'Idioma', 'Language'),
+  ('pais', 'País', 'País', 'Country'),
+  ('paisPadrao', 'Padrão', 'Predeterminado', 'Default'),
+  ('idioma_pt', 'Português', 'Portugués', 'Portuguese'),
+  ('idioma_en', 'Inglês', 'Inglés', 'English'),
+  ('idioma_es', 'Espanhol', 'Español', 'Spanish'),
+  ('idioma_fr', 'Francês', 'Francés', 'French'),
+  ('idioma_de', 'Alemão', 'Alemán', 'German'),
+  ('idioma_it', 'Italiano', 'Italiano', 'Italian'),
+  ('idioma_nl', 'Holandês', 'Neerlandés', 'Dutch'),
+  ('idioma_pl', 'Polonês', 'Polaco', 'Polish'),
+  ('idioma_ru', 'Russo', 'Ruso', 'Russian'),
+  ('idioma_uk', 'Ucraniano', 'Ucraniano', 'Ukrainian'),
+  ('idioma_tr', 'Turco', 'Turco', 'Turkish'),
+  ('idioma_ar', 'Árabe', 'Árabe', 'Arabic'),
+  ('idioma_he', 'Hebraico', 'Hebreo', 'Hebrew'),
+  ('idioma_el', 'Grego', 'Griego', 'Greek'),
+  ('idioma_hi', 'Hindi', 'Hindi', 'Hindi'),
+  ('idioma_ja', 'Japonês', 'Japonés', 'Japanese'),
+  ('idioma_ko', 'Coreano', 'Coreano', 'Korean'),
+  ('idioma_zh', 'Chinês', 'Chino', 'Chinese'),
+  ('idioma_id', 'Indonésio', 'Indonesio', 'Indonesian'),
+  ('idioma_sv', 'Sueco', 'Sueco', 'Swedish'),
+  ('pais_BR', 'Brasil', 'Brasil', 'Brazil'),
+  ('pais_PT', 'Portugal', 'Portugal', 'Portugal'),
+  ('pais_AO', 'Angola', 'Angola', 'Angola'),
+  ('pais_MZ', 'Moçambique', 'Mozambique', 'Mozambique'),
+  ('pais_US', 'Estados Unidos', 'Estados Unidos', 'United States'),
+  ('pais_GB', 'Reino Unido', 'Reino Unido', 'United Kingdom'),
+  ('pais_AU', 'Austrália', 'Australia', 'Australia'),
+  ('pais_CA', 'Canadá', 'Canadá', 'Canada'),
+  ('pais_IE', 'Irlanda', 'Irlanda', 'Ireland'),
+  ('pais_IN', 'Índia', 'India', 'India'),
+  ('pais_NZ', 'Nova Zelândia', 'Nueva Zelanda', 'New Zealand'),
+  ('pais_ZA', 'África do Sul', 'Sudáfrica', 'South Africa'),
+  ('pais_NG', 'Nigéria', 'Nigeria', 'Nigeria'),
+  ('pais_ES', 'Espanha', 'España', 'Spain'),
+  ('pais_MX', 'México', 'México', 'Mexico'),
+  ('pais_AR', 'Argentina', 'Argentina', 'Argentina'),
+  ('pais_CO', 'Colômbia', 'Colombia', 'Colombia'),
+  ('pais_CL', 'Chile', 'Chile', 'Chile'),
+  ('pais_PE', 'Peru', 'Perú', 'Peru'),
+  ('pais_FR', 'França', 'Francia', 'France'),
+  ('pais_BE', 'Bélgica', 'Bélgica', 'Belgium'),
+  ('pais_CH', 'Suíça', 'Suiza', 'Switzerland'),
+  ('pais_DE', 'Alemanha', 'Alemania', 'Germany'),
+  ('pais_AT', 'Áustria', 'Austria', 'Austria'),
+  ('pais_IT', 'Itália', 'Italia', 'Italy'),
+  ('pais_NL', 'Holanda', 'Países Bajos', 'Netherlands'),
+  ('pais_JP', 'Japão', 'Japón', 'Japan'),
+  ('pais_KR', 'Coreia do Sul', 'Corea del Sur', 'South Korea'),
+  ('pais_CN', 'China', 'China', 'China'),
+  ('pais_TW', 'Taiwan', 'Taiwán', 'Taiwan'),
+  ('pais_HK', 'Hong Kong', 'Hong Kong', 'Hong Kong'),
+  ('pais_RU', 'Rússia', 'Rusia', 'Russia'),
+  ('pais_IL', 'Israel', 'Israel', 'Israel'),
+  ('pais_GR', 'Grécia', 'Grecia', 'Greece'),
+  ('pais_TR', 'Turquia', 'Turquía', 'Turkey')
+) AS v (trad_chave, trad_pt_br, trad_es_es, trad_en_us)
+WHERE NOT EXISTS (SELECT 1 FROM public.traducao t WHERE t.trad_chave = v.trad_chave);
+
+-- Configurações de leitura: restaurar o padrão
+INSERT INTO public.traducao (trad_chave, trad_pt_br, trad_es_es, trad_en_us)
+SELECT v.trad_chave, v.trad_pt_br, v.trad_es_es, v.trad_en_us
+FROM (VALUES
+  ('restaurarPadrao', 'Restaurar padrão', 'Restablecer predeterminados', 'Restore defaults'),
+  ('restaurarPadraoPergunta', 'Voltar fonte, aparência e narração ao padrão? A versão, as tags e as anotações não mudam.', '¿Volver la fuente, la apariencia y la narración a los valores predeterminados? La versión, las etiquetas y las notas no cambian.', 'Reset font, appearance and narration to defaults? Version, tags and notes stay the same.'),
+  ('restaurar', 'Restaurar', 'Restablecer', 'Restore'),
+  ('padraoRestaurado', 'Configurações restauradas', 'Ajustes restablecidos', 'Settings restored')
+) AS v (trad_chave, trad_pt_br, trad_es_es, trad_en_us)
+WHERE NOT EXISTS (SELECT 1 FROM public.traducao t WHERE t.trad_chave = v.trad_chave);
+
+-- Leitura: engrenagem com as Configurações de leitura e as do app
+INSERT INTO public.traducao (trad_chave, trad_pt_br, trad_es_es, trad_en_us)
+SELECT v.trad_chave, v.trad_pt_br, v.trad_es_es, v.trad_en_us
+FROM (VALUES
+  ('configuracoesApp', 'Configurações do app', 'Ajustes de la app', 'App settings')
+) AS v (trad_chave, trad_pt_br, trad_es_es, trad_en_us)
+WHERE NOT EXISTS (SELECT 1 FROM public.traducao t WHERE t.trad_chave = v.trad_chave);
+
+-- Leitura: Configurações do app sem login
+INSERT INTO public.traducao (trad_chave, trad_pt_br, trad_es_es, trad_en_us)
+SELECT v.trad_chave, v.trad_pt_br, v.trad_es_es, v.trad_en_us
+FROM (VALUES
+  ('entreParaAcessar', 'Entre para acessar', 'Inicia sesión para acceder', 'Sign in to access')
+) AS v (trad_chave, trad_pt_br, trad_es_es, trad_en_us)
+WHERE NOT EXISTS (SELECT 1 FROM public.traducao t WHERE t.trad_chave = v.trad_chave);
+
+-- Leitura: Configurações do app sem login (sheet explicando e levando ao login)
+INSERT INTO public.traducao (trad_chave, trad_pt_br, trad_es_es, trad_en_us)
+SELECT v.trad_chave, v.trad_pt_br, v.trad_es_es, v.trad_en_us
+FROM (VALUES
+  ('funcionalidadeRestritaLogin', 'Esta funcionalidade é restrita a quem está logado. Entre na sua conta para acessar as configurações do app.', 'Esta función está restringida a quienes han iniciado sesión. Inicia sesión para acceder a los ajustes de la app.', 'This feature is only available to signed-in users. Sign in to access the app settings.'),
+  ('continuarParaLogin', 'Continuar para o login', 'Continuar al inicio de sesión', 'Continue to sign in'),
+  ('voltar', 'Voltar', 'Volver', 'Back')
+) AS v (trad_chave, trad_pt_br, trad_es_es, trad_en_us)
+WHERE NOT EXISTS (SELECT 1 FROM public.traducao t WHERE t.trad_chave = v.trad_chave);
+
+-- Leitura: trocar a versão da Bíblia só com login
+INSERT INTO public.traducao (trad_chave, trad_pt_br, trad_es_es, trad_en_us)
+SELECT v.trad_chave, v.trad_pt_br, v.trad_es_es, v.trad_en_us
+FROM (VALUES
+  ('selecaoVersaoRestritaLogin', 'Escolher a versão da Bíblia é uma funcionalidade restrita a quem está logado. Entre na sua conta para trocar a versão.', 'Elegir la versión de la Biblia está restringido a quienes han iniciado sesión. Inicia sesión para cambiar la versión.', 'Choosing the Bible version is only available to signed-in users. Sign in to change the version.')
+) AS v (trad_chave, trad_pt_br, trad_es_es, trad_en_us)
+WHERE NOT EXISTS (SELECT 1 FROM public.traducao t WHERE t.trad_chave = v.trad_chave);
+
+-- Configurações de leitura: cor padrão do marca-texto
+INSERT INTO public.traducao (trad_chave, trad_pt_br, trad_es_es, trad_en_us)
+SELECT v.trad_chave, v.trad_pt_br, v.trad_es_es, v.trad_en_us
+FROM (VALUES
+  ('corMarcaTexto', 'Cor do marca-texto', 'Color del resaltador', 'Highlighter color'),
+  ('cor_amarelo', 'Amarelo', 'Amarillo', 'Yellow'),
+  ('cor_verde', 'Verde', 'Verde', 'Green'),
+  ('cor_azul', 'Azul', 'Azul', 'Blue'),
+  ('cor_rosa', 'Rosa', 'Rosa', 'Pink')
+) AS v (trad_chave, trad_pt_br, trad_es_es, trad_en_us)
+WHERE NOT EXISTS (SELECT 1 FROM public.traducao t WHERE t.trad_chave = v.trad_chave);
+
+-- Leitura: marcar o trecho na cor escolhida nas configurações
+INSERT INTO public.traducao (trad_chave, trad_pt_br, trad_es_es, trad_en_us)
+SELECT v.trad_chave, v.trad_pt_br, v.trad_es_es, v.trad_en_us
+FROM (VALUES
+  ('marcarTexto', 'Marcar texto', 'Resaltar texto', 'Highlight text')
+) AS v (trad_chave, trad_pt_br, trad_es_es, trad_en_us)
+WHERE NOT EXISTS (SELECT 1 FROM public.traducao t WHERE t.trad_chave = v.trad_chave);
+
+-- Sheet do trecho: desmarcar o texto (a seleção já marca)
+INSERT INTO public.traducao (trad_chave, trad_pt_br, trad_es_es, trad_en_us)
+SELECT v.trad_chave, v.trad_pt_br, v.trad_es_es, v.trad_en_us
+FROM (VALUES
+  ('desmarcarTexto', 'Desmarcar texto', 'Quitar resaltado', 'Remove highlight')
+) AS v (trad_chave, trad_pt_br, trad_es_es, trad_en_us)
+WHERE NOT EXISTS (SELECT 1 FROM public.traducao t WHERE t.trad_chave = v.trad_chave);
+
+-- Tags: mais cores
+INSERT INTO public.traducao (trad_chave, trad_pt_br, trad_es_es, trad_en_us)
+SELECT v.trad_chave, v.trad_pt_br, v.trad_es_es, v.trad_en_us
+FROM (VALUES
+  ('corTag_anil', 'Anil', 'Añil', 'Indigo'),
+  ('corTag_ciano', 'Ciano', 'Cian', 'Cyan'),
+  ('corTag_turquesa', 'Turquesa', 'Turquesa', 'Teal'),
+  ('corTag_lima', 'Verde-limão', 'Lima', 'Lime'),
+  ('corTag_ambar', 'Âmbar', 'Ámbar', 'Amber'),
+  ('corTag_vinho', 'Vinho', 'Vino', 'Wine'),
+  ('corTag_violeta', 'Violeta', 'Violeta', 'Violet'),
+  ('corTag_marrom', 'Marrom', 'Marrón', 'Brown')
 ) AS v (trad_chave, trad_pt_br, trad_es_es, trad_en_us)
 WHERE NOT EXISTS (SELECT 1 FROM public.traducao t WHERE t.trad_chave = v.trad_chave);

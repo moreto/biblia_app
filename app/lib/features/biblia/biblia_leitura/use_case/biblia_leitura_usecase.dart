@@ -1,9 +1,14 @@
+import 'package:app/config/anotacao_leitura.dart';
 import 'package:app/config/brilho_tela.dart';
+import 'package:app/config/compartilhamento.dart';
 import 'package:app/config/leitura_preferencia.dart';
+import 'package:app/config/marca_texto.dart';
 import 'package:app/config/narracao_voz.dart';
+import 'package:app/config/orientacao_tela.dart';
 import 'package:app/config/ultimo_capitulo_preferencia.dart';
 import 'package:app/config/versao_preferencia.dart';
 import 'package:commons/commons.dart';
+import 'package:components/components.dart' show HighlightColor;
 
 import '../../../../data/model/biblia/capitulo_lido_model.dart';
 import '../../../../data/model/biblia/indice_capitulo_model.dart';
@@ -69,18 +74,26 @@ class LeituraDestino {
 ///   versículo, o progresso do capítulo é recalculado a partir dessas reações;
 /// - o histórico de leitura lista os capítulos do mais recente para o mais antigo;
 /// - o filtro de testamentos mostra o Novo Testamento antes do Antigo;
-/// - a leitura abre na versão salva em [versaoPreferencia] (a primeira, se não há versão salva ou se a salva não
+/// - a leitura abre na versão salva em [versaoPreferencia] (a Bíblia Fácil, [versaoPadrao], se não há versão salva ou se a salva não
 ///   existe mais) e cada troca de versão é salva;
 /// - toda marcação (capítulo ou versículo) devolve uma mensagem de confirmação ao usuário ([mensagemCapitulo] e
 ///   [mensagemVersiculo]); ao marcar o último versículo que faltava, a mensagem avisa que o capítulo foi concluído;
 /// - sem login ([logado] falso) a leitura é pública: só versões, livros, índice e capítulos; progresso, reações,
 ///   marcações e indicações dependem do usuário e não são carregados;
-/// - as opções de leitura guardam o tamanho da fonte (entre [escalaFonteMinima] e [escalaFonteMaxima]) e o tema em
+/// - as opções de leitura guardam o tamanho da fonte (entre [escalaFonteMinima] e [escalaFonteMaxima]) e o tema da leitura em
 ///   [leituraPreferencia]; o brilho muda só o do app, via [brilhoTela], e volta ao do sistema ao sair da leitura;
 /// - o toque longo numa palavra do versículo consulta o dicionário ([palavraEm] e [consultarPalavra]); o dicionário
 ///   exige login, então sem login a consulta devolve `entreParaConsultarDicionario`;
 /// - ao passar para o capítulo seguinte, o que ficou para trás é marcado, perguntado ou deixado conforme
 ///   [marcarAoPassar] ([acaoAoPassar]); só com login, só avançando e só se ele ainda não estiver completo;
+/// - o marca-texto pinta o trecho selecionado numa cor ([marcar]) ou apaga a marcação dele ([desmarcar]); a cor
+///   nova substitui a que já estava no trecho. As marcações ficam no aparelho, por versão e capítulo
+///   ([marcaTextoArmazenamento]), com ou sem login;
+/// - o trecho selecionado pode ganhar uma anotação (texto digitado ou ditado) com tags criadas pelo usuário
+///   ([comAnotacao], [validarTag]), cada tag com uma cor ([proximaCor] ao criar); anotação sem texto e sem tags é
+///   apagada. Anotações e tags ficam no aparelho ([anotacaoArmazenamento]), com ou sem login; apagar uma tag a tira
+///   das anotações;
+/// - compartilhar manda o trecho com a referência e, antes, a mensagem opcional do usuário ([textoCompartilhado]);
 /// - a narração lê o capítulo em voz alta a partir do versículo destacado (ou do primeiro), um versículo por vez
 ///   ([versiculosANarrar], [narrar]); funciona sem login. A voz é a escolhida nas opções ou, sem escolha, a de
 ///   maior qualidade em português ([vozesNarracao]: pt-BR antes de pt-PT, por qualidade, online antes de local);
@@ -95,6 +108,10 @@ class BibliaLeituraUseCase {
     this.brilhoTela,
     this.dicionarioUseCase,
     this.narracaoVoz,
+    this.marcaTextoArmazenamento,
+    this.anotacaoArmazenamento,
+    this.compartilhamento,
+    this.orientacaoTela,
     bool Function()? estaLogado,
   }) : _estaLogado = estaLogado ?? (() => AuthSession.instance.isLogged) {
     Log.print(super.runtimeType);
@@ -121,6 +138,387 @@ class BibliaLeituraUseCase {
 
   /// Consulta do dicionário pelo toque longo numa palavra; nulo desliga a consulta.
   final DicionarioUseCase? dicionarioUseCase;
+
+  /// Onde ficam as marcações do marca-texto; nulo desliga o marca-texto.
+  final MarcaTextoArmazenamento? marcaTextoArmazenamento;
+
+  bool get marcaTextoDisponivel => marcaTextoArmazenamento != null;
+
+  /// Marcações do capítulo [ref] na versão [versaId]; vazia se não houver ou se falhar.
+  Future<List<MarcaTexto>> marcasDoCapitulo(int versaId, CapituloRef ref) async {
+    try {
+      return await marcaTextoArmazenamento?.doCapitulo(versaId, ref.livrId, ref.capiNumero) ?? const [];
+    } catch (e) {
+      Log.print('marcações indisponíveis: $e');
+      return const [];
+    }
+  }
+
+  Future<void> salvarMarcas(int versaId, CapituloRef ref, List<MarcaTexto> marcas) async {
+    try {
+      await marcaTextoArmazenamento?.salvarCapitulo(versaId, ref.livrId, ref.capiNumero, marcas);
+    } catch (e) {
+      Log.print('marcações não salvas: $e');
+    }
+  }
+
+  /// Trava a orientação da tela na leitura (escolhida na Configurações de leitura); nulo não mexe.
+  final OrientacaoTela? orientacaoTela;
+
+  /// Aplica a orientação escolhida para a leitura.
+  Future<void> aplicarOrientacao() async {
+    final orientacao = leituraPreferencia?.orientacao ?? OrientacaoLeitura.automatica;
+    await orientacaoTela?.aplicar(orientacao);
+  }
+
+  /// Ao sair da leitura, a tela volta a seguir o aparelho.
+  Future<void> soltarOrientacao() async => orientacaoTela?.aplicar(OrientacaoLeitura.automatica);
+
+  /// Ao abrir (ou voltar para) a leitura: aplica a orientação e o brilho guardados. O tema e a fonte da leitura já
+  /// valem só nela (a tela os usa ao montar).
+  Future<void> aplicarAjustesLeitura() async {
+    await aplicarOrientacao();
+    final brilho = leituraPreferencia?.brilhoLeitura;
+    if (brilho != null) await definirBrilho(brilho);
+  }
+
+  /// Ao sair da leitura (ou abrir uma tela que não é dela): orientação e brilho voltam aos do sistema.
+  Future<void> soltarAjustesLeitura() async {
+    await soltarOrientacao();
+    await restaurarBrilho();
+  }
+
+  /// Brilho guardado da leitura; nulo usa o do sistema.
+  double? get brilhoLeitura => leituraPreferencia?.brilhoLeitura;
+
+  /// Guarda e aplica o brilho da leitura.
+  Future<void> salvarBrilho(double valor) async {
+    leituraPreferencia?.setBrilhoLeitura(valor.clamp(0, 1).toDouble());
+    await definirBrilho(valor);
+  }
+
+  /// Onde ficam as anotações e as tags; nulo desliga as anotações.
+  final AnotacaoArmazenamento? anotacaoArmazenamento;
+
+  /// Compartilhamento do sistema; nulo esconde "Compartilhar".
+  final Compartilhamento? compartilhamento;
+
+  bool get anotacaoDisponivel => anotacaoArmazenamento != null;
+
+  bool get compartilhamentoDisponivel => compartilhamento != null;
+
+  /// Anotações do capítulo [ref] na versão [versaId]; vazia se não houver ou se falhar.
+  Future<List<AnotacaoTrecho>> anotacoesDoCapitulo(int versaId, CapituloRef ref) async {
+    try {
+      return await anotacaoArmazenamento?.doCapitulo(versaId, ref.livrId, ref.capiNumero) ?? const [];
+    } catch (e) {
+      Log.print('anotações indisponíveis: $e');
+      return const [];
+    }
+  }
+
+  Future<void> salvarAnotacoes(int versaId, CapituloRef ref, List<AnotacaoTrecho> anotacoes) async {
+    try {
+      await anotacaoArmazenamento?.salvarCapitulo(versaId, ref.livrId, ref.capiNumero, anotacoes);
+    } catch (e) {
+      Log.print('anotações não salvas: $e');
+    }
+  }
+
+  /// Tags do usuário em ordem alfabética; vazia se não houver ou se falhar.
+  Future<List<TagLeitura>> tagsLeitura() async {
+    try {
+      return ordenarTags(await anotacaoArmazenamento?.tags() ?? const []);
+    } catch (e) {
+      Log.print('tags indisponíveis: $e');
+      return const [];
+    }
+  }
+
+  Future<void> salvarTags(List<TagLeitura> tags) async {
+    try {
+      await anotacaoArmazenamento?.salvarTags(tags);
+    } catch (e) {
+      Log.print('tags não salvas: $e');
+    }
+  }
+
+  /// Abre o compartilhamento do sistema com [texto]; falha só vai para o log.
+  Future<void> compartilhar(String texto) async {
+    try {
+      await compartilhamento?.compartilhar(texto);
+    } catch (e) {
+      Log.print('compartilhamento falhou: $e');
+    }
+  }
+
+  static const tamanhoMaximoTag = 30;
+
+  /// Chave da mensagem de erro do nome de tag [nome] (vazio, longo demais ou repetido, sem diferenciar
+  /// maiúsculas); nulo se o nome serve. [exceto] é a tag sendo renomeada.
+  static String? validarTag(String nome, List<TagLeitura> tags, {String? exceto}) {
+    final limpo = nome.trim();
+    if (limpo.isEmpty) return 'tagNomeVazio';
+    if (limpo.length > tamanhoMaximoTag) return 'tagNomeLongo';
+    final minusculo = limpo.toLowerCase();
+    if (tags.any((t) => t.id != exceto && t.nome.toLowerCase() == minusculo)) return 'tagRepetida';
+    return null;
+  }
+
+  /// Cor da anotação [a]: a da primeira tag dela que ainda existe (na ordem em que foram marcadas); nula sem tag.
+  static CorTag? corDaAnotacao(AnotacaoTrecho a, List<TagLeitura> tags) {
+    for (final id in a.tags) {
+      if (tags.where((t) => t.id == id).firstOrNull case final tag?) return tag.cor;
+    }
+    return null;
+  }
+
+  /// Cor de uma tag nova (a sugerida ao criar): a primeira da paleta que ainda não foi usada; com todas usadas, segue o rodízio.
+  static CorTag proximaCor(List<TagLeitura> tags) {
+    final usadas = {for (final t in tags) t.cor};
+    return CorTag.values.where((c) => !usadas.contains(c)).firstOrNull ??
+        CorTag.values[tags.length % CorTag.values.length];
+  }
+
+  static List<TagLeitura> ordenarTags(List<TagLeitura> tags) =>
+      [...tags]..sort((a, b) => a.nome.toLowerCase().compareTo(b.nome.toLowerCase()));
+
+  /// Id novo para tag ou anotação.
+  static String novoId(DateTime agora) => agora.microsecondsSinceEpoch.toRadixString(36);
+
+  /// Texto enviado ao compartilhar: a [mensagem] (se houver), uma linha em branco e o trecho com a referência.
+  static String textoCompartilhado(String texto, String referencia, {String? mensagem}) {
+    final trecho = '"$texto" ($referencia)';
+    final limpa = mensagem?.trim() ?? '';
+    return limpa.isEmpty ? trecho : '$limpa\n\n$trecho';
+  }
+
+  /// Posição da anotação [a] no capítulo ([versiculos]); nula se um dos versículos dela não está no capítulo.
+  static (({int indice, int offset}), ({int indice, int offset}))? posicaoDaAnotacao(
+    AnotacaoTrecho a,
+    List<VersiculoTextoModel> versiculos,
+  ) {
+    final i = versiculos.indexWhere((v) => v.versId == a.versIdInicio);
+    final f = versiculos.indexWhere((v) => v.versId == a.versIdFim);
+    if (i < 0 || f < i) return null;
+    return ((indice: i, offset: a.inicio), (indice: f, offset: a.fim));
+  }
+
+  /// Anotação feita exatamente no trecho de [inicio] a [fim]; nula se não houver.
+  static AnotacaoTrecho? anotacaoDoTrecho(
+    List<AnotacaoTrecho> anotacoes,
+    List<VersiculoTextoModel> versiculos,
+    ({int indice, int offset}) inicio,
+    ({int indice, int offset}) fim,
+  ) {
+    final vi = versiculos[inicio.indice].versId;
+    final vf = versiculos[fim.indice].versId;
+    return anotacoes
+        .where((a) => a.versIdInicio == vi && a.inicio == inicio.offset && a.versIdFim == vf && a.fim == fim.offset)
+        .lastOrNull;
+  }
+
+  /// Anotação cujo trecho contém a posição [offset] do versículo [indice] (a mais recente, se houver mais de
+  /// uma); nula se ali não há anotação.
+  static AnotacaoTrecho? anotacaoEm(
+    List<AnotacaoTrecho> anotacoes,
+    List<VersiculoTextoModel> versiculos,
+    int indice,
+    int offset,
+  ) {
+    AnotacaoTrecho? achada;
+    for (final a in anotacoes) {
+      final posicao = posicaoDaAnotacao(a, versiculos);
+      if (posicao == null) continue;
+      final (ini, fim) = posicao;
+      final depoisDoInicio = indice > ini.indice || (indice == ini.indice && offset >= ini.offset);
+      final antesDoFim = indice < fim.indice || (indice == fim.indice && offset < fim.offset);
+      if (depoisDoInicio && antesDoFim && (achada == null || a.atualizadaEm.isAfter(achada.atualizadaEm))) {
+        achada = a;
+      }
+    }
+    return achada;
+  }
+
+  /// Partes do versículo [indice] que têm anotação (para indicar no texto), com a anotação de cada uma.
+  static List<({int inicio, int fim, AnotacaoTrecho anotacao})> trechosAnotados(
+    List<AnotacaoTrecho> anotacoes,
+    List<VersiculoTextoModel> versiculos,
+    int indice,
+  ) => [
+    for (final a in anotacoes)
+      if (posicaoDaAnotacao(a, versiculos) case (final ini, final fim)?)
+        if (_trechoNoVersiculo(versiculos, indice, ini, fim) case final t?) (inicio: t.inicio, fim: t.fim, anotacao: a),
+  ];
+
+  /// [anotacoes] com a anotação do trecho de [inicio] a [fim] gravada: substitui a de [id] (ou cria uma nova).
+  /// Sem texto e sem tags, a anotação é apagada.
+  static List<AnotacaoTrecho> comAnotacao(
+    List<AnotacaoTrecho> anotacoes,
+    List<VersiculoTextoModel> versiculos,
+    ({int indice, int offset}) inicio,
+    ({int indice, int offset}) fim, {
+    String? id,
+    required String texto,
+    required List<String> tags,
+    required DateTime agora,
+  }) {
+    final outras = [
+      for (final a in anotacoes)
+        if (a.id != id) a,
+    ];
+    final limpo = texto.trim();
+    if (limpo.isEmpty && tags.isEmpty) return outras;
+    return [
+      ...outras,
+      (
+        id: id ?? novoId(agora),
+        versIdInicio: versiculos[inicio.indice].versId,
+        inicio: inicio.offset,
+        versIdFim: versiculos[fim.indice].versId,
+        fim: fim.offset,
+        texto: limpo,
+        tags: tags,
+        atualizadaEm: agora,
+      ),
+    ];
+  }
+
+  /// [anotacoes] sem a tag [tagId]; anotação que só tinha essa tag e nenhum texto é apagada.
+  static List<AnotacaoTrecho> semTag(List<AnotacaoTrecho> anotacoes, String tagId) => [
+    for (final a in anotacoes)
+      if (!a.tags.contains(tagId))
+        a
+      else if (a.texto.isNotEmpty || a.tags.length > 1)
+        (
+          id: a.id,
+          versIdInicio: a.versIdInicio,
+          inicio: a.inicio,
+          versIdFim: a.versIdFim,
+          fim: a.fim,
+          texto: a.texto,
+          tags: [
+            for (final t in a.tags)
+              if (t != tagId) t,
+          ],
+          atualizadaEm: a.atualizadaEm,
+        ),
+  ];
+
+  /// Intervalo do trecho de [inicio] a [fim] (fim exclusivo) no versículo [indice]; nulo se ele não faz parte.
+  static ({int inicio, int fim})? _trechoNoVersiculo(
+    List<VersiculoTextoModel> versiculos,
+    int indice,
+    ({int indice, int offset}) inicio,
+    ({int indice, int offset}) fim,
+  ) {
+    if (indice < inicio.indice || indice > fim.indice) return null;
+    final tamanho = versiculos[indice].versTexto.length;
+    final de = indice == inicio.indice ? inicio.offset.clamp(0, tamanho) : 0;
+    final ate = indice == fim.indice ? fim.offset.clamp(de, tamanho) : tamanho;
+    return ate > de ? (inicio: de, fim: ate) : null;
+  }
+
+  /// [marcas] sem a parte que cai no trecho de [inicio] a [fim] (o que sobra de cada marcação fica).
+  static List<MarcaTexto> desmarcar(
+    List<MarcaTexto> marcas,
+    List<VersiculoTextoModel> versiculos,
+    ({int indice, int offset}) inicio,
+    ({int indice, int offset}) fim,
+  ) {
+    final cortes = <int, ({int inicio, int fim})>{
+      for (var i = inicio.indice; i <= fim.indice; i++)
+        versiculos[i].versId: ?_trechoNoVersiculo(versiculos, i, inicio, fim),
+    };
+    return [
+      for (final m in marcas)
+        if (cortes[m.versId] case final c? when m.inicio < c.fim && m.fim > c.inicio) ...[
+          if (m.inicio < c.inicio) (versId: m.versId, inicio: m.inicio, fim: c.inicio, cor: m.cor),
+          if (m.fim > c.fim) (versId: m.versId, inicio: c.fim, fim: m.fim, cor: m.cor),
+        ] else
+          m,
+    ];
+  }
+
+  /// [marcas] com o trecho de [inicio] a [fim] pintado de [cor] (substitui o que já estava marcado ali).
+  static List<MarcaTexto> marcar(
+    List<MarcaTexto> marcas,
+    List<VersiculoTextoModel> versiculos,
+    ({int indice, int offset}) inicio,
+    ({int indice, int offset}) fim,
+    HighlightColor cor,
+  ) => [
+    ...desmarcar(marcas, versiculos, inicio, fim),
+    for (var i = inicio.indice; i <= fim.indice; i++)
+      if (_trechoNoVersiculo(versiculos, i, inicio, fim) case final t?)
+        (versId: versiculos[i].versId, inicio: t.inicio, fim: t.fim, cor: cor),
+  ];
+
+  /// Trecho marcado que contém a posição [offset] do versículo [indice] (tocar numa marcação); nulo se ali não há
+  /// marcação. Marcações da mesma cor que continuam de um versículo para o seguinte (fim de um e começo do outro)
+  /// formam um trecho só, como foram marcadas.
+  static (({int indice, int offset}), ({int indice, int offset}))? trechoDaMarcaEm(
+    List<MarcaTexto> marcas,
+    List<VersiculoTextoModel> versiculos,
+    int indice,
+    int offset,
+  ) {
+    if (indice < 0 || indice >= versiculos.length) return null;
+    MarcaTexto? marcaEm(int i, bool Function(MarcaTexto) teste) =>
+        marcas.where((m) => m.versId == versiculos[i].versId && teste(m)).lastOrNull;
+
+    final tocada = marcaEm(indice, (m) => offset >= m.inicio && offset < m.fim);
+    if (tocada == null) return null;
+
+    var inicio = (indice: indice, offset: tocada.inicio);
+    var primeira = tocada;
+    while (primeira.inicio == 0 && inicio.indice > 0) {
+      final anterior = inicio.indice - 1;
+      final tamanho = versiculos[anterior].versTexto.length;
+      final m = marcaEm(anterior, (m) => m.fim >= tamanho && m.cor == tocada.cor);
+      if (m == null) break;
+      primeira = m;
+      inicio = (indice: anterior, offset: m.inicio);
+    }
+
+    var fim = (indice: indice, offset: tocada.fim);
+    var ultima = tocada;
+    while (ultima.fim >= versiculos[fim.indice].versTexto.length && fim.indice + 1 < versiculos.length) {
+      final seguinte = fim.indice + 1;
+      final m = marcaEm(seguinte, (m) => m.inicio == 0 && m.cor == tocada.cor);
+      if (m == null) break;
+      ultima = m;
+      fim = (indice: seguinte, offset: m.fim);
+    }
+    return (inicio, fim);
+  }
+
+  /// O trecho de [inicio] a [fim] tem alguma parte marcada.
+  static bool trechoMarcado(
+    List<MarcaTexto> marcas,
+    List<VersiculoTextoModel> versiculos,
+    ({int indice, int offset}) inicio,
+    ({int indice, int offset}) fim,
+  ) => marcas.any((m) {
+    final i = versiculos.indexWhere((v) => v.versId == m.versId);
+    final t = i < 0 ? null : _trechoNoVersiculo(versiculos, i, inicio, fim);
+    return t != null && m.inicio < t.fim && m.fim > t.inicio;
+  });
+
+  /// Cor da primeira marcação que toca o trecho de [inicio] a [fim]; nula se nada ali estiver marcado.
+  static HighlightColor? corDaMarcaNoTrecho(
+    List<MarcaTexto> marcas,
+    List<VersiculoTextoModel> versiculos,
+    ({int indice, int offset}) inicio,
+    ({int indice, int offset}) fim,
+  ) => marcas
+      .where((m) {
+        final i = versiculos.indexWhere((v) => v.versId == m.versId);
+        final t = i < 0 ? null : _trechoNoVersiculo(versiculos, i, inicio, fim);
+        return t != null && m.inicio < t.fim && m.fim > t.inicio;
+      })
+      .firstOrNull
+      ?.cor;
 
   /// Leitura em voz alta; nula esconde o botão de áudio.
   final NarracaoVoz? narracaoVoz;
@@ -164,11 +562,12 @@ class BibliaLeituraUseCase {
     }
   }
 
-  /// Só as vozes em português: pt-BR antes de pt-PT, depois pela qualidade e, empatadas, as online (no Android,
-  /// em geral as neurais) antes das locais.
+  /// Vozes do aparelho, da que mais serve para a leitura à que menos serve: português do Brasil, depois o resto do
+  /// português, depois as outras línguas; em cada grupo, a de maior qualidade primeiro (online desempata).
   static List<VozNarracao> ordenarVozes(List<VozNarracao> vozes) {
     int pontos(VozNarracao voz) {
-      final brasil = voz.locale.toLowerCase().replaceAll('_', '-').startsWith('pt-br') ? 100 : 0;
+      final partes = partesLocale(voz.locale);
+      final lingua = partes.idioma == 'pt' ? (partes.pais == 'BR' ? 100 : 50) : 0;
       final qualidade = switch (voz.qualidade?.toLowerCase()) {
         'premium' || 'very high' => 40,
         'enhanced' || 'high' => 30,
@@ -176,21 +575,62 @@ class BibliaLeituraUseCase {
         'low' => 10,
         _ => 15,
       };
-      return brasil + qualidade + (voz.online ? 1 : 0);
+      return lingua + qualidade + (voz.online ? 1 : 0);
     }
 
-    final portugues = vozes.where((v) => v.locale.toLowerCase().startsWith('pt')).toList();
-    return portugues..sort((a, b) {
+    return [...vozes]..sort((a, b) {
       final porPontos = pontos(b).compareTo(pontos(a));
       return porPontos != 0 ? porPontos : a.nome.compareTo(b.nome);
     });
   }
 
-  /// Voz da narração: a escolhida, se ainda estiver instalada; senão a melhor de [vozes]. Nula sem vozes.
+  /// Idioma (minúsculo, ex.: `pt`) e país (maiúsculo, ex.: `BR`; nulo se o locale não tiver) de um locale como
+  /// `pt-BR`, `pt_BR` ou `zh-Hans-CN`.
+  static ({String idioma, String? pais}) partesLocale(String locale) {
+    final partes = locale.split(RegExp('[-_]')).where((p) => p.isNotEmpty).toList();
+    final idioma = partes.isEmpty ? '' : partes.first.toLowerCase();
+    final pais = partes.skip(1).where((p) => RegExp(r'^([A-Za-z]{2}|\d{3})$').hasMatch(p)).firstOrNull;
+    return (idioma: idioma, pais: pais?.toUpperCase());
+  }
+
+  /// Idiomas das [vozes], na ordem delas (português primeiro, com [ordenarVozes]).
+  static List<String> idiomasDasVozes(List<VozNarracao> vozes) =>
+      {for (final v in vozes) partesLocale(v.locale).idioma}.toList();
+
+  /// Países com voz no [idioma], na ordem das [vozes]; nulo entra como "sem país".
+  static List<String?> paisesDasVozes(List<VozNarracao> vozes, String idioma) => {
+    for (final v in vozes)
+      if (partesLocale(v.locale) case (idioma: final i, pais: final p) when i == idioma) p,
+  }.toList();
+
+  /// Vozes do [idioma] e [pais], na ordem das [vozes].
+  static List<VozNarracao> vozesDe(List<VozNarracao> vozes, String idioma, String? pais) => [
+    for (final v in vozes)
+      if (partesLocale(v.locale) == (idioma: idioma, pais: pais)) v,
+  ];
+
+  /// Nome amigável de [voz]: o nome dela quando já é de gente (no iPhone, ex.: "Luciana", sem o "(Enhanced)");
+  /// senão (no Android os nomes são técnicos, ex.: `pt-br-x-afs-network`), "Voz N", com N a posição dela entre as
+  /// vozes do mesmo idioma e país em [vozes] (a melhor é a 1). Devolve o nome ou só o número (a tela põe "Voz").
+  static ({String? nome, int numero}) nomeAmigavel(VozNarracao voz, List<VozNarracao> vozes) {
+    final partes = partesLocale(voz.locale);
+    final mesmas = vozesDe(vozes, partes.idioma, partes.pais);
+    final numero = mesmas.indexWhere((v) => v.nome == voz.nome) + 1;
+    final limpo = voz.nome.replaceAll(RegExp(r'\s*\(.*?\)\s*'), ' ').trim();
+    final tecnico = limpo.isEmpty || RegExp(r'[-_.#\d]').hasMatch(limpo) || limpo == limpo.toLowerCase();
+    return (nome: tecnico ? null : limpo, numero: numero < 1 ? 1 : numero);
+  }
+
+  /// Voz da narração: a escolhida, se ainda estiver instalada; senão a padrão ([vozPadrao]). Nula sem vozes.
   VozNarracao? vozEscolhida(List<VozNarracao> vozes) {
     final nome = leituraPreferencia?.vozNarracao;
-    return vozes.where((v) => v.nome == nome).firstOrNull ?? vozes.firstOrNull;
+    return vozes.where((v) => v.nome == nome).firstOrNull ?? vozPadrao(vozes);
   }
+
+  /// Voz padrão (sem escolha do usuário): a última de português do Brasil em [vozes] (na ordem de [ordenarVozes]);
+  /// sem pt-BR, a primeira.
+  static VozNarracao? vozPadrao(List<VozNarracao> vozes) =>
+      vozes.where((v) => partesLocale(v.locale) == (idioma: 'pt', pais: 'BR')).lastOrNull ?? vozes.firstOrNull;
 
   /// Chave de tradução da qualidade da voz para o seletor.
   static String rotuloQualidade(VozNarracao voz) => switch (voz.qualidade?.toLowerCase()) {
@@ -208,11 +648,13 @@ class BibliaLeituraUseCase {
     return inicio < 0 ? versiculos : versiculos.sublist(inicio);
   }
 
-  /// Fala o [texto] e termina quando a fala acaba (ou é interrompida). Falso se a voz falhou.
-  Future<bool> narrar(String texto) async {
+  /// Fala o [texto] na [voz] (sem ela, a escolhida) e termina quando a fala acaba (ou é interrompida). Falso se a
+  /// voz falhou. O idioma da fala é o da voz.
+  Future<bool> narrar(String texto, {VozNarracao? voz}) async {
     try {
-      final voz = vozEscolhida(await vozesNarracao());
-      await narracaoVoz?.falar(texto, idioma: idiomaNarracao, voz: voz, velocidade: velocidadeNarracao);
+      final falar = voz ?? vozEscolhida(await vozesNarracao());
+      final idioma = falar == null ? idiomaNarracao : falar.locale.replaceAll('_', '-');
+      await narracaoVoz?.falar(texto, idioma: idioma, voz: falar, velocidade: velocidadeNarracao);
       return narracaoVoz != null;
     } catch (e) {
       Log.print('narração falhou: $e');
@@ -319,10 +761,15 @@ class BibliaLeituraUseCase {
 
   void salvarMostrarSetas(bool mostrar) => leituraPreferencia?.setMostrarSetas(mostrar);
 
-  /// Tema do app; sem preferência, segue o sistema.
-  TemaApp get tema => leituraPreferencia?.tema ?? TemaApp.sistema;
+  /// Tema só da leitura; [TemaApp.sistema] (e sem preferência) usa o mesmo do app.
+  TemaApp get tema => leituraPreferencia?.temaLeitura ?? TemaApp.sistema;
 
-  void salvarTema(TemaApp tema) => leituraPreferencia?.setTema(tema);
+  void salvarTema(TemaApp tema) => leituraPreferencia?.setTemaLeitura(tema);
+
+  /// Cor padrão do marca-texto (amarelo sem preferência).
+  HighlightColor get corMarcaTexto => leituraPreferencia?.corMarcaTexto ?? HighlightColor.amarelo;
+
+  void salvarCorMarcaTexto(HighlightColor cor) => leituraPreferencia?.setCorMarcaTexto(cor);
 
   /// Brilho atual do app (0 a 1); nulo se não há suporte a brilho.
   Future<double?> brilhoAtual() async {
@@ -345,6 +792,27 @@ class BibliaLeituraUseCase {
     }
   }
 
+  /// Volta as configurações da leitura ao padrão: fonte 100%, marca-texto amarelo, setas visíveis, "Ao passar a página" perguntando,
+  /// a melhor voz, velocidade [velocidadePadrao], sem narração contínua, tema do app e o brilho do sistema. A
+  /// versão, as tags, as anotações e o marca-texto ficam (são conteúdo, não ajuste). A orientação é da
+  /// Configurações de leitura (`ConfiguracaoLeituraViewmodel.restaurarPadrao`).
+  Future<void> restaurarPadrao() async {
+    final preferencia = leituraPreferencia;
+    if (preferencia != null) {
+      preferencia
+        ..setEscalaFonte(1)
+        ..setMostrarSetas(true)
+        ..setMarcarAoPassar(MarcarAoPassar.perguntar)
+        ..setVozNarracao(null)
+        ..setVelocidadeNarracao(velocidadePadrao)
+        ..setNarracaoContinua(false)
+        ..setTemaLeitura(TemaApp.sistema)
+        ..setBrilhoLeitura(null)
+        ..setCorMarcaTexto(HighlightColor.amarelo);
+    }
+    await restaurarBrilho();
+  }
+
   /// Devolve o brilho ao do sistema.
   Future<void> restaurarBrilho() async {
     try {
@@ -356,14 +824,31 @@ class BibliaLeituraUseCase {
 
   Future<Result<List<VersaoModel>>> versoes() => bibliaLeituraRepository.versoes();
 
-  /// Versão em que a leitura abre: a salva, se ainda estiver entre as [versoes]; senão a primeira. Nula se não
-  /// há versões.
+  /// Versão em que a leitura abre: a salva, se ainda estiver entre as [versoes]; senão a padrão ([versaoPadrao]).
+  /// Nula se não há versões.
   VersaoModel? versaoInicial(List<VersaoModel> versoes) {
     final salva = versaoPreferencia?.versaoId;
     for (final versao in versoes) {
       if (versao.versaId == salva) return versao;
     }
-    return versoes.firstOrNull;
+    return versaoPadrao(versoes);
+  }
+
+  /// Versão padrão (sem escolha do usuário): a Bíblia Fácil, achada pelo nome (sem diferenciar maiúsculas nem
+  /// acentos, ex.: "Bíblia Fácil"); se ela não vier da API, a primeira.
+  static VersaoModel? versaoPadrao(List<VersaoModel> versoes) =>
+      versoes.where((v) => _semAcento(v.versaNome).contains('facil')).firstOrNull ?? versoes.firstOrNull;
+
+  static String _semAcento(String texto) {
+    const de = 'áàâãäéèêëíìîïóòôõöúùûüç';
+    const para = 'aaaaaeeeeiiiiooooouuuuc';
+    final minusculo = texto.toLowerCase();
+    return String.fromCharCodes(
+      minusculo.runes.map((c) {
+        final i = de.indexOf(String.fromCharCode(c));
+        return i < 0 ? c : para.codeUnitAt(i);
+      }),
+    );
   }
 
   /// Versão em que a leitura abre quando há [destino]: a versão do destino, se estiver entre as [versoes]; senão a
