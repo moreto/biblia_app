@@ -44,7 +44,10 @@ WITH v (ordem, func_nome, func_descricao, func_icone, func_rota) AS (
     (17, 'Meus Dados', 'Consulta e alteração dos dados do cadastro (nome completo e nome de usuário), troca de senha e configurações dos avisos por e-mail, da leitura aberta e do histórico guardado.', 'account-cog-outline', '/usuario'),
 
     -- Grupo de leitura
-    (18, 'Grupos de Leitura', 'Grupos de leitura que você criou ou de que participa, com participantes, agenda de encontros e atividades de cada item (livro da Bíblia, texto e conclusão).', 'book-account-outline', '/grupo-leitura')
+    (18, 'Grupos de Leitura', 'Grupos de leitura que você criou ou de que participa, com participantes, agenda de encontros e atividades de cada item (livro da Bíblia, texto e conclusão).', 'book-account-outline', '/grupo-leitura'),
+
+    -- Bíblia (continuação)
+    (19, 'Histórico de Leitura', 'Capítulos lidos em cada versão, do mais recente para o mais antigo e agrupados por dia, com o resumo de concluídos e em andamento, filtros e o atalho para continuar a leitura.', 'book-clock-outline', '/historico-leitura')
 ),
 atualizadas AS (
   UPDATE public.funcionalidade f

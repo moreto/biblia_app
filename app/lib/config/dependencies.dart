@@ -64,6 +64,8 @@ import '../features/grupo_leitura/grupo_leitura_atividade/repository/grupo_leitu
 import '../features/grupo_leitura/grupo_leitura_atividade/repository/grupo_leitura_atividade_repository_impl.dart';
 import '../features/grupo_leitura/grupo_leitura_participante/repository/grupo_leitura_participante_repository.dart';
 import '../features/grupo_leitura/grupo_leitura_participante/repository/grupo_leitura_participante_repository_impl.dart';
+import '../features/historico_leitura/repository/historico_leitura_repository.dart';
+import '../features/historico_leitura/repository/historico_leitura_repository_impl.dart';
 import '../features/lgpd/usuario_consentimento/repository/usuario_consentimento_repository.dart';
 import '../features/lgpd/usuario_consentimento/repository/usuario_consentimento_repository_impl.dart';
 import '../features/mensagem/mensagem_envio/repository/mensagem_envio_repository.dart';
@@ -121,6 +123,10 @@ void configDependencies() {
   locator.registerLazySingleton<GrupoLeituraParticipanteRepository>(() => GrupoLeituraParticipanteRepositoryImpl());
   locator.registerLazySingleton<GrupoLeituraAgendaRepository>(() => GrupoLeituraAgendaRepositoryImpl());
   locator.registerLazySingleton<GrupoLeituraAtividadeRepository>(() => GrupoLeituraAtividadeRepositoryImpl());
+  // Usa o repository da leitura registrado em _configLeituraOffline, para funcionar também sem conexão.
+  locator.registerLazySingleton<HistoricoLeituraRepository>(
+    () => HistoricoLeituraRepositoryImpl(leitura: locator<BibliaLeituraRepository>()),
+  );
 }
 
 /// Leitura da Bíblia sem conexão: banco local, conexão, sincronização e os repositories da leitura, que decoram os

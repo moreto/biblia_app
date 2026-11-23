@@ -223,6 +223,16 @@ class IconsMap {
     // iconeFimRepeticao); lembrete ('bell-outline') já mapeado.
     'repeat': MdiIcons.repeat,
     'calendar-end': MdiIcons.calendarEnd,
+    // Tela "Histórico de leitura" (HistoricoLeituraView): 'book-clock-outline' também é func_icone/menu_icone de
+    // /historico-leitura; filtro "Todos", continuar leitura, grupo de hoje e grupo sem data. Versão
+    // ('book-multiple'), concluído ('check-circle'), em andamento ('progress-check'), versículos lidos
+    // ('format-list-checks'), outros dias ('calendar-blank-outline'), abrir ('chevron-right') e atualizar
+    // ('refresh') já mapeados acima.
+    'book-clock-outline': MdiIcons.bookClockOutline,
+    'format-list-bulleted': MdiIcons.formatListBulleted,
+    'book-arrow-right-outline': MdiIcons.bookArrowRightOutline,
+    'calendar-today': MdiIcons.calendarToday,
+    'calendar-question': MdiIcons.calendarQuestion,
     // ...
   };
 }

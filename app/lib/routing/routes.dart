@@ -29,6 +29,9 @@ abstract final class Routes {
   /// Indicações de versículo que o usuário recebeu (tela própria, não é aba).
   static const versiculoIndicado = '/versiculo-indicado';
 
+  /// Histórico de leitura do usuário por versão, agrupado por dia (tela própria, não é aba; item do menu Bíblia).
+  static const historicoLeitura = '/historico-leitura';
+
   // mensagem
   /// Mensagens recebidas pelo usuário (tela própria, não é aba).
   static const mensagemLista = '/mensagem-lista';

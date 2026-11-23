@@ -28,6 +28,10 @@ import '../../features/biblia/versiculo_renomado/ui/versiculo_renomado_viewmodel
 import '../../features/biblia/versiculo_renomado/use_case/versiculo_renomado_usecase.dart';
 import '../../features/dashboard/widgets/versiculo_reacao/repository/versiculo_reacao_repository.dart';
 import '../../features/dashboard/widgets/versiculo_reacao/use_case/versiculo_reacao_usecase.dart';
+import '../../features/historico_leitura/repository/historico_leitura_repository.dart';
+import '../../features/historico_leitura/ui/historico_leitura_view.dart';
+import '../../features/historico_leitura/ui/historico_leitura_viewmodel.dart';
+import '../../features/historico_leitura/use_case/historico_leitura_usecase.dart';
 import '../routes.dart';
 
 class BibliaRouter {
@@ -92,6 +96,20 @@ class BibliaRouter {
         viewModel: VersiculoIndicadoViewmodel(
           versiculoIndicadoUseCase: VersiculoIndicadoUseCase(
             versiculoIndicadoRepository: locator<VersiculoIndicadoRepository>(),
+          ),
+        ),
+      ),
+    ),
+    GoRoute(
+      path: Routes.historicoLeitura,
+      builder: (context, state) => HistoricoLeituraView(
+        viewModel: HistoricoLeituraViewmodel(
+          historicoLeituraUseCase: HistoricoLeituraUseCase(
+            historicoLeituraRepository: locator<HistoricoLeituraRepository>(),
+            bibliaLeituraUseCase: BibliaLeituraUseCase(
+              bibliaLeituraRepository: locator<BibliaLeituraRepository>(),
+              versaoPreferencia: locator<AppConfig>(),
+            ),
           ),
         ),
       ),
