@@ -32,6 +32,13 @@ class IconsMap {
     'chevron-left': MdiIcons.chevronLeft,
     'chevron-right': MdiIcons.chevronRight,
     'progress-check': MdiIcons.progressCheck,
+    // Leitura offline (BibliaLeituraView.iconeSemConexao / iconeSincronizar / iconeSincronizando / iconeBaixarVersao
+    // / iconeVersaoBaixada).
+    'cloud-off-outline': MdiIcons.cloudOffOutline,
+    'cloud-upload-outline': MdiIcons.cloudUploadOutline,
+    'cloud-sync-outline': MdiIcons.cloudSyncOutline,
+    'download-outline': MdiIcons.downloadOutline,
+    'cloud-check-outline': MdiIcons.cloudCheckOutline,
     // Indicação de versículo (VersiculoIndicacaoSheet).
     'thumb-up': MdiIcons.thumbUp,
     'thumb-up-outline': MdiIcons.thumbUpOutline,

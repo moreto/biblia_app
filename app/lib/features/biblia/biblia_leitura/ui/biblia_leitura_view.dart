@@ -34,13 +34,17 @@ import 'widgets/versiculo_indicacao_sheet.dart';
 ///   para recebê-la (`/v1/versiculo-indicacao-usuario` e `/v1/usuario/busca`).
 /// - Versão (`/v1/versao`): seleção no topo do índice, acima do filtro de testamentos.
 /// - AppBar: histórico de leitura, orientação da tela e tema.
+/// - Sem conexão: a leitura usa o que está no aparelho (capítulos já abertos e versões baixadas) e as marcações de
+///   lido e as indicações ficam pendentes até sincronizar. A AppBar mostra um ícone quando não há conexão ou há
+///   pendências (tocar sincroniza); abaixo da versão, o botão baixa a versão inteira para ler offline.
 /// - Aberta com destino (`/biblia-leitura?versaId=&livrId=&capiNumero=&versNumero=`, ex.: versículo de um renomado):
 ///   abre direto no capítulo, na versão do destino, rola até o versículo e o destaca; voltar sai da tela.
 ///
 /// Ícones (em [IconsMap.mdiIcons]): [iconeLeitura], [iconeHistorico], [iconeVersao], [iconeAnterior],
 /// [iconeProximo], [iconeLido], [iconeNaoLido], [iconeParcial], [iconeComentarIndicar], [iconeIndicadoSemComentario],
 /// [iconeComentado], [iconeIndicar],
-/// [iconeIndicado], [iconeRemover] e [iconeTentarNovamente].
+/// [iconeIndicado], [iconeRemover], [iconeTentarNovamente], [iconeSemConexao], [iconeSincronizar],
+/// [iconeSincronizando], [iconeBaixarVersao] e [iconeVersaoBaixada].
 class BibliaLeituraView extends StatefulWidget {
   const BibliaLeituraView({super.key, required this.viewModel});
 
@@ -85,6 +89,21 @@ class BibliaLeituraView extends StatefulWidget {
   static const iconeRemover = 'delete-outline';
   static const iconeTentarNovamente = 'refresh';
 
+  /// AppBar: aparelho sem conexão.
+  static const iconeSemConexao = 'cloud-off-outline';
+
+  /// AppBar: há marcações pendentes; tocar sincroniza.
+  static const iconeSincronizar = 'cloud-upload-outline';
+
+  /// AppBar: sincronizando.
+  static const iconeSincronizando = 'cloud-sync-outline';
+
+  /// Índice: baixar a versão para ler offline.
+  static const iconeBaixarVersao = 'download-outline';
+
+  /// Índice: versão baixada no aparelho.
+  static const iconeVersaoBaixada = 'cloud-check-outline';
+
   /// Ícone de [IconsMap.mdiIcons] pela chave; usa [fallback] se a chave não estiver mapeada.
   static Widget icone(String chave, IconData fallback, {Color? color, double? size}) =>
       Icon(IconsMap.mdiIcons[chave] ?? fallback, color: color, size: size);
@@ -128,6 +147,8 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
     vm.versaoCommand,
     vm.marcarLidoCommand,
     vm.marcarVersiculoCommand,
+    vm.baixarVersaoCommand,
+    vm.removerVersaoCommand,
   ];
 
   @override
@@ -158,7 +179,17 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
   }
 
   void _onResult() {
-    for (final Command command in [_vm.versaoCommand, _vm.marcarLidoCommand, _vm.marcarVersiculoCommand]) {
+    if (_vm.baixarVersaoCommand.completed) {
+      _vm.baixarVersaoCommand.clearResult();
+      _mostrarMensagem('versaoDisponivelOffline');
+    }
+    for (final Command command in [
+      _vm.versaoCommand,
+      _vm.marcarLidoCommand,
+      _vm.marcarVersiculoCommand,
+      _vm.baixarVersaoCommand,
+      _vm.removerVersaoCommand,
+    ]) {
       if (command.error) {
         final mensagem = BibliaLeituraView.mensagemErro(command.result);
         command.clearResult();
@@ -228,6 +259,7 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
             ),
       title: Text(ref == null ? strings.translate('leituraBiblica') : _tituloCapitulo(ref)),
       actions: [
+        ?_estadoConexao(strings),
         IconButton(
           tooltip: strings.translate('historicoLeitura'),
           onPressed: _vm.indice == null ? null : _abrirHistorico,
@@ -237,6 +269,75 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
         const ThemeModeButton(),
       ],
     );
+  }
+
+  /// Ícone da AppBar com o estado offline: sem conexão, sincronizando ou com marcações pendentes (o número aparece
+  /// no badge e tocar sincroniza). Nulo quando está tudo enviado (ou o modo offline está desligado).
+  Widget? _estadoConexao(AppLocalizations strings) {
+    if (!_vm.offlineDisponivel) return null;
+    final pendentes = _vm.pendentesSincronizacao;
+    if (_vm.online && pendentes == 0) return null;
+
+    final (chave, fallback, tooltip) = !_vm.online
+        ? (BibliaLeituraView.iconeSemConexao, Icons.cloud_off_outlined, 'semConexaoLeituraOffline')
+        : _vm.sincronizando
+        ? (BibliaLeituraView.iconeSincronizando, Icons.cloud_sync_outlined, 'sincronizando')
+        : (BibliaLeituraView.iconeSincronizar, Icons.cloud_upload_outlined, 'sincronizarAgora');
+    return IconButton(
+      tooltip: strings.translate(tooltip),
+      onPressed: () {
+        if (!_vm.online) {
+          _mostrarMensagem(pendentes > 0 ? 'alteracoesSeraoSincronizadas' : 'semConexaoLeituraOffline');
+        } else if (!_vm.sincronizarCommand.running) {
+          _vm.sincronizarCommand.execute();
+        }
+      },
+      icon: Badge(
+        isLabelVisible: pendentes > 0,
+        label: Text('$pendentes'),
+        child: BibliaLeituraView.icone(chave, fallback),
+      ),
+    );
+  }
+
+  /// Download da versão atual para ler offline, abaixo da seleção da versão: botão para baixar, andamento ou aviso
+  /// de que ela já está no aparelho (com a opção de remover).
+  Widget _versaoOffline(AppLocalizations strings) {
+    final textTheme = Theme.of(context).textTheme;
+    final progresso = _vm.progressoDownload;
+    final Widget conteudo;
+    if (progresso != null) {
+      conteudo = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('${strings.translate('baixandoVersao')} ${(progresso * 100).round()}%', style: textTheme.bodySmall),
+          const SizedBox(height: 4),
+          LinearProgressIndicator(value: progresso),
+        ],
+      );
+    } else if (_vm.versaoBaixada) {
+      conteudo = Row(
+        children: [
+          BibliaLeituraView.icone(BibliaLeituraView.iconeVersaoBaixada, Icons.cloud_done_outlined, size: 18),
+          const SizedBox(width: 8),
+          Expanded(child: Text(strings.translate('versaoDisponivelOffline'), style: textTheme.bodySmall)),
+          TextButton(
+            onPressed: _vm.removerVersaoCommand.running ? null : _vm.removerVersaoCommand.execute,
+            child: Text(strings.translate('removerDoAparelho')),
+          ),
+        ],
+      );
+    } else {
+      conteudo = Align(
+        alignment: Alignment.centerLeft,
+        child: TextButton.icon(
+          onPressed: !_vm.online || _vm.baixarVersaoCommand.running ? null : _vm.baixarVersaoCommand.execute,
+          icon: BibliaLeituraView.icone(BibliaLeituraView.iconeBaixarVersao, Icons.download_outlined, size: 18),
+          label: Text(strings.translate('baixarVersaoOffline')),
+        ),
+      );
+    }
+    return Padding(padding: const EdgeInsets.fromLTRB(16, 4, 16, 0), child: conteudo);
   }
 
   /// Seleção da versão (`/v1/versao`), no topo do índice, logo acima do filtro de testamentos.
@@ -319,6 +420,7 @@ class _BibliaLeituraViewState extends State<BibliaLeituraView> {
       children: [
         if (_vm.versaoCommand.running) const LinearProgressIndicator(),
         if (_vm.versoes.isNotEmpty) _versaoSelecao(strings),
+        if (_vm.offlineDisponivel && _vm.versao != null) _versaoOffline(strings),
         _filtroTestamento(strings),
         Expanded(
           child: livros.isEmpty

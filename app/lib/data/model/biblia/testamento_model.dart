@@ -11,4 +11,7 @@ class TestamentoModel {
     testId: JsonReader.inteiro(json, 'testId', 'test_id'),
     testNome: JsonReader.texto(json, 'testNome', 'test_nome'),
   );
+
+  /// Formato da API, usado também no cache local da leitura offline.
+  Map<String, dynamic> toJson() => {'testId': testId, 'testNome': testNome};
 }

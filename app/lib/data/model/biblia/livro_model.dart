@@ -25,4 +25,13 @@ class LivroModel {
     livrAbrev: JsonReader.texto(json, 'livrAbrev', 'livr_abrev'),
     livrCapituloCount: JsonReader.inteiroOpcional(json, 'livrCapituloCount', 'livr_capitulo_count') ?? 0,
   );
+
+  /// Formato da API, usado também no cache local da leitura offline.
+  Map<String, dynamic> toJson() => {
+    'livrId': livrId,
+    'testId': testId,
+    'livrNome': livrNome,
+    'livrAbrev': livrAbrev,
+    'livrCapituloCount': livrCapituloCount,
+  };
 }

@@ -43,6 +43,27 @@ A mensagem de erro sai da exceção. `HandledException.message` e `HttpServiceEx
 | `UsuarioSession` | [`config/usuario_session.dart`](../../app/lib/config/usuario_session.dart) | Detalhe do usuário logado. |
 | `AppConfig` | [`config/app_config.dart`](../../app/lib/config/app_config.dart) | Tema (`ThemeMode`), idioma e versão da Bíblia, persistidos no secure storage (`kColorScheme`, `kSelectedLanguage`, `kSelectedBibleVersion`). `ThemeModeButton` e `OrientationButton` alteram tema e idioma; a versão é exposta aos use cases pela interface [`VersaoPreferencia`](../../app/lib/config/versao_preferencia.dart). |
 
+## Leitura offline
+
+A leitura da Bíblia (`/biblia-leitura`) funciona sem conexão: o usuário lê, marca capítulos e versículos como lidos e indica versículos, e tudo é enviado à API quando a conexão volta. O código fica em [`biblia_leitura/offline/`](../../app/lib/features/biblia/biblia_leitura/offline) e em [`data/local/`](../../app/lib/data/local).
+
+```
+Viewmodel → UseCase → Repository offline ─┬→ Repository da API → DioProvider
+                                          └→ LeituraLocalStore → BancoLocal (SQLite)
+                         LeituraSincronizacao → Repositories da API (envia as pendências)
+```
+
+- **Decorators.** `BibliaLeituraRepositoryOffline`, `VersiculoReacaoRepositoryOffline` e `VersiculoIndicacaoRepositoryOffline` implementam os mesmos contratos e são os registrados no `locator`; os use cases e o viewmodel não sabem se há conexão. Cada um recebe o repository da API (`api`).
+- **Leituras.** Versões, testamentos, livros, índice e progresso (`lidos`): consulta a API e guarda a resposta na tabela `cache`; sem resposta, usa a guardada. Capítulos: lê do aparelho se já estiverem salvos (abertos antes ou versão baixada), senão busca e salva. Com o aparelho sem rede (`Conectividade`, pelo `connectivity_plus`), nem chama a API, para não esperar o timeout.
+- **Gravações (local-first).** Marcar lido e indicar gravam nas tabelas `reacao` e `indicacao` (uma linha por usuário e versículo, com `pendente = 1`) e pedem a sincronização; a tela mostra o estado do aparelho na hora. Guarda-se o estado final, não a sequência de toques: marcar e desmarcar várias vezes offline vira no máximo uma gravação. O progresso offline é o da API somado à diferença entre o que está no aparelho e o último estado conhecido na API (`lido_servidor`).
+- **Só com o texto no aparelho.** As gravações offline exigem o versículo na tabela `versiculo` (para saber o capítulo). Versículo nunca aberto na leitura (ex.: o do dia, no card da dashboard) vai direto à API, como antes.
+- **Sincronização (`LeituraSincronizacao`).** Roda ao voltar a conexão, ao voltar o app ao primeiro plano, depois de cada gravação, ao abrir a leitura e pelo ícone da AppBar; uma por vez. Capítulo inteiro com a mesma marcação vai num só `PUT /v1/versiculo-reacao/capitulo`. Nos demais casos consulta o que a API tem antes de gravar, porque `versiculo_reacao` e `versiculo_indicacao` não têm chave única por usuário e versículo e um POST repetido duplicaria. Resposta da API que chega durante o envio não sobrescreve a linha (`sincronizado_em` > início da consulta), e a linha só sai de pendente se não mudou durante o envio (`versao`).
+- **Erros na sincronização.** Sem rede, 429 ou sessão vencida (`tokenInvalido`, 401/403): para e espera. 5xx: tenta até `LeituraSincronizacao.maxTentativas` vezes e descarta. Outros 4xx: descarta e volta ao estado da API (a tela recarrega o progresso).
+- **Indicação offline.** Recebe o id provisório `-versId` até sincronizar; os destinatários só podem ser escolhidos depois (`indicacaoAguardandoSincronizacao`), porque dependem do `vindId` e da busca de usuários.
+- **Download.** "Baixar para ler offline", abaixo da versão, busca a versão livro a livro (`GET /v1/biblia/livro/:versaId/:livrId`) e continua de onde parou se for interrompido.
+- **Logoff.** Apaga os dados do usuário já sincronizados (cache e marcações). As pendências ficam e são enviadas quando ele entrar de novo.
+- **Limite.** A sessão (`AuthSession`) só existe em memória: se o app for fechado, entrar de novo exige conexão. O modo offline cobre a perda de conexão com o app aberto (e as aberturas seguintes, depois de entrar).
+
 ## Proteção de rotas
 
 O `redirect` do `GoRouter` chama `authRedirect` ([`routing/auth_guard.dart`](../../app/lib/routing/auth_guard.dart)):

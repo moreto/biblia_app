@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app/config/command.dart';
 import 'package:commons/commons.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +16,7 @@ import '../../../../data/model/usuario/usuario_resumo_model.dart';
 import '../../../../data/model/versiculo/versiculo_reacao_model.dart';
 import '../../../dashboard/widgets/versiculo_reacao/use_case/versiculo_reacao_usecase.dart';
 import '../use_case/biblia_leitura_usecase.dart';
+import '../use_case/leitura_offline_usecase.dart';
 import '../versiculo_indicacao/use_case/versiculo_indicacao_usecase.dart';
 import '../versiculo_indicacao/use_case/versiculo_indicacao_usuario_usecase.dart';
 
@@ -37,6 +40,12 @@ import '../versiculo_indicacao/use_case/versiculo_indicacao_usuario_usecase.dart
 /// - [indicados] são os usuários que recebem a indicação do usuário, carregados com ela; [buscarUsuarios] procura
 ///   destinatários, [adicionarIndicadoCommand] inclui e [removerIndicadoCommand] remove.
 ///
+/// Sem conexão (com [leituraOfflineUseCase]): a leitura usa o que está no aparelho e as marcações ficam pendentes
+/// até sincronizar. [online], [pendentesSincronizacao] e [sincronizando] mostram o estado;
+/// [sincronizarCommand] envia as pendências; [baixarVersaoCommand] baixa a versão inteira ([progressoDownload]) e
+/// [removerVersaoCommand] apaga do aparelho; [versaoBaixada] diz se a versão atual está toda no aparelho. Ao abrir,
+/// a leitura tenta sincronizar antes de carregar o progresso.
+///
 /// Com [destino] (ex.: versículo aberto a partir de um renomado), a leitura carrega na versão do destino, abre o
 /// capítulo direto e destaca o versículo; [versiculoAlvo] indica à view para onde rolar (lido uma vez com
 /// [consumirVersiculoAlvo]).
@@ -46,10 +55,101 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
     required this.versiculoIndicacaoUseCase,
     required this.versiculoReacaoUseCase,
     required this.versiculoIndicacaoUsuarioUseCase,
+    this.leituraOfflineUseCase,
     this.destino,
   }) {
     Log.print(super.runtimeType);
+    leituraOfflineUseCase?.estado.addListener(_onEstadoOffline);
     carregarCommand.execute();
+  }
+
+  /// Leitura sem conexão; nulo desliga o modo offline (ex.: testes).
+  final LeituraOfflineUseCase? leituraOfflineUseCase;
+
+  /// O aparelho tem conexão.
+  bool get online => leituraOfflineUseCase?.online ?? true;
+
+  /// Marcações (lido e indicação) feitas no aparelho e ainda não enviadas.
+  int get pendentesSincronizacao => leituraOfflineUseCase?.pendentes ?? 0;
+
+  bool get sincronizando => leituraOfflineUseCase?.sincronizando ?? false;
+
+  /// O modo offline está ligado (há o que mostrar sobre conexão e download).
+  bool get offlineDisponivel => leituraOfflineUseCase != null;
+
+  Set<int> _versoesBaixadas = const {};
+
+  /// A versão atual está toda no aparelho.
+  bool get versaoBaixada => _versao != null && _versoesBaixadas.contains(_versao!.versaId);
+
+  double? _progressoDownload;
+
+  /// Andamento (0 a 1) do download da versão; nulo quando não está baixando.
+  double? get progressoDownload => _progressoDownload;
+
+  late final Command0<void> baixarVersaoCommand = Command0(_baixarVersao);
+  late final Command0<void> removerVersaoCommand = Command0(_removerVersao);
+  late final Command0<int> sincronizarCommand = Command0(_sincronizar);
+
+  void _onEstadoOffline() {
+    // A API recusou alguma marcação: o aparelho voltou ao estado da API, então o progresso é recarregado.
+    if (leituraOfflineUseCase?.consumirDescartada() ?? false) unawaited(_recarregarProgresso());
+    notifyListeners();
+  }
+
+  Future<void> _recarregarProgresso() async {
+    final versao = _versao;
+    if (versao == null) return;
+    final lidos = await bibliaLeituraUseCase.lidos(versao.versaId);
+    if (lidos case Ok<Map<String, CapituloLidoModel>>(value: final value) when _versao == versao) _lidos = value;
+    await _recarregarReacoes();
+    notifyListeners();
+  }
+
+  Future<Result<int>> _sincronizar() async {
+    final offline = leituraOfflineUseCase;
+    if (offline == null) return const Result.ok(0);
+    return offline.sincronizar();
+  }
+
+  Future<void> _atualizarVersoesBaixadas() async {
+    final offline = leituraOfflineUseCase;
+    if (offline != null) _versoesBaixadas = await offline.versoesBaixadas();
+  }
+
+  Future<Result<void>> _baixarVersao() async {
+    final offline = leituraOfflineUseCase;
+    final versao = _versao;
+    final indice = _indice;
+    if (offline == null || versao == null || indice == null) {
+      return Result.error(HandledException(message: 'nenhumaVersaoDisponivel'));
+    }
+    _progressoDownload = 0;
+    notifyListeners();
+
+    final result = await offline.baixarVersao(
+      versao,
+      _livros.where((livro) => indice.containsKey(livro.livrId)).toList(growable: false),
+      progresso: (andamento) {
+        _progressoDownload = andamento;
+        notifyListeners();
+      },
+    );
+    if (result case Error(error: final error)) Log.print(error.toString(), name: kApp, title: 'Erro');
+    _progressoDownload = null;
+    await _atualizarVersoesBaixadas();
+    notifyListeners();
+    return result;
+  }
+
+  Future<Result<void>> _removerVersao() async {
+    final offline = leituraOfflineUseCase;
+    final versao = _versao;
+    if (offline == null || versao == null) return const Result.ok(null);
+    final result = await offline.removerVersao(versao);
+    await _atualizarVersoesBaixadas();
+    notifyListeners();
+    return result;
   }
 
   final VersiculoReacaoUseCase versiculoReacaoUseCase;
@@ -346,10 +446,12 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
   Future<Result<void>> _carregar() async {
     notifyListeners();
 
-    final (versoes, testamentos, livros) = await (
+    // Envia antes as marcações feitas offline, para o progresso vir da API já com elas.
+    final (versoes, testamentos, livros, _) = await (
       bibliaLeituraUseCase.versoes(),
       bibliaLeituraUseCase.testamentos(),
       bibliaLeituraUseCase.livros(),
+      _prepararOffline(),
     ).wait;
 
     for (final Result result in [versoes, testamentos, livros]) {
@@ -374,6 +476,12 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
     if (result is Ok && _capitulo == null) await _abrirDestino();
     notifyListeners();
     return result;
+  }
+
+  Future<void> _prepararOffline() async {
+    final offline = leituraOfflineUseCase;
+    if (offline == null) return;
+    await (offline.sincronizar(), _atualizarVersoesBaixadas()).wait;
   }
 
   /// Carrega índice e progresso da [versao]. Falha no progresso não impede a leitura: o índice aparece sem lidos.
@@ -636,8 +744,21 @@ class BibliaLeituraViewmodel extends ChangeNotifier {
     return result;
   }
 
+  bool _disposed = false;
+
+  /// O download e a sincronização podem terminar depois que a tela fecha.
+  @override
+  void notifyListeners() {
+    if (!_disposed) super.notifyListeners();
+  }
+
   @override
   void dispose() {
+    _disposed = true;
+    leituraOfflineUseCase?.estado.removeListener(_onEstadoOffline);
+    baixarVersaoCommand.dispose();
+    removerVersaoCommand.dispose();
+    sincronizarCommand.dispose();
     carregarCommand.dispose();
     versaoCommand.dispose();
     abrirCapituloCommand.dispose();

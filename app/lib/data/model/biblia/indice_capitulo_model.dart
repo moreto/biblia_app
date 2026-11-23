@@ -25,4 +25,13 @@ class IndiceCapituloModel {
     capiNumero: JsonReader.inteiro(json, 'capiNumero', 'capi_numero'),
     versTotal: JsonReader.inteiroOpcional(json, 'versTotal', 'vers_total') ?? 0,
   );
+
+  /// Formato da API, usado também no cache local da leitura offline.
+  Map<String, dynamic> toJson() => {
+    'testId': testId,
+    'livrId': livrId,
+    'livrNome': livrNome,
+    'capiNumero': capiNumero,
+    'versTotal': versTotal,
+  };
 }

@@ -39,4 +39,25 @@ class CapituloLidoModel {
     versLidos: JsonReader.inteiroOpcional(json, 'versLidos', 'vers_lidos') ?? 0,
     lidoEm: JsonReader.data(json, 'lidoEm', 'lido_em'),
   );
+
+  /// Formato da API, usado também no cache local da leitura offline.
+  Map<String, dynamic> toJson() => {
+    'livrId': livrId,
+    'livrNome': livrNome,
+    'livrAbrev': livrAbrev,
+    'capiNumero': capiNumero,
+    'versTotal': versTotal,
+    'versLidos': versLidos,
+    'lidoEm': lidoEm?.toIso8601String(),
+  };
+
+  CapituloLidoModel copyWith({int? versLidos, DateTime? lidoEm}) => CapituloLidoModel(
+    livrId: livrId,
+    livrNome: livrNome,
+    livrAbrev: livrAbrev,
+    capiNumero: capiNumero,
+    versTotal: versTotal,
+    versLidos: versLidos ?? this.versLidos,
+    lidoEm: lidoEm ?? this.lidoEm,
+  );
 }

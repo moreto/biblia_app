@@ -1,5 +1,14 @@
 import 'package:get_it/get_it.dart';
 
+import '../data/local/banco_local.dart';
+import '../data/local/conectividade.dart';
+import '../data/local/leitura_local_store.dart';
+import '../features/biblia/biblia_leitura/offline/biblia_leitura_repository_offline.dart';
+import '../features/biblia/biblia_leitura/offline/leitura_offline_repository.dart';
+import '../features/biblia/biblia_leitura/offline/leitura_sincronizacao.dart';
+import '../features/biblia/biblia_leitura/offline/versiculo_indicacao_repository_offline.dart';
+import '../features/biblia/biblia_leitura/offline/versiculo_reacao_repository_offline.dart';
+
 import '../features/access/configuracao_app/repository/configuracao_app_repository.dart';
 import '../features/access/configuracao_app/repository/configuracao_app_repository_impl.dart';
 import '../features/access/home/repository/home_repository.dart';
@@ -91,9 +100,7 @@ void configDependencies() {
   locator.registerLazySingleton<OracaoRepository>(() => OracaoRepositoryImpl());
   locator.registerLazySingleton<MusicaRepository>(() => MusicaRepositoryImpl());
   locator.registerLazySingleton<VersiculoRepository>(() => VersiculoRepositoryImpl());
-  locator.registerLazySingleton<VersiculoReacaoRepository>(() => VersiculoReacaoRepositoryImpl());
-  locator.registerLazySingleton<BibliaLeituraRepository>(() => BibliaLeituraRepositoryImpl());
-  locator.registerLazySingleton<VersiculoIndicacaoRepository>(() => VersiculoIndicacaoRepositoryImpl());
+  _configLeituraOffline();
   locator.registerLazySingleton<VersiculoIndicacaoUsuarioRepository>(() => VersiculoIndicacaoUsuarioRepositoryImpl());
   locator.registerLazySingleton<RenomadoRepository>(() => RenomadoRepositoryImpl());
   locator.registerLazySingleton<VersiculoRenomadoRepository>(() => VersiculoRenomadoRepositoryImpl());
@@ -114,4 +121,49 @@ void configDependencies() {
   locator.registerLazySingleton<GrupoLeituraParticipanteRepository>(() => GrupoLeituraParticipanteRepositoryImpl());
   locator.registerLazySingleton<GrupoLeituraAgendaRepository>(() => GrupoLeituraAgendaRepositoryImpl());
   locator.registerLazySingleton<GrupoLeituraAtividadeRepository>(() => GrupoLeituraAtividadeRepositoryImpl());
+}
+
+/// Leitura da Bíblia sem conexão: banco local, conexão, sincronização e os repositories da leitura, que decoram os
+/// da API (veja `files/docs/arquitetura.md`, seção "Leitura offline"). A sincronização recebe os repositories da
+/// API diretamente, para não gravar de novo no aparelho.
+void _configLeituraOffline() {
+  locator.registerLazySingleton<BancoLocal>(() => BancoLocal());
+  locator.registerLazySingleton<LeituraLocalStore>(() => LeituraLocalStore(locator<BancoLocal>()));
+  locator.registerLazySingleton<Conectividade>(() => ConectividadePlus());
+  locator.registerLazySingleton<LeituraSincronizacao>(
+    () => LeituraSincronizacao(
+      store: locator<LeituraLocalStore>(),
+      conectividade: locator<Conectividade>(),
+      bibliaRemoto: BibliaLeituraRepositoryImpl(),
+      reacaoRemoto: VersiculoReacaoRepositoryImpl(),
+      indicacaoRemoto: VersiculoIndicacaoRepositoryImpl(),
+    ),
+  );
+  locator.registerLazySingleton<BibliaLeituraRepository>(
+    () => BibliaLeituraRepositoryOffline(
+      api: BibliaLeituraRepositoryImpl(),
+      store: locator<LeituraLocalStore>(),
+      conectividade: locator<Conectividade>(),
+      sincronizacao: locator<LeituraSincronizacao>(),
+    ),
+  );
+  locator.registerLazySingleton<VersiculoReacaoRepository>(
+    () => VersiculoReacaoRepositoryOffline(
+      api: VersiculoReacaoRepositoryImpl(),
+      store: locator<LeituraLocalStore>(),
+      conectividade: locator<Conectividade>(),
+      sincronizacao: locator<LeituraSincronizacao>(),
+    ),
+  );
+  locator.registerLazySingleton<VersiculoIndicacaoRepository>(
+    () => VersiculoIndicacaoRepositoryOffline(
+      api: VersiculoIndicacaoRepositoryImpl(),
+      store: locator<LeituraLocalStore>(),
+      conectividade: locator<Conectividade>(),
+      sincronizacao: locator<LeituraSincronizacao>(),
+    ),
+  );
+  locator.registerLazySingleton<LeituraOfflineRepository>(
+    () => LeituraOfflineRepositoryImpl(store: locator<LeituraLocalStore>(), conectividade: locator<Conectividade>()),
+  );
 }

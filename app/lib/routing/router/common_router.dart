@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 
 import '../../config/dependencies.dart';
+import '../../data/local/leitura_local_store.dart';
 import '../../features/access/loggof/ui/loggof_view.dart';
 import '../../features/access/loggof/ui/loggof_viewmodel.dart';
 import '../../features/dashboard/repository/dashboard_repository.dart';
@@ -32,7 +33,7 @@ abstract final class CommonRouter {
     GoRoute(
       path: Routes.loggof,
       builder: (context, state) {
-        final viewModel = LoggofViewmodel();
+        final viewModel = LoggofViewmodel(limparDadosLocais: locator<LeituraLocalStore>().limparUsuario);
         return LoggofView(viewModel: viewModel);
       },
     ),

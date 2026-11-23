@@ -434,6 +434,15 @@ void main() {
       expect(indicados.registros, hasLength(1));
     });
 
+    test('indicação feita offline (id provisório) não tem destinatários nem aceita incluir', () async {
+      final uc = indicadoUseCase();
+      const provisoria = VersiculoIndicacaoModel(vindId: -43101, versId: 43101, usuaId: _usuario);
+      expect(((await uc.usuarios(provisoria)) as Ok<List<VersiculoIndicacaoUsuarioModel>>).value, isEmpty);
+      final result = await uc.adicionar(provisoria, maria, const []);
+      expect(((result as Error).error as HandledException).message, 'indicacaoAguardandoSincronizacao');
+      expect(indicados.registros, isEmpty);
+    });
+
     test('estado da indicação: nenhuma, indicado sem comentário e comentado', () {
       final uc = indicacaoUseCase();
       expect(uc.estado(null), EstadoIndicacao.nenhuma);

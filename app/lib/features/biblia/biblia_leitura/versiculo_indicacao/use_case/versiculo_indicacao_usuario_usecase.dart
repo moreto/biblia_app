@@ -11,7 +11,9 @@ import '../repository/versiculo_indicacao_usuario_repository.dart';
 /// - a busca de usuários exige ao menos [buscaMinimo] caracteres (abaixo disso não chama a API) e não lista quem
 ///   já é destinatário;
 /// - o mesmo usuário não é incluído duas vezes na mesma indicação;
-/// - o nome mostrado é o nome completo; sem ele, o nome de usuário.
+/// - o nome mostrado é o nome completo; sem ele, o nome de usuário;
+/// - indicação feita sem conexão tem id provisório (negativo) até sincronizar: não tem destinatários e não aceita
+///   incluir (`indicacaoAguardandoSincronizacao`).
 class VersiculoIndicacaoUsuarioUseCase {
   VersiculoIndicacaoUsuarioUseCase({required this.versiculoIndicacaoUsuarioRepository}) {
     Log.print(super.runtimeType);
@@ -25,7 +27,7 @@ class VersiculoIndicacaoUsuarioUseCase {
   /// Destinatários da [indicacao]; lista vazia se ela ainda não foi gravada.
   Future<Result<List<VersiculoIndicacaoUsuarioModel>>> usuarios(VersiculoIndicacaoModel? indicacao) async {
     final vindId = indicacao?.vindId;
-    if (vindId == null) return const Result.ok([]);
+    if (vindId == null || vindId <= 0) return const Result.ok([]);
     return versiculoIndicacaoUsuarioRepository.usuarios(vindId);
   }
 
@@ -55,6 +57,9 @@ class VersiculoIndicacaoUsuarioUseCase {
     final vindId = indicacao?.vindId;
     if (vindId == null) {
       return Result.error(HandledException(message: 'indiqueAntesDeAdicionarUsuarios'));
+    }
+    if (vindId <= 0) {
+      return Result.error(HandledException(message: 'indicacaoAguardandoSincronizacao'));
     }
     if (indicados.any((i) => i.usuaId == usuario.usuaId)) {
       return Result.error(HandledException(message: 'usuarioJaIndicado'));

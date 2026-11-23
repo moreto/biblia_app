@@ -5,7 +5,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../config/app_config.dart';
 import '../../config/dependencies.dart';
+import '../../features/biblia/biblia_leitura/offline/leitura_offline_repository.dart';
+import '../../features/biblia/biblia_leitura/offline/leitura_sincronizacao.dart';
 import '../../features/biblia/biblia_leitura/repository/biblia_leitura_repository.dart';
+import '../../features/biblia/biblia_leitura/use_case/leitura_offline_usecase.dart';
 import '../../features/biblia/biblia_leitura/ui/biblia_leitura_viewmodel.dart';
 import '../../features/biblia/biblia_leitura/use_case/biblia_leitura_usecase.dart';
 import '../../features/biblia/biblia_leitura/versiculo_indicacao/repository/versiculo_indicacao_repository.dart';
@@ -45,6 +48,10 @@ class BibliaRouter {
           ),
           versiculoIndicacaoUsuarioUseCase: VersiculoIndicacaoUsuarioUseCase(
             versiculoIndicacaoUsuarioRepository: locator<VersiculoIndicacaoUsuarioRepository>(),
+          ),
+          leituraOfflineUseCase: LeituraOfflineUseCase(
+            leituraOfflineRepository: locator<LeituraOfflineRepository>(),
+            sincronizacao: locator<LeituraSincronizacao>(),
           ),
           // Abertura direta num versículo (ex.: a partir dos versículos de um renomado).
           destino: LeituraDestino.fromQuery(state.uri.queryParameters),

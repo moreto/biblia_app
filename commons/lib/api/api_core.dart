@@ -31,6 +31,7 @@ enum ApiCore {
   // Area Logada (requere autenticação)
   bibliaCapitulo('/v1/biblia/capitulo', kDesHost, kPrdHost, HeaderType.loggedArea),
   bibliaIndice('/v1/biblia/indice', kDesHost, kPrdHost, HeaderType.loggedArea),
+  bibliaLivro('/v1/biblia/livro', kDesHost, kPrdHost, HeaderType.loggedArea),
   comunidade('/v1/comunidade', kDesHost, kPrdHost, HeaderType.loggedArea),
   comunidadeContato('/v1/comunidade-contato', kDesHost, kPrdHost, HeaderType.loggedArea),
   comunidadeDenominacao('/v1/comunidade-denominacao', kDesHost, kPrdHost, HeaderType.loggedArea),

@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:app/app.dart';
 import 'package:app/config/app_config.dart';
 import 'package:app/config/dependencies.dart';
 import 'package:app/features/access/configuracao_app/repository/configuracao_app_repository.dart';
 import 'package:app/features/access/configuracao_app/use_case/configuracao_app_usecase.dart';
+import 'package:app/features/biblia/biblia_leitura/offline/leitura_sincronizacao.dart';
 import 'package:flutter/material.dart';
 
 Future<void> main() async {
@@ -15,5 +18,9 @@ Future<void> main() async {
   // rotas fora da área logada usam o x-access-token que vem daqui. Se falhar (ex.: sem rede), login/registro
   // tentam de novo antes de criptografar a senha.
   await ConfiguracaoAppUseCase(configuracaoAppRepository: locator<ConfiguracaoAppRepository>()).carregar();
+  // Leitura offline: envia as marcações pendentes quando a conexão volta e quando o app volta ao primeiro plano.
+  final sincronizacao = locator<LeituraSincronizacao>();
+  unawaited(sincronizacao.iniciar());
+  AppLifecycleListener(onResume: sincronizacao.agendar);
   runApp(const MyApp());
 }

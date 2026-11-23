@@ -15,4 +15,7 @@ class VersaoModel {
     versaCodigo: JsonReader.texto(json, 'versaCodigo', 'versa_codigo'),
     versaNome: JsonReader.texto(json, 'versaNome', 'versa_nome'),
   );
+
+  /// Formato da API, usado também no cache local da leitura offline.
+  Map<String, dynamic> toJson() => {'versaId': versaId, 'versaCodigo': versaCodigo, 'versaNome': versaNome};
 }
